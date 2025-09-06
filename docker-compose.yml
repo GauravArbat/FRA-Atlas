@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # Frontend React Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+      - REACT_APP_MAPBOX_TOKEN=${MAPBOX_TOKEN}
+    depends_on:
+      - backend
+    networks:
+      - fra-network
+
+  # Backend Node.js API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://fra_user:fra_password@postgres:5432/fra_atlas
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - MAPBOX_TOKEN=${MAPBOX_TOKEN}
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - fra-network
+
+  # Python Data Processing Service
+  data-processor:
+    build:
+      context: ./data-processor
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./data-processor:/app
+      - ./uploads:/app/uploads
+      - ./processed:/app/processed
+    environment:
+      - DATABASE_URL=postgresql://fra_user:fra_password@postgres:5432/fra_atlas
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - fra-network
+
+  # PostgreSQL Database with PostGIS
+  postgres:
+    image: postgis/postgis:15-3.3
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=fra_atlas
+      - POSTGRES_USER=fra_user
+      - POSTGRES_PASSWORD=fra_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - fra-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - fra-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - fra-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  fra-network:
+    driver: bridge
+

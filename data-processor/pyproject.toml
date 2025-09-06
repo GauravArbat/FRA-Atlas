@@ -1,0 +1,85 @@
+name = "fra-atlas-data-processor"
+version = "1.0.0"
+description = "Forest Rights Act Atlas Data Processing Service"
+authors = [
+    {name = "FRA Atlas Team", email = "team@fraatlas.gov.in"}
+]
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+fastapi = "^0.104.1"
+uvicorn = {extras = ["standard"], version = "^0.24.0"}
+pydantic = "^2.5.0"
+psycopg2-binary = "^2.9.9"
+redis = "^5.0.1"
+opencv-python = "^4.8.1.78"
+pytesseract = "^0.3.10"
+pillow = "^10.1.0"
+pandas = "^2.1.4"
+geopandas = "^0.14.1"
+shapely = "^2.0.2"
+numpy = "^1.25.2"
+python-multipart = "^0.0.6"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+celery = "^5.3.4"
+sqlalchemy = "^2.0.23"
+alembic = "^1.13.1"
+python-dotenv = "^1.0.0"
+requests = "^2.31.0"
+aiofiles = "^23.2.1"
+pytest = "^7.4.3"
+pytest-asyncio = "^0.21.1"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.11.0"
+isort = "^5.12.0"
+flake8 = "^6.1.0"
+mypy = "^1.7.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+
+
