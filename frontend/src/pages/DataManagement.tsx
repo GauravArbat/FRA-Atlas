@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
-import { Box, Typography, Paper, Stack, Button, Divider, Alert, TextField } from '@mui/material';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Box, Typography, Paper, Stack, Button, Divider, Alert, TextField, IconButton } from '@mui/material';
+import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import MapIcon from '@mui/icons-material/Map';
 import { api } from '../services/api';
+import { loadOcrItems, addOcrItem, deleteOcrItem, updateOcrItem, type OcrItem } from '../utils/ocrStore';
 
 const DataManagement: React.FC = () => {
   const [uploadInfo, setUploadInfo] = useState<string | null>(null);
@@ -12,6 +16,8 @@ const DataManagement: React.FC = () => {
   const [archiveFormat, setArchiveFormat] = useState('json');
   const [ocrText, setOcrText] = useState('');
   const [nerEntities, setNerEntities] = useState<any[]>([]);
+  const [history, setHistory] = useState<OcrItem[]>([]);
+  const [info, setInfo] = useState<string | null>(null);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -66,8 +72,14 @@ const DataManagement: React.FC = () => {
   const runOcr = async () => {
     try {
       setError(null);
-      const res = await api.post('/digitization/ocr', { text: ocrText || undefined });
-      setOcrText(res.data.text);
+      let text = ocrText;
+      try {
+        const res = await api.post('/digitization/ocr', { text: ocrText || undefined });
+        text = res.data.text;
+      } catch {
+        setInfo('OCR service unavailable. Using input as OCR text.');
+      }
+      setOcrText(text);
     } catch (e: any) {
       setError('OCR failed');
     }
@@ -76,12 +88,49 @@ const DataManagement: React.FC = () => {
   const runNer = async () => {
     try {
       setError(null);
-      const res = await api.post('/digitization/ner', { text: ocrText });
-      setNerEntities(res.data.entities || []);
+      let entities: Array<{ label: string; value: string }> = [];
+      try {
+        const res = await api.post('/digitization/ner', { text: ocrText });
+        entities = res.data.entities || [];
+      } catch {
+        setInfo('NER service unavailable. Saving locally.');
+        entities = [];
+      }
+      setNerEntities(entities);
+      const item: OcrItem = {
+        id: `${Date.now()}`,
+        text: ocrText,
+        entities,
+        createdAt: new Date().toISOString(),
+      };
+      setHistory(addOcrItem(item));
     } catch (e: any) {
       setError('NER failed');
     }
   };
+
+  const handleDelete = async (id: string) => {
+    try { setHistory(deleteOcrItem(id)); } catch {}
+  };
+
+  const handleEdit = async (row: OcrItem) => {
+    const updated = { ...row, text: ocrText || row.text, updatedAt: new Date().toISOString() };
+    setHistory(updateOcrItem(updated));
+  };
+
+  useEffect(() => { setHistory(loadOcrItems()); }, []);
+
+  const columns: GridColDef[] = useMemo(() => ([
+    { field: 'createdAt', headerName: 'Created At', flex: 1, valueGetter: (p) => new Date(p.value as string).toLocaleString() },
+    { field: 'text', headerName: 'Text', flex: 2, minWidth: 260 },
+    { field: 'entities', headerName: 'Entities', flex: 1.5, valueGetter: (p) => (p.value as any[]).map((e) => `${e.label}:${e.value}`).join(', ') },
+    { field: 'actions', headerName: 'Actions', sortable: false, filterable: false, width: 120, renderCell: (params) => (
+      <Box>
+        <IconButton size="small" onClick={() => handleEdit(params.row as OcrItem)}><EditIcon fontSize="small" /></IconButton>
+        <IconButton size="small" onClick={() => handleDelete((params.row as OcrItem).id)}><DeleteIcon fontSize="small" /></IconButton>
+      </Box>
+    ) },
+  ]), []);
 
   return (
     <Box>
@@ -129,6 +178,7 @@ const DataManagement: React.FC = () => {
               <Button variant="contained" onClick={runOcr}>Run OCR (mock)</Button>
               <Button variant="outlined" onClick={runNer}>Run NER</Button>
             </Stack>
+            {info && <Alert severity="info">{info}</Alert>}
             {nerEntities.length > 0 && (
               <Box>
                 <Typography variant="subtitle2" gutterBottom>Extracted Entities</Typography>
@@ -137,6 +187,11 @@ const DataManagement: React.FC = () => {
                 ))}
               </Box>
             )}
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="subtitle2" gutterBottom>History</Typography>
+            <div style={{ width: '100%', height: 320 }}>
+              <DataGrid rows={history} columns={columns} getRowId={(r) => r.id} pageSizeOptions={[5,10]} initialState={{ pagination: { paginationModel: { pageSize: 5 } } }} />
+            </div>
           </Stack>
         </Paper>
       </Stack>

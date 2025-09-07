@@ -30,6 +30,13 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
+    hydrate: (state, action: PayloadAction<string>) => {
+      // Set token from storage and mark as authenticated; user will be fetched separately
+      state.token = action.payload;
+      state.isAuthenticated = true;
+      state.loading = false;
+      state.error = null;
+    },
     loginStart: (state) => {
       state.loading = true;
       state.error = null;
@@ -85,6 +92,7 @@ const authSlice = createSlice({
 });
 
 export const { 
+  hydrate,
   loginStart, 
   loginSuccess, 
   loginFailure, 

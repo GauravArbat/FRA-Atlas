@@ -7,6 +7,8 @@ import CssBaseline from '@mui/material/CssBaseline';
 import App from './App';
 import { store } from './store';
 import './index.css';
+import { hydrate, setUser, clearAuth } from './store/slices/authSlice';
+import { api } from './services/api';
 
 // Mapbox GL CSS
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -57,6 +59,22 @@ const theme = createTheme({
     },
   },
 });
+
+// Hydrate auth from localStorage and fetch current user on bootstrap
+const token = localStorage.getItem('token');
+if (token) {
+  store.dispatch(hydrate(token));
+  api
+    .get('/auth/me')
+    .then((res) => {
+      if (res?.data?.user) {
+        store.dispatch(setUser(res.data.user));
+      }
+    })
+    .catch(() => {
+      store.dispatch(clearAuth());
+    });
+}
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
