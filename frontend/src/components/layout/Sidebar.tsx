@@ -5,6 +5,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
   Dashboard as DashboardIcon,
   Map as MapIcon,
+  MapOutlined as GISPlotIcon,
+  DataObject as DataPlotIcon,
   Storage as DataIcon,
   Assessment as DecisionIcon,
   BarChart as ReportsIcon,
@@ -32,11 +34,13 @@ const Sidebar: React.FC = () => {
   const items = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
     { text: 'FRA Atlas', icon: <MapIcon />, path: '/atlas' },
+    { text: 'Digital GIS Plot', icon: <GISPlotIcon />, path: '/gis-plot' },
+    // { text: 'Data Plotting Demo', icon: <DataPlotIcon />, path: '/data-plotting' },
     { text: 'Data Management', icon: <DataIcon />, path: '/data' },
     { text: 'Decision Support', icon: <DecisionIcon />, path: '/decisions' },
-    { text: 'Reports', icon: <ReportsIcon />, path: '/reports' },
-    { text: 'Profile', icon: <ProfileIcon />, path: '/profile' },
-    { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
+    { text: 'Reports & Analytics', icon: <ReportsIcon />, path: '/reports' },
+    { text: 'My Profile', icon: <ProfileIcon />, path: '/profile' },
+    { text: 'System Settings', icon: <SettingsIcon />, path: '/settings' },
   ];
 
   return (
@@ -98,10 +102,28 @@ const Sidebar: React.FC = () => {
               onClick={() => navigate(item.path)}
               sx={{
                 px: sidebarOpen ? 2 : 1,
+                borderRadius: 1.5,
+                my: 0.25,
+                '&:hover': { backgroundColor: 'action.hover' },
                 '&.Mui-selected': { backgroundColor: 'action.selected' },
               }}
             >
-              <ListItemIcon sx={{ minWidth: 40, color: selected ? 'primary.main' : 'inherit' }}>{item.icon}</ListItemIcon>
+              <ListItemIcon sx={{ minWidth: 40 }}>
+                <Box
+                  sx={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 1,
+                    display: 'grid',
+                    placeItems: 'center',
+                    color: selected ? 'primary.contrastText' : 'text.secondary',
+                    bgcolor: selected ? 'primary.main' : 'transparent',
+                    border: selected ? 'none' : '1px solid rgba(0,0,0,0.08)'
+                  }}
+                >
+                  {React.cloneElement(item.icon as any, { fontSize: 'small' })}
+                </Box>
+              </ListItemIcon>
               {sidebarOpen && <ListItemText primary={item.text} />}
             </ListItemButton>
           );

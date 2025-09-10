@@ -15,6 +15,9 @@ const digitizationRoutes = require('./routes/digitization');
 const proxyRoutes = require('./routes/proxy');
 const ocrRoutes = require('./routes/ocr');
 const nerRoutes = require('./routes/ner');
+const gisPlotRoutes = require('./routes/gis-plot');
+const geojsonPlotRoutes = require('./routes/geojson-plot');
+const pdfProcessorRoutes = require('./routes/pdf-processor');
 
 const { errorHandler } = require('./middleware/errorHandler');
 const { authenticateToken, authorize } = require('./middleware/auth');
@@ -65,6 +68,9 @@ app.use('/api/digitization', digitizationRoutes); // Digitization and standardiz
 app.use('/api/proxy', proxyRoutes); // Tile proxy for external datasets
 app.use('/api/ocr', ocrRoutes); // OCR processing
 app.use('/api/ner', nerRoutes); // Named Entity Recognition
+app.use('/api/gis-plot', gisPlotRoutes); // Digital GIS Plot functionality
+app.use('/api/geojson-plot', geojsonPlotRoutes); // GeoJSON plotting functionality
+app.use('/api/pdf-processor', pdfProcessorRoutes); // PDF processing and data extraction
 
 // Error handling middleware
 app.use(errorHandler);

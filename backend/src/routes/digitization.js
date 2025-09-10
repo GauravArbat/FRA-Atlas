@@ -23,20 +23,29 @@ const upload = multer({
 // OCR Processing Endpoint for Digitization
 router.post('/ocr', upload.single('file'), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+    let extractedText = '';
+    let confidence = 0;
+
+    // Check if file was uploaded or text was provided
+    if (req.file) {
+      // Process uploaded file with OCR
+      const { buffer, mimetype, originalname } = req.file;
+      
+      // Use Tesseract.js for OCR
+      const result = await Tesseract.recognize(buffer, 'eng', {
+        logger: m => console.log(m) // Optional: log progress
+      });
+
+      // Calculate confidence score
+      confidence = result.data.confidence || 0;
+      extractedText = result.data.text || '';
+    } else if (req.body.text) {
+      // Use provided text directly
+      extractedText = req.body.text;
+      confidence = 100; // Assume high confidence for manual input
+    } else {
+      return res.status(400).json({ error: 'No file uploaded or text provided' });
     }
-
-    const { buffer, mimetype, originalname } = req.file;
-    
-    // Use Tesseract.js for OCR
-    const result = await Tesseract.recognize(buffer, 'eng', {
-      logger: m => console.log(m) // Optional: log progress
-    });
-
-    // Calculate confidence score
-    const confidence = result.data.confidence || 0;
-    const extractedText = result.data.text || '';
 
     // Clean up the text
     const cleanedText = extractedText
@@ -51,8 +60,8 @@ router.post('/ocr', upload.single('file'), async (req, res) => {
       success: true,
       text: cleanedText,
       confidence: Math.round(confidence),
-      filename: originalname,
-      fileType: mimetype,
+      filename: req.file ? req.file.originalname : 'text-input',
+      fileType: req.file ? req.file.mimetype : 'text/plain',
       wordCount: cleanedText.split(' ').length,
       characterCount: cleanedText.length,
       fraInfo: fraInfo,

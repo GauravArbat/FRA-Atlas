@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Box, 
   Paper, 
@@ -34,6 +34,7 @@ import { useDispatch } from 'react-redux';
 import { loginStart, loginSuccess, loginFailure } from '../store/slices/authSlice';
 import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('admin@fraatlas.gov.in');
@@ -45,6 +46,14 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { isAuthenticated } = useAuth();
+
+  // If already authenticated, redirect to Dashboard
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +65,7 @@ const Login: React.FC = () => {
     try {
       const response = await api.post('/auth/login', { email, password });
       dispatch(loginSuccess(response.data));
+      navigate('/', { replace: true });
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || 'Login failed';
       dispatch(loginFailure(errorMessage));

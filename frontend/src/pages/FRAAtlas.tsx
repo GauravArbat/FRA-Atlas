@@ -34,7 +34,10 @@ import {
   ListItemIcon,
   Avatar,
   Tabs,
-  Tab
+  Tab,
+  Drawer,
+  Snackbar,
+  AlertTitle
 } from '@mui/material';
 import {
   Satellite,
@@ -91,7 +94,7 @@ const DATAMEET_STATES_GEOJSON_URL =
 const DATAMEET_CITIES_GEOJSON_URL =
   'https://raw.githubusercontent.com/datameet/india-geojson/master/india_telangana_and_ladakh/city/india_telangana_and_ladakh_city.geojson';
 
-// Professional Satellite style (free): ESRI World Imagery + ESRI Boundaries & Places labels overlay
+// Professional Satellite style (free): ESRI World Imagery + optional labels overlay
 const PROFESSIONAL_SATELLITE_STYLE: any = {
   version: 8,
   glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
@@ -140,6 +143,27 @@ const PROFESSIONAL_SATELLITE_STYLE: any = {
   ]
 };
 
+// Pure satellite imagery without label overlay
+const PURE_SATELLITE_STYLE: any = {
+  version: 8,
+  glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+  sources: {
+    'satellite': {
+      type: 'raster',
+      tiles: [
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+      ],
+      tileSize: 256,
+      maxzoom: 17,
+      attribution: '© Esri, Maxar, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AeroGRID, IGN, and the GIS User Community'
+    }
+  },
+  layers: [
+    { id: 'satellite', type: 'raster', source: 'satellite' }
+  ]
+};
+
 const TERRAIN_STYLE: any = {
   ...PROFESSIONAL_SATELLITE_STYLE,
   layers: [
@@ -171,7 +195,7 @@ const FRAAtlas: React.FC = () => {
   
   // Enhanced UI State
   const [currentMapStyle, setCurrentMapStyle] = useState<'satellite' | 'terrain' | 'osm'>('satellite');
-  const [showControls, setShowControls] = useState(true);
+  const [showControls, setShowControls] = useState(false);
   const [showOCRDialog, setShowOCRDialog] = useState(false);
   const [showNERDialog, setShowNERDialog] = useState(false);
   const [ocrResults, setOcrResults] = useState<any>(null);
@@ -187,7 +211,7 @@ const FRAAtlas: React.FC = () => {
   const lastFetchRef = useRef(0);
   const backoffRef = useRef(0);
   const [adminToggles, setAdminToggles] = useState({ osmAdminBoundaries: false });
-  const [hillshadeOn, setHillshadeOn] = useState(true);
+  const [hillshadeOn, setHillshadeOn] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [cursorInfo, setCursorInfo] = useState<{lng:number;lat:number;zoom:number}>({lng:73.86,lat:19.08,zoom:11});
   const userLocRef = useRef<{lng:number; lat:number; acc:number} | null>(null);
@@ -243,6 +267,10 @@ const FRAAtlas: React.FC = () => {
         },
         filter: ['==', ['get', 'status'], 'potential']
       });
+      
+      // Set initial visibility based on current status chips
+      map.setLayoutProperty('fra-granted-fill', 'visibility', statusChips.granted ? 'visible' : 'none');
+      map.setLayoutProperty('fra-potential-fill', 'visibility', statusChips.potential ? 'visible' : 'none');
       map.addLayer({
         id: 'fra-outline',
         type: 'line',
@@ -288,7 +316,14 @@ const FRAAtlas: React.FC = () => {
         const maxLng = Math.max(...lons);
         const minLat = Math.min(...lats);
         const maxLat = Math.max(...lats);
-        map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 40, duration: 500 });
+        // Ensure map uses current style (satellite) and wait for it to be ready before fitting
+        if (!map.isStyleLoaded()) {
+          map.once('style.load', () => {
+            try { map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 40, duration: 600 }); } catch (_) {}
+          });
+        } else {
+          try { map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 40, duration: 600 }); } catch (_) {}
+        }
       }
       setTimeout(() => map.resize(), 0);
       // On success, reset rate-limit backoff
@@ -317,7 +352,7 @@ const FRAAtlas: React.FC = () => {
       const map = usingMapbox
         ? new mapboxgl.Map({
             container: containerRef.current,
-            style: 'mapbox://styles/mapbox/satellite-streets-v12',
+            style: 'mapbox://styles/mapbox/satellite-v9',
             center: [73.86, 19.08],
             zoom: 11,
             pitch: 45,
@@ -330,7 +365,7 @@ const FRAAtlas: React.FC = () => {
             style: ((): any => {
               switch (currentMapStyle) {
                 case 'satellite':
-                  return PROFESSIONAL_SATELLITE_STYLE;
+                  return PURE_SATELLITE_STYLE;
                 case 'terrain':
                   return TERRAIN_STYLE;
                 default:
@@ -363,7 +398,7 @@ const FRAAtlas: React.FC = () => {
           }
           const ml = new maplibregl.Map({
             container: containerRef.current as HTMLDivElement,
-            style: OSM_STYLE,
+            style: PURE_SATELLITE_STYLE,
             center: [73.86, 19.08],
             zoom: 11,
             maxZoom: 19
@@ -377,7 +412,7 @@ const FRAAtlas: React.FC = () => {
             }
           });
           // Use MapLibre's NavigationControl for MapLibre maps
-          (ml as unknown as maplibregl.Map).addControl(new (maplibregl as any).NavigationControl(), 'top-right');
+          (ml as unknown as maplibregl.Map).addControl(new (maplibregl as any).NavigationControl(), 'bottom-right');
         }
       });
 
@@ -390,9 +425,9 @@ const FRAAtlas: React.FC = () => {
         map.addControl(draw, 'top-left');
       }
       if (usingMapbox) {
-        map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+        map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
       } else {
-        (map as unknown as maplibregl.Map).addControl(new (maplibregl as any).NavigationControl(), 'top-right');
+        (map as unknown as maplibregl.Map).addControl(new (maplibregl as any).NavigationControl(), 'bottom-right');
         try { (map as unknown as maplibregl.Map).addControl(new (maplibregl as any).ScaleControl({ maxWidth: 120, unit: 'metric' }), 'bottom-left'); } catch (_) {}
       }
 
@@ -489,7 +524,13 @@ const FRAAtlas: React.FC = () => {
     const current = !statusChips[layer];
     setStatusChips((s) => ({ ...s, [layer]: current }));
     const id = layer === 'granted' ? 'fra-granted-fill' : 'fra-potential-fill';
-    map.setLayoutProperty(id, 'visibility', current ? 'visible' : 'none');
+    
+    // Check if layer exists before trying to style it
+    if (map.getLayer(id)) {
+      map.setLayoutProperty(id, 'visibility', current ? 'visible' : 'none');
+    } else {
+      console.warn(`Layer ${id} does not exist yet. Will retry when data loads.`);
+    }
   };
 
   const syncAssetLayers = async () => {
@@ -726,7 +767,10 @@ const FRAAtlas: React.FC = () => {
     
     switch (style) {
       case 'satellite':
-        newStyle = PROFESSIONAL_SATELLITE_STYLE;
+        newStyle = PURE_SATELLITE_STYLE;
+        // Satellite: keep imagery clean by disabling hillshade/overlays
+        setHillshadeOn(false);
+        setOverlayToggles({ cropland: false, forestcover: false, waterbodies: false });
         break;
       case 'terrain':
         newStyle = TERRAIN_STYLE;
@@ -736,13 +780,23 @@ const FRAAtlas: React.FC = () => {
         break;
     }
     
-    mapRef.current.setStyle(newStyle as any, { diff: true } as any);
+    // Apply full style replacement to avoid residual layers from previous style
+    try {
+      mapRef.current.setStyle(newStyle as any);
+    } catch (_) {
+      // Fallback with explicit diff false for older engines
+      try { (mapRef.current as any).setStyle(newStyle as any, { diff: false }); } catch (_) {}
+    }
     try { (mapRef.current as any).setMaxZoom?.(19); } catch (_) {}
-    mapRef.current.on('style.load', () => {
+    mapRef.current.once('style.load', () => {
       addGeoJsonSource();
       syncAdminBoundaries();
       if (datameetToggles.stateBorders || datameetToggles.cityLabels) {
         syncDatameetOverlays();
+      }
+      // After style change, clear any overlay layers when satellite chosen
+      if (style === 'satellite') {
+        try { syncOverlays(); } catch (_) {}
       }
       try { mapRef.current?.setLayoutProperty('hillshade', 'visibility', hillshadeOn ? 'visible' : 'none'); } catch (_) {}
     });
@@ -833,73 +887,27 @@ const FRAAtlas: React.FC = () => {
       position: 'relative',
       overflow: 'hidden'
     }}>
-      {/* Professional Header */}
-      <Box sx={{ 
-        p: 2, 
-        bgcolor: 'background.paper', 
-        borderBottom: 1, 
-        borderColor: 'divider',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexShrink: 0
-      }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Satellite sx={{ color: 'primary.main', fontSize: 32 }} />
-          <Box>
-            <Typography variant="h5" sx={{ fontWeight: 600, color: 'primary.main' }}>
-              FRA Atlas - Professional 3D
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Forest Rights Act Digital Platform with AI/ML Integration
-            </Typography>
-          </Box>
-        </Box>
-        
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Tooltip title="Analytics Dashboard">
-            <IconButton onClick={() => setShowAnalytics(!showAnalytics)}>
-              <Analytics />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Toggle Controls">
-            <IconButton onClick={() => setShowControls(!showControls)}>
-              <Settings />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={fullscreen ? "Exit Fullscreen" : "Fullscreen"}>
-            <IconButton onClick={toggleFullscreen}>
-              {fullscreen ? <FullscreenExit /> : <Fullscreen />}
-            </IconButton>
-          </Tooltip>
-        </Box>
+      {/* Alerts as floating overlays */}
+      <Box sx={{ position: 'absolute', top: 16, left: 16, zIndex: 1500, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        {!usingMockData && error && (
+          <Alert severity="error" onClose={() => setError(null)}>
+            <AlertTitle>Error</AlertTitle>
+            {error}
+          </Alert>
+        )}
+        {(usingMockData || info) && (
+          <Alert severity={usingMockData ? 'info' : 'info'} onClose={() => setInfo(null)}>
+            {usingMockData ? 'Demo data active: serving sample FRA areas locally.' : info}
+          </Alert>
+        )}
       </Box>
-
-      {/* Error/Info Alerts */}
-      {!usingMockData && error && (
-        <Alert severity="error" sx={{ m: 2, flexShrink: 0 }}>
-          {error}
-        </Alert>
-      )}
-      {(usingMockData || info) && (
-        <Alert severity={usingMockData ? 'info' : 'info'} sx={{ m: 2, flexShrink: 0 }}>
-          {usingMockData ? 'Demo data active: serving sample FRA areas locally.' : info}
-        </Alert>
-      )}
 
       {/* Main Content Area */}
       <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* Left Control Panel */}
-        {showControls && (
-          <Card sx={{ 
-            width: 350, 
-            m: 2, 
-            height: 'fit-content',
-            maxHeight: 'calc(100vh - 200px)',
-            overflow: 'auto',
-            flexShrink: 0
-          }}>
-            <CardContent>
+        {/* Right-side Controls Drawer */}
+        <Drawer anchor="right" open={showControls} onClose={() => setShowControls(false)}>
+          <Box sx={{ width: 360, maxWidth: '80vw', p: 2 }} role="presentation" onKeyDown={(e) => { if (e.key === 'Escape') setShowControls(false); }}>
+            <CardContent sx={{ p: 0 }}>
               <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Layers />
                 Map Controls
@@ -1178,11 +1186,11 @@ const FRAAtlas: React.FC = () => {
                 )}
               </Box>
             </CardContent>
-          </Card>
-        )}
+          </Box>
+        </Drawer>
 
         {/* Map Container */}
-        <Box sx={{ flex: 1, position: 'relative', m: showControls ? 2 : 0, ml: showControls ? 0 : 2 }}>
+        <Box sx={{ flex: 1, position: 'relative', m: 0 }}>
           <Box 
             ref={containerRef} 
             sx={{ 
@@ -1214,7 +1222,12 @@ const FRAAtlas: React.FC = () => {
           </Box>
 
           {/* Floating Action Buttons */}
-          <Box sx={{ position: 'absolute', top: 16, right: 16, display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Box sx={{ position: 'absolute', top: 16, right: showControls ? 376 : 16, display: 'flex', flexDirection: 'column', gap: 1, zIndex: 1400, transition: 'right 200ms' }}>
+            <Tooltip title="Map Controls">
+              <Fab size="medium" color="primary" onClick={() => setShowControls(true)}>
+                <Layers />
+              </Fab>
+            </Tooltip>
             <Tooltip title="Go to my location">
               <Fab size="small" color="default" onClick={() => locateMe(false)}>
                 <MyLocation />
@@ -1370,7 +1383,7 @@ const FRAAtlas: React.FC = () => {
       <Paper sx={{ 
         position: 'absolute', 
         bottom: 16, 
-        left: showControls ? 382 : 16, 
+        left: 16, 
         p: 2, 
         display: 'flex', 
         gap: 3,
