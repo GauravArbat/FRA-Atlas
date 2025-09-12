@@ -7,18 +7,21 @@
   NODE_VERSION = "18"
   REACT_APP_API_URL = "https://fra-atlas-backend-ig8n.onrender.com"
 
-# Build settings
+# Ensure proper build process
 [build.processing]
   skip_processing = false
 
+# CSS optimization
 [build.processing.css]
   bundle = true
   minify = true
 
+# JavaScript optimization  
 [build.processing.js]
   bundle = true
   minify = true
 
+# HTML optimization
 [build.processing.html]
   pretty_urls = true
 
