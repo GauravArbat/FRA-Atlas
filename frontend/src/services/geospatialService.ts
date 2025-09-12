@@ -36,48 +36,45 @@ export interface GeospatialAnalysis {
   }>;
 }
 
-// Sample geospatial data for Maharashtra districts
-const MAHARASHTRA_DISTRICTS = {
-  'Pune': { lat: 18.5204, lng: 73.8567, bounds: [[73.5, 18.2], [74.2, 18.8]] },
-  'Nashik': { lat: 19.9975, lng: 73.7898, bounds: [[73.4, 19.7], [74.1, 20.3]] },
-  'Nagpur': { lat: 21.1458, lng: 79.0882, bounds: [[78.8, 20.9], [79.4, 21.4]] },
-  'Aurangabad': { lat: 19.8762, lng: 75.3433, bounds: [[75.1, 19.6], [75.6, 20.1]] },
-  'Kolhapur': { lat: 16.7050, lng: 74.2433, bounds: [[74.0, 16.4], [74.5, 17.0]] },
-  'Sangli': { lat: 16.8524, lng: 74.5815, bounds: [[74.3, 16.6], [74.9, 17.1]] },
-  'Satara': { lat: 17.6805, lng: 74.0183, bounds: [[73.7, 17.4], [74.3, 18.0]] },
-  'Solapur': { lat: 17.6598, lng: 75.9064, bounds: [[75.6, 17.3], [76.2, 18.0]] },
-  'Ahmednagar': { lat: 19.0952, lng: 74.7496, bounds: [[74.4, 18.8], [75.1, 19.4]] },
-  'Jalgaon': { lat: 21.0077, lng: 75.5626, bounds: [[75.2, 20.7], [75.9, 21.3]] },
-  'Dhule': { lat: 20.9028, lng: 74.7774, bounds: [[74.5, 20.6], [75.1, 21.2]] },
-  'Nandurbar': { lat: 21.3667, lng: 74.2400, bounds: [[74.0, 21.1], [74.5, 21.6]] },
-  'Thane': { lat: 19.2183, lng: 72.9781, bounds: [[72.7, 19.0], [73.3, 19.4]] },
-  'Mumbai': { lat: 19.0760, lng: 72.8777, bounds: [[72.7, 18.9], [73.0, 19.3]] },
-  'Raigad': { lat: 18.2500, lng: 73.0000, bounds: [[72.8, 18.0], [73.2, 18.5]] },
-  'Ratnagiri': { lat: 16.9944, lng: 73.3000, bounds: [[73.0, 16.7], [73.6, 17.3]] },
-  'Sindhudurg': { lat: 16.1667, lng: 73.5000, bounds: [[73.2, 15.9], [73.8, 16.4]] },
-  'Osmanabad': { lat: 18.1667, lng: 76.0500, bounds: [[75.8, 17.9], [76.3, 18.4]] },
-  'Latur': { lat: 18.4000, lng: 76.5833, bounds: [[76.3, 18.1], [76.9, 18.7]] },
-  'Beed': { lat: 18.9833, lng: 75.7667, bounds: [[75.5, 18.7], [76.0, 19.3]] },
-  'Jalna': { lat: 19.8333, lng: 75.8833, bounds: [[75.6, 19.6], [76.2, 20.1]] },
-  'Parbhani': { lat: 19.2500, lng: 76.7833, bounds: [[76.5, 19.0], [77.1, 19.5]] },
-  'Hingoli': { lat: 19.7167, lng: 77.1500, bounds: [[76.9, 19.4], [77.4, 20.0]] },
-  'Nanded': { lat: 19.1500, lng: 77.3167, bounds: [[77.0, 18.9], [77.6, 19.4]] },
-  'Washim': { lat: 20.1000, lng: 77.1333, bounds: [[76.9, 19.8], [77.4, 20.4]] },
-  'Yavatmal': { lat: 20.4000, lng: 78.1333, bounds: [[77.9, 20.1], [78.4, 20.7]] },
-  'Amravati': { lat: 20.9333, lng: 77.7500, bounds: [[77.5, 20.6], [78.0, 21.3]] },
-  'Wardha': { lat: 20.7500, lng: 78.6167, bounds: [[78.3, 20.4], [78.9, 21.1]] },
-  'Chandrapur': { lat: 19.9500, lng: 79.3000, bounds: [[79.0, 19.7], [79.6, 20.2]] },
-  'Gadchiroli': { lat: 19.8000, lng: 80.0000, bounds: [[79.7, 19.5], [80.3, 20.1]] },
-  'Bhandara': { lat: 21.1667, lng: 79.6500, bounds: [[79.3, 20.9], [80.0, 21.4]] },
-  'Gondia': { lat: 21.4500, lng: 80.2000, bounds: [[79.9, 21.2], [80.5, 21.7]] }
+// Target states districts for FRA implementation
+const TARGET_STATE_DISTRICTS = {
+  // Madhya Pradesh
+  'Balaghat': { lat: 21.8047, lng: 80.1847, bounds: [[79.8, 21.5], [80.5, 22.1]], state: 'Madhya Pradesh' },
+  'Mandla': { lat: 22.5986, lng: 80.3714, bounds: [[80.0, 22.3], [80.7, 22.9]], state: 'Madhya Pradesh' },
+  'Dindori': { lat: 22.9422, lng: 81.0844, bounds: [[80.8, 22.6], [81.4, 23.2]], state: 'Madhya Pradesh' },
+  'Seoni': { lat: 22.0853, lng: 79.5431, bounds: [[79.2, 21.8], [79.9, 22.4]], state: 'Madhya Pradesh' },
+  'Chhindwara': { lat: 22.0572, lng: 78.9389, bounds: [[78.6, 21.8], [79.3, 22.3]], state: 'Madhya Pradesh' },
+  'Betul': { lat: 21.9058, lng: 77.9019, bounds: [[77.6, 21.6], [78.2, 22.2]], state: 'Madhya Pradesh' },
+  
+  // Tripura
+  'West Tripura': { lat: 23.8315, lng: 91.2868, bounds: [[91.0, 23.6], [91.6, 24.1]], state: 'Tripura' },
+  'South Tripura': { lat: 23.1634, lng: 91.4346, bounds: [[91.1, 22.9], [91.8, 23.4]], state: 'Tripura' },
+  'Dhalai': { lat: 23.8372, lng: 91.8624, bounds: [[91.5, 23.5], [92.2, 24.1]], state: 'Tripura' },
+  'North Tripura': { lat: 24.1258, lng: 92.1686, bounds: [[91.8, 23.8], [92.5, 24.4]], state: 'Tripura' },
+  
+  // Odisha
+  'Mayurbhanj': { lat: 21.9287, lng: 86.7350, bounds: [[86.4, 21.6], [87.1, 22.3]], state: 'Odisha' },
+  'Keonjhar': { lat: 21.6297, lng: 85.5828, bounds: [[85.2, 21.3], [85.9, 21.9]], state: 'Odisha' },
+  'Sundargarh': { lat: 22.1236, lng: 84.0186, bounds: [[83.7, 21.8], [84.4, 22.4]], state: 'Odisha' },
+  'Kandhamal': { lat: 20.2333, lng: 84.1167, bounds: [[83.8, 19.9], [84.5, 20.6]], state: 'Odisha' },
+  'Rayagada': { lat: 19.1677, lng: 83.4158, bounds: [[83.1, 18.8], [83.8, 19.5]], state: 'Odisha' },
+  'Koraput': { lat: 18.8120, lng: 82.7108, bounds: [[82.4, 18.5], [83.1, 19.1]], state: 'Odisha' },
+  
+  // Telangana
+  'Adilabad': { lat: 19.6677, lng: 78.5311, bounds: [[78.2, 19.3], [78.9, 20.0]], state: 'Telangana' },
+  'Komaram Bheem': { lat: 19.1067, lng: 79.3089, bounds: [[79.0, 18.8], [79.6, 19.4]], state: 'Telangana' },
+  'Mancherial': { lat: 18.8708, lng: 79.4578, bounds: [[79.1, 18.6], [79.8, 19.2]], state: 'Telangana' },
+  'Bhadradri': { lat: 17.5500, lng: 80.8833, bounds: [[80.5, 17.2], [81.2, 17.9]], state: 'Telangana' },
+  'Khammam': { lat: 17.2473, lng: 80.1514, bounds: [[79.8, 16.9], [80.5, 17.6]], state: 'Telangana' },
+  'Mulugu': { lat: 18.1925, lng: 79.9167, bounds: [[79.6, 17.9], [80.3, 18.5]], state: 'Telangana' }
 };
 
 // Generate random coordinates within district bounds
 function generateRandomCoordinates(district: string): [number, number] {
-  const districtData = MAHARASHTRA_DISTRICTS[district as keyof typeof MAHARASHTRA_DISTRICTS];
+  const districtData = TARGET_STATE_DISTRICTS[district as keyof typeof TARGET_STATE_DISTRICTS];
   if (!districtData) {
-    // Default to Pune if district not found
-    return [73.8567, 18.5204];
+    // Default to Balaghat, MP if district not found
+    return [80.1847, 21.8047];
   }
 
   const [minLng, minLat] = districtData.bounds[0];
@@ -93,19 +90,18 @@ function generateRandomCoordinates(district: string): [number, number] {
 export function generateSampleFRAData(): FRAClaim[] {
   const sampleClaims: FRAClaim[] = [
     {
-      id: 'FRA/2024/001234',
-      applicantName: 'श्री रामदास किसान पाटिल',
-      village: 'Ambegaon',
-      district: 'Pune',
-      state: 'Maharashtra',
+      id: 'FRA/MP/2024/001234',
+      applicantName: 'श्री रामसिंह गोंड',
+      village: 'Khairlanji',
+      district: 'Balaghat',
+      state: 'Madhya Pradesh',
       area: 2.5,
       status: 'granted',
-      coordinates: generateRandomCoordinates('Pune'),
-      pattaNumber: 'PATTA/MAH/2024/001234',
-      claimNumber: 'FRA/2024/001234',
-      caste: 'Scheduled Tribe (ST)',
+      coordinates: generateRandomCoordinates('Balaghat'),
+      pattaNumber: 'PATTA/MP/2024/001234',
+      claimNumber: 'FRA/MP/2024/001234',
+      caste: 'Gond (ST)',
       phoneNumber: '9876543210',
-      email: 'ramdas.patil@email.com',
       surveyNumber: '45/2',
       claimType: 'IFR',
       grantedDate: '2024-03-15',
@@ -113,34 +109,34 @@ export function generateSampleFRAData(): FRAClaim[] {
       extractedFrom: 'OCR Document Processing'
     },
     {
-      id: 'FRA/2024/001235',
-      applicantName: 'Smt. Sunita Devi',
-      village: 'Khed',
-      district: 'Pune',
-      state: 'Maharashtra',
+      id: 'FRA/TR/2024/001235',
+      applicantName: 'Smt. Kokborok Debbarma',
+      village: 'Gandacherra',
+      district: 'Dhalai',
+      state: 'Tripura',
       area: 1.8,
       status: 'pending',
-      coordinates: generateRandomCoordinates('Pune'),
-      pattaNumber: 'PATTA/MAH/2024/001235',
-      claimNumber: 'FRA/2024/001235',
-      caste: 'Scheduled Tribe (ST)',
+      coordinates: generateRandomCoordinates('Dhalai'),
+      pattaNumber: 'PATTA/TR/2024/001235',
+      claimNumber: 'FRA/TR/2024/001235',
+      caste: 'Tripuri (ST)',
       phoneNumber: '9876543211',
       surveyNumber: '46/1',
       claimType: 'IFR',
       extractedFrom: 'OCR Document Processing'
     },
     {
-      id: 'FRA/2024/001236',
-      applicantName: 'Shri Kisan Patil',
-      village: 'Junnar',
-      district: 'Pune',
-      state: 'Maharashtra',
+      id: 'FRA/OD/2024/001236',
+      applicantName: 'Shri Arjun Santal',
+      village: 'Baripada',
+      district: 'Mayurbhanj',
+      state: 'Odisha',
       area: 3.2,
       status: 'granted',
-      coordinates: generateRandomCoordinates('Pune'),
-      pattaNumber: 'PATTA/MAH/2024/001236',
-      claimNumber: 'FRA/2024/001236',
-      caste: 'Scheduled Tribe (ST)',
+      coordinates: generateRandomCoordinates('Mayurbhanj'),
+      pattaNumber: 'PATTA/OD/2024/001236',
+      claimNumber: 'FRA/OD/2024/001236',
+      caste: 'Santal (ST)',
       phoneNumber: '9876543212',
       surveyNumber: '47/3',
       claimType: 'IFR',
@@ -148,47 +144,47 @@ export function generateSampleFRAData(): FRAClaim[] {
       extractedFrom: 'OCR Document Processing'
     },
     {
-      id: 'FRA/2024/001237',
-      applicantName: 'Gram Sabha Ambegaon',
-      village: 'Ambegaon',
-      district: 'Pune',
-      state: 'Maharashtra',
+      id: 'FRA/TG/2024/001237',
+      applicantName: 'Gram Sabha Utnoor',
+      village: 'Utnoor',
+      district: 'Adilabad',
+      state: 'Telangana',
       area: 15.0,
       status: 'granted',
-      coordinates: generateRandomCoordinates('Pune'),
-      pattaNumber: 'PATTA/MAH/2024/001237',
-      claimNumber: 'FRA/2024/001237',
+      coordinates: generateRandomCoordinates('Adilabad'),
+      pattaNumber: 'PATTA/TG/2024/001237',
+      claimNumber: 'FRA/TG/2024/001237',
       claimType: 'CFR',
       grantedDate: '2024-02-28',
       extractedFrom: 'OCR Document Processing'
     },
     {
-      id: 'FRA/2024/001238',
-      applicantName: 'Shri Rajesh Kumar',
-      village: 'Nashik',
-      district: 'Nashik',
-      state: 'Maharashtra',
+      id: 'FRA/MP/2024/001238',
+      applicantName: 'Shri Bhil Singh',
+      village: 'Mandla',
+      district: 'Mandla',
+      state: 'Madhya Pradesh',
       area: 2.1,
       status: 'rejected',
-      coordinates: generateRandomCoordinates('Nashik'),
-      claimNumber: 'FRA/2024/001238',
-      caste: 'Scheduled Tribe (ST)',
+      coordinates: generateRandomCoordinates('Mandla'),
+      claimNumber: 'FRA/MP/2024/001238',
+      caste: 'Bhil (ST)',
       phoneNumber: '9876543213',
       surveyNumber: '12/5',
       claimType: 'IFR',
       extractedFrom: 'OCR Document Processing'
     },
     {
-      id: 'FRA/2024/001239',
-      applicantName: 'Smt. Meera Bai',
-      village: 'Nagpur',
-      district: 'Nagpur',
-      state: 'Maharashtra',
+      id: 'FRA/OD/2024/001239',
+      applicantName: 'Smt. Kondh Devi',
+      village: 'Phulbani',
+      district: 'Kandhamal',
+      state: 'Odisha',
       area: 1.5,
       status: 'pending',
-      coordinates: generateRandomCoordinates('Nagpur'),
-      claimNumber: 'FRA/2024/001239',
-      caste: 'Scheduled Tribe (ST)',
+      coordinates: generateRandomCoordinates('Kandhamal'),
+      claimNumber: 'FRA/OD/2024/001239',
+      caste: 'Kondh (ST)',
       phoneNumber: '9876543214',
       surveyNumber: '23/7',
       claimType: 'IFR',

@@ -8,16 +8,16 @@ router.get('/claims', async (req, res) => {
     const claims = [
       {
         id: '1',
-        claimNumber: 'FRA/2024/001',
+        claimNumber: 'FRA/MP/2024/001',
         claimType: 'IFR',
         status: 'approved',
-        applicantName: 'Rajesh Kumar',
-        village: 'Village A',
-        block: 'Block A',
-        district: 'District A',
-        state: 'Maharashtra',
+        applicantName: 'Ramsingh Gond',
+        village: 'Khairlanji',
+        block: 'Balaghat',
+        district: 'Balaghat',
+        state: 'Madhya Pradesh',
         area: 2.5,
-        coordinates: { latitude: 19.0760, longitude: 73.8567 },
+        coordinates: { latitude: 21.8047, longitude: 80.1847 },
         submittedDate: '2024-01-15',
         lastUpdated: '2024-01-20',
         documents: ['doc1.pdf', 'doc2.pdf'],
@@ -25,20 +25,54 @@ router.get('/claims', async (req, res) => {
       },
       {
         id: '2',
-        claimNumber: 'FRA/2024/002',
+        claimNumber: 'FRA/TR/2024/002',
         claimType: 'CR',
         status: 'pending',
-        applicantName: 'Sita Devi',
-        village: 'Village B',
-        block: 'Block B',
-        district: 'District B',
-        state: 'Maharashtra',
+        applicantName: 'Kokborok Debbarma',
+        village: 'Gandacherra',
+        block: 'Dhalai',
+        district: 'Dhalai',
+        state: 'Tripura',
         area: 1.8,
-        coordinates: { latitude: 19.0760, longitude: 73.8567 },
+        coordinates: { latitude: 23.8372, longitude: 91.8624 },
         submittedDate: '2024-01-20',
         lastUpdated: '2024-01-25',
         documents: ['doc3.pdf'],
         verificationStatus: 'pending'
+      },
+      {
+        id: '3',
+        claimNumber: 'FRA/OD/2024/003',
+        claimType: 'IFR',
+        status: 'approved',
+        applicantName: 'Arjun Santal',
+        village: 'Baripada',
+        block: 'Mayurbhanj',
+        district: 'Mayurbhanj',
+        state: 'Odisha',
+        area: 3.2,
+        coordinates: { latitude: 21.9287, longitude: 86.7350 },
+        submittedDate: '2024-01-10',
+        lastUpdated: '2024-01-18',
+        documents: ['doc4.pdf', 'doc5.pdf'],
+        verificationStatus: 'verified'
+      },
+      {
+        id: '4',
+        claimNumber: 'FRA/TG/2024/004',
+        claimType: 'CFR',
+        status: 'approved',
+        applicantName: 'Gram Sabha Utnoor',
+        village: 'Utnoor',
+        block: 'Adilabad',
+        district: 'Adilabad',
+        state: 'Telangana',
+        area: 15.0,
+        coordinates: { latitude: 19.6677, longitude: 78.5311 },
+        submittedDate: '2024-01-05',
+        lastUpdated: '2024-01-22',
+        documents: ['doc6.pdf'],
+        verificationStatus: 'verified'
       }
     ];
     
@@ -55,16 +89,16 @@ router.get('/claims/:id', async (req, res) => {
     // Mock data - in production this would query the database
     const claim = {
       id,
-      claimNumber: 'FRA/2024/001',
+      claimNumber: 'FRA/MP/2024/001',
       claimType: 'IFR',
       status: 'approved',
-      applicantName: 'Rajesh Kumar',
-      village: 'Village A',
-      block: 'Block A',
-      district: 'District A',
-      state: 'Maharashtra',
+      applicantName: 'Ramsingh Gond',
+      village: 'Khairlanji',
+      block: 'Balaghat',
+      district: 'Balaghat',
+      state: 'Madhya Pradesh',
       area: 2.5,
-      coordinates: { latitude: 19.0760, longitude: 73.8567 },
+      coordinates: { latitude: 21.8047, longitude: 80.1847 },
       submittedDate: '2024-01-15',
       lastUpdated: '2024-01-20',
       documents: ['doc1.pdf', 'doc2.pdf'],
@@ -90,32 +124,64 @@ router.get('/atlas/geojson', async (req, res) => {
       features: [
         {
           type: 'Feature',
-          properties: { id: 'g1', status: 'granted', claimNumber: 'FRA/2024/001' },
+          properties: { id: 'g1', status: 'granted', claimNumber: 'FRA/MP/2024/001', state: 'Madhya Pradesh', district: 'Balaghat' },
           geometry: {
             type: 'Polygon',
             coordinates: [
               [
-                [73.85, 19.08],
-                [73.86, 19.08],
-                [73.86, 19.09],
-                [73.85, 19.09],
-                [73.85, 19.08]
+                [80.18, 21.80],
+                [80.19, 21.80],
+                [80.19, 21.81],
+                [80.18, 21.81],
+                [80.18, 21.80]
               ]
             ]
           }
         },
         {
           type: 'Feature',
-          properties: { id: 'p1', status: 'potential', claimNumber: 'FRA/2024/099' },
+          properties: { id: 'p1', status: 'potential', claimNumber: 'FRA/TR/2024/099', state: 'Tripura', district: 'Dhalai' },
           geometry: {
             type: 'Polygon',
             coordinates: [
               [
-                [73.855, 19.075],
-                [73.865, 19.075],
-                [73.865, 19.085],
-                [73.855, 19.085],
-                [73.855, 19.075]
+                [91.86, 23.83],
+                [91.87, 23.83],
+                [91.87, 23.84],
+                [91.86, 23.84],
+                [91.86, 23.83]
+              ]
+            ]
+          }
+        },
+        {
+          type: 'Feature',
+          properties: { id: 'g2', status: 'granted', claimNumber: 'FRA/OD/2024/002', state: 'Odisha', district: 'Mayurbhanj' },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [
+              [
+                [86.73, 21.92],
+                [86.74, 21.92],
+                [86.74, 21.93],
+                [86.73, 21.93],
+                [86.73, 21.92]
+              ]
+            ]
+          }
+        },
+        {
+          type: 'Feature',
+          properties: { id: 'g3', status: 'granted', claimNumber: 'FRA/TG/2024/003', state: 'Telangana', district: 'Adilabad' },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [
+              [
+                [78.53, 19.66],
+                [78.54, 19.66],
+                [78.54, 19.67],
+                [78.53, 19.67],
+                [78.53, 19.66]
               ]
             ]
           }
@@ -163,17 +229,18 @@ router.post('/atlas/validate', async (req, res) => {
 // Decision Support mock endpoints
 router.get('/dss/eligibility', async (req, res) => {
   try {
-    const { scheme = 'PMKSY', state = 'Maharashtra', district = 'Pune' } = req.query;
-    // Mock: 3 beneficiaries eligible for scheme
+    const { scheme = 'PMKSY', state = 'Madhya Pradesh', district = 'Balaghat' } = req.query;
+    // Mock: beneficiaries eligible for scheme from target states
     res.json({
       scheme,
       state,
       district,
-      totalBeneficiaries: 3,
+      totalBeneficiaries: 4,
       beneficiaries: [
-        { id: 'ben1', name: 'Rajesh Kumar', village: 'Village A', eligibilityScore: 0.86 },
-        { id: 'ben2', name: 'Sita Devi', village: 'Village B', eligibilityScore: 0.78 },
-        { id: 'ben3', name: 'A. Rahman', village: 'Village C', eligibilityScore: 0.72 }
+        { id: 'ben1', name: 'Ramsingh Gond', village: 'Khairlanji', eligibilityScore: 0.86, tribe: 'Gond' },
+        { id: 'ben2', name: 'Kokborok Debbarma', village: 'Gandacherra', eligibilityScore: 0.78, tribe: 'Tripuri' },
+        { id: 'ben3', name: 'Arjun Santal', village: 'Baripada', eligibilityScore: 0.82, tribe: 'Santal' },
+        { id: 'ben4', name: 'Bhil Singh', village: 'Utnoor', eligibilityScore: 0.75, tribe: 'Bhil' }
       ]
     });
   } catch (e) {
@@ -183,16 +250,17 @@ router.get('/dss/eligibility', async (req, res) => {
 
 router.get('/dss/prioritize', async (req, res) => {
   try {
-    const { intervention = 'borewell', state = 'Maharashtra', district = 'Pune' } = req.query;
-    // Mock prioritization using groundwater index (lower = higher priority)
+    const { intervention = 'borewell', state = 'Madhya Pradesh', district = 'Balaghat' } = req.query;
+    // Mock prioritization for target states
     res.json({
       intervention,
       state,
       district,
       recommendations: [
-        { block: 'Block A', priorityScore: 0.91, groundwaterIndex: 0.12 },
-        { block: 'Block B', priorityScore: 0.76, groundwaterIndex: 0.22 },
-        { block: 'Block C', priorityScore: 0.58, groundwaterIndex: 0.35 }
+        { block: 'Balaghat', priorityScore: 0.91, groundwaterIndex: 0.12, tribalPopulation: 85 },
+        { block: 'Dhalai', priorityScore: 0.88, groundwaterIndex: 0.15, tribalPopulation: 92 },
+        { block: 'Mayurbhanj', priorityScore: 0.82, groundwaterIndex: 0.18, tribalPopulation: 78 },
+        { block: 'Adilabad', priorityScore: 0.76, groundwaterIndex: 0.22, tribalPopulation: 68 }
       ]
     });
   } catch (e) {
@@ -202,13 +270,14 @@ router.get('/dss/prioritize', async (req, res) => {
 
 router.get('/dss/metrics', async (req, res) => {
   try {
-    // Mock policy dashboard metrics
+    // Mock policy dashboard metrics for target states
     res.json({
       national: { beneficiaries: 125000, coveragePct: 62, fundedProjects: 8300 },
       states: [
-        { name: 'Maharashtra', beneficiaries: 24000, coveragePct: 68 },
-        { name: 'Chhattisgarh', beneficiaries: 13000, coveragePct: 59 },
-        { name: 'Odisha', beneficiaries: 15000, coveragePct: 64 }
+        { name: 'Madhya Pradesh', beneficiaries: 35000, coveragePct: 72, tribalPopulation: 21.1 },
+        { name: 'Odisha', beneficiaries: 28000, coveragePct: 68, tribalPopulation: 22.8 },
+        { name: 'Telangana', beneficiaries: 18000, coveragePct: 65, tribalPopulation: 9.3 },
+        { name: 'Tripura', beneficiaries: 12000, coveragePct: 78, tribalPopulation: 31.8 }
       ]
     });
   } catch (e) {
@@ -233,9 +302,10 @@ router.get('/reports/summary', async (req, res) => {
         { type: 'Potential', value: 38 }
       ],
       topDistricts: [
-        { name: 'Pune', beneficiaries: 4200 },
-        { name: 'Gadchiroli', beneficiaries: 2800 },
-        { name: 'Dantewada', beneficiaries: 2300 }
+        { name: 'Balaghat (MP)', beneficiaries: 4200 },
+        { name: 'Mayurbhanj (OD)', beneficiaries: 3800 },
+        { name: 'Adilabad (TG)', beneficiaries: 2800 },
+        { name: 'Dhalai (TR)', beneficiaries: 2300 }
       ]
     });
   } catch (e) {
@@ -247,11 +317,11 @@ router.get('/reports/summary', async (req, res) => {
 router.get('/atlas/filters', async (req, res) => {
   try {
     res.json({
-      states: ['Maharashtra', 'Chhattisgarh'],
-      districts: ['Pune', 'Gadchiroli', 'Dantewada'],
-      blocks: ['Block A', 'Block B', 'Block C'],
-      villages: ['Village A', 'Village B', 'Village C'],
-      tribal_groups: ['Gond', 'Bhils', 'Santhal']
+      states: ['Madhya Pradesh', 'Tripura', 'Odisha', 'Telangana'],
+      districts: ['Balaghat', 'Mandla', 'Dhalai', 'West Tripura', 'Mayurbhanj', 'Kandhamal', 'Adilabad', 'Khammam'],
+      blocks: ['Balaghat', 'Mandla', 'Dhalai', 'Gandacherra', 'Mayurbhanj', 'Phulbani', 'Adilabad', 'Utnoor'],
+      villages: ['Khairlanji', 'Mandla', 'Gandacherra', 'Baripada', 'Phulbani', 'Utnoor'],
+      tribal_groups: ['Gond', 'Bhil', 'Tripuri', 'Kokborok', 'Santal', 'Kondh', 'Lambada']
     });
   } catch (e) {
     res.status(500).json({ error: 'Failed to load filters' });

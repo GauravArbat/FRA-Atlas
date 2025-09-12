@@ -2,21 +2,12 @@ const express = require('express');
 const multer = require('multer');
 const { logger } = require('../utils/logger');
 const path = require('path');
-const fs = require('fs').promises;
 
 const router = express.Router();
 const { addLayer } = require('../utils/layersStore');
 
 // Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/pdf-processor/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+const storage = multer.memoryStorage(); // Use memory storage to avoid file system issues
 
 const upload = multer({ 
   storage: storage,
@@ -32,49 +23,44 @@ const upload = multer({
   }
 });
 
-// Ensure upload directory exists
-const ensureUploadDir = async () => {
-  try {
-    await fs.mkdir('uploads/pdf-processor/', { recursive: true });
-  } catch (error) {
-    logger.error('Error creating upload directory:', error);
-  }
-};
+
 
 // Mock PDF text extraction (in real implementation, use pdf-parse or similar)
-const extractTextFromPDF = async (filePath) => {
+const extractTextFromPDF = async (buffer) => {
   // This is a mock implementation
   // In production, you would use a library like pdf-parse
   const mockText = `
     FOREST RIGHTS ACT CLAIM FORM
     
-    Claimant Name: Rajesh Kumar Singh
-    Father's Name: Late Ram Singh
-    Address: Village Greenpur, Tehsil Madanpur, District Shivnagar
-    Village: Greenpur
-    Gram Panchayat: Greenpur Panchayat
-    Tehsil: Madanpur
-    District: Shivnagar
+    Claimant Name: Ramsingh Gond
+    Father's Name: Late Bhimsingh Gond
+    Address: Village Khairlanji, Tehsil Balaghat, District Balaghat
+    Village: Khairlanji
+    Gram Panchayat: Khairlanji Panchayat
+    Tehsil: Balaghat
+    District: Balaghat
     State: Madhya Pradesh
+    Tribe: Gond (Scheduled Tribe)
     
     Land Details:
     Khasra Number: 45/2
-    Area: 1.25 hectares
-    Coordinates: 78.1234, 23.5678
-    Additional Coordinates: 78.1245, 23.5689, 78.1256, 23.5700
+    Area: 2.25 hectares
+    Coordinates: 80.1847, 21.8047
+    Additional Coordinates: 80.1857, 21.8057, 80.1867, 21.8067
     
     Nature of Claim:
-    - Individual Forest Rights
+    - Individual Forest Rights (IFR)
     - Land for habitation: 0.25 hectares
-    - Land for cultivation: 1.0 hectares
+    - Land for cultivation: 2.0 hectares
     
     Evidence Submitted:
     - Old revenue records
     - Gram Sabha resolution
     - Elders testimony
+    - Forest dwelling certificate
     
     Date of Application: 15/01/2024
-    Signature: Rajesh Kumar Singh
+    Signature: Ramsingh Gond
   `;
   
   return mockText;
@@ -215,8 +201,6 @@ const createGeoJSONFromCoordinates = (coordinates, personalInfo) => {
 // Process PDF and extract data
 router.post('/process-pdf', upload.single('pdf'), async (req, res) => {
   try {
-    await ensureUploadDir();
-    
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -229,8 +213,8 @@ router.post('/process-pdf', upload.single('pdf'), async (req, res) => {
       size: req.file.size
     });
     
-    // Extract text from PDF
-    const extractedText = await extractTextFromPDF(req.file.path);
+    // Extract text from PDF buffer
+    const extractedText = await extractTextFromPDF(req.file.buffer);
     
     // Extract personal information
     const personalInfo = extractPersonalInfo(extractedText);
@@ -247,13 +231,6 @@ router.post('/process-pdf', upload.single('pdf'), async (req, res) => {
       name: `Extracted Data - ${personalInfo.name || 'Unknown'}`,
       features: [geoJSONFeature]
     };
-    
-    // Clean up uploaded file
-    try {
-      await fs.unlink(req.file.path);
-    } catch (error) {
-      logger.warn('Could not delete uploaded file:', error);
-    }
     
     logger.info('PDF processing completed', {
       extractedInfo: Object.keys(personalInfo).length,
@@ -275,18 +252,9 @@ router.post('/process-pdf', upload.single('pdf'), async (req, res) => {
   } catch (error) {
     logger.error('Error processing PDF:', error);
     
-    // Clean up uploaded file on error
-    if (req.file) {
-      try {
-        await fs.unlink(req.file.path);
-      } catch (cleanupError) {
-        logger.warn('Could not delete uploaded file after error:', cleanupError);
-      }
-    }
-    
     res.status(500).json({
       success: false,
-      error: 'Failed to process PDF'
+      error: 'Failed to process PDF: ' + error.message
     });
   }
 });

@@ -18,6 +18,7 @@ const nerRoutes = require('./routes/ner');
 const gisPlotRoutes = require('./routes/gis-plot');
 const geojsonPlotRoutes = require('./routes/geojson-plot');
 const pdfProcessorRoutes = require('./routes/pdf-processor');
+const bhunakshaRoutes = require('./routes/bhunaksha');
 
 const { errorHandler } = require('./middleware/errorHandler');
 const { authenticateToken, authorize } = require('./middleware/auth');
@@ -71,6 +72,7 @@ app.use('/api/ner', nerRoutes); // Named Entity Recognition
 app.use('/api/gis-plot', gisPlotRoutes); // Digital GIS Plot functionality
 app.use('/api/geojson-plot', geojsonPlotRoutes); // GeoJSON plotting functionality
 app.use('/api/pdf-processor', pdfProcessorRoutes); // PDF processing and data extraction
+app.use('/api/bhunaksha', bhunakshaRoutes); // Bhunaksha-style land records
 
 // Error handling middleware
 app.use(errorHandler);

@@ -72,7 +72,10 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import 'leaflet-draw';
+import '../styles/mapPopup.css';
 import { geojsonPlotAPI } from '../services/api';
+import BhunakshaSearch from '../components/BhunakshaSearch';
+import { LandRecord, getAllLandRecords } from '../services/bhunakshaService';
 
 // Fix Leaflet default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -136,14 +139,20 @@ const FRAAtlas: React.FC = () => {
   const [showLayersDialog, setShowLayersDialog] = useState(false);
   const [uploadedLayers, setUploadedLayers] = useState<any[]>([]);
   const uploadedLayerBoundsRef = useRef<L.LatLngBounds | null>(null);
+  const [showBhunakshaSearch, setShowBhunakshaSearch] = useState(false);
+  const bhunakshaLayerRef = useRef<L.LayerGroup | null>(null);
+  const allPlotsLayerRef = useRef<L.LayerGroup | null>(null);
+  const [allPlotsVisible, setAllPlotsVisible] = useState(false);
+  const persistentLayerRef = useRef<L.LayerGroup | null>(null);
+  const [persistentLayerInfo, setPersistentLayerInfo] = useState<any>(null);
 
   // Initialize map
   useEffect(() => {
     if (containerRef.current && !mapRef.current) {
-      // Initialize map with satellite imagery
+      // Initialize map with satellite imagery - centered on central India
       const map = L.map(containerRef.current, {
-        center: [19.08, 73.86], // Mumbai coordinates
-        zoom: 11,
+        center: [21.5, 82.5], // Central India coordinates
+        zoom: 6,
         zoomControl: false,
         attributionControl: true
       });
@@ -241,18 +250,26 @@ const FRAAtlas: React.FC = () => {
       // Load FRA data
       loadFRAData();
 
-      // If a focus payload exists, fit to it
+      // Handle persistent layer from Data Management
       try {
         const raw = sessionStorage.getItem('mapFocusGeoJSON');
         if (raw) {
-          const focus = JSON.parse(raw);
-          sessionStorage.removeItem('mapFocusGeoJSON');
-          const gj = L.geoJSON(focus);
-          const b = (gj as any).getBounds?.();
-          if (b && b.isValid()) {
-            map.fitBounds(b, { padding: [20, 20] });
+          const layerData = JSON.parse(raw);
+          
+          if (layerData.persistent) {
+            // Don't remove from session storage for persistent layers
+            setPersistentLayerInfo(layerData.personalInfo || {});
+            addPersistentLayer(layerData.geoJSON, layerData.personalInfo || {});
+          } else {
+            // Legacy behavior for non-persistent layers
+            sessionStorage.removeItem('mapFocusGeoJSON');
+            const gj = L.geoJSON(layerData.geoJSON || layerData);
+            const b = (gj as any).getBounds?.();
+            if (b && b.isValid()) {
+              map.fitBounds(b, { padding: [20, 20] });
+            }
+            gj.remove();
           }
-          gj.remove();
         }
       } catch {}
     }
@@ -273,27 +290,51 @@ const FRAAtlas: React.FC = () => {
       const mockData: FRAData[] = [
         {
           id: '1',
-          claimantName: 'Ramesh Kumar',
+          claimantName: 'Ramsingh Gond',
           area: 2.5,
           status: 'granted',
-          coordinates: [[19.0760, 73.8777], [19.0770, 73.8777], [19.0770, 73.8787], [19.0760, 73.8787]],
-          village: 'Andheri',
-          district: 'Mumbai',
-          state: 'Maharashtra',
-          dateSubmitted: '2023-01-15',
-          surveyNumber: 'MH001'
+          coordinates: [[21.8047, 80.1847], [21.8057, 80.1847], [21.8057, 80.1857], [21.8047, 80.1857]],
+          village: 'Khairlanji',
+          district: 'Balaghat',
+          state: 'Madhya Pradesh',
+          dateSubmitted: '2024-01-15',
+          surveyNumber: 'MP001'
         },
         {
           id: '2',
-          claimantName: 'Sunita Devi',
+          claimantName: 'Kokborok Debbarma',
           area: 1.8,
           status: 'potential',
-          coordinates: [[19.0800, 73.8800], [19.0810, 73.8800], [19.0810, 73.8810], [19.0800, 73.8810]],
-          village: 'Bandra',
-          district: 'Mumbai',
-          state: 'Maharashtra',
-          dateSubmitted: '2023-02-20',
-          surveyNumber: 'MH002'
+          coordinates: [[23.8372, 91.8624], [23.8382, 91.8624], [23.8382, 91.8634], [23.8372, 91.8634]],
+          village: 'Gandacherra',
+          district: 'Dhalai',
+          state: 'Tripura',
+          dateSubmitted: '2024-01-20',
+          surveyNumber: 'TR002'
+        },
+        {
+          id: '3',
+          claimantName: 'Arjun Santal',
+          area: 3.2,
+          status: 'granted',
+          coordinates: [[21.9287, 86.7350], [21.9297, 86.7350], [21.9297, 86.7360], [21.9287, 86.7360]],
+          village: 'Baripada',
+          district: 'Mayurbhanj',
+          state: 'Odisha',
+          dateSubmitted: '2024-01-10',
+          surveyNumber: 'OD003'
+        },
+        {
+          id: '4',
+          claimantName: 'Gram Sabha Utnoor',
+          area: 15.0,
+          status: 'granted',
+          coordinates: [[19.6677, 78.5311], [19.6687, 78.5311], [19.6687, 78.5321], [19.6677, 78.5321]],
+          village: 'Utnoor',
+          district: 'Adilabad',
+          state: 'Telangana',
+          dateSubmitted: '2024-01-05',
+          surveyNumber: 'TG004'
         }
       ];
       
@@ -336,10 +377,10 @@ const FRAAtlas: React.FC = () => {
             // Hover: show info tooltip and highlight
             lyr.on('mouseover', (e: any) => {
               const props = (e?.target?.feature && e.target.feature.properties) || {};
-              const html = getPopupHtml(props, layer.name);
+              const html = getPopupHtml(props, layer.name, persistentLayerInfo);
               (lyr as any).bindTooltip(html, { sticky: true, direction: 'top', opacity: 0.95 }).openTooltip();
               try {
-                (lyr as any).setStyle && (lyr as any).setStyle({ weight: (style.strokeWidth || 2) + 1, fillOpacity: Math.max(0.1, (style.fillOpacity ?? 0.6)) });
+                (lyr as any).setStyle && (lyr as any).setStyle({ weight: (style.strokeWidth || 2) + 2, fillOpacity: Math.min(0.8, (style.fillOpacity ?? 0.6) + 0.2) });
                 (lyr as any).bringToFront && (lyr as any).bringToFront();
               } catch {}
             });
@@ -356,7 +397,7 @@ const FRAAtlas: React.FC = () => {
               } catch {}
             });
 
-            // Click: focus and open popup with details
+            // Click: focus and open detailed popup
             lyr.on('click', (e: any) => {
               try {
                 const b = (lyr as any).getBounds?.();
@@ -364,13 +405,13 @@ const FRAAtlas: React.FC = () => {
                   mapRef.current.fitBounds(b, { padding: [16, 16] });
                 }
                 const props = (e?.target?.feature && e.target.feature.properties) || {};
-                const html = getPopupHtml(props, layer.name);
-                (lyr as any).bindPopup(html).openPopup();
+                const html = getPopupHtml(props, layer.name, persistentLayerInfo);
+                (lyr as any).bindPopup(html, { maxWidth: 400, className: 'custom-popup' }).openPopup();
               } catch {}
             });
           }
         });
-        gj.bindPopup(getPopupHtml({}, layer.name));
+        gj.bindPopup(getPopupHtml({}, layer.name, persistentLayerInfo));
         gj.addTo(uploadedLayersRef.current as L.LayerGroup);
         try {
           const b = (gj as any).getBounds?.();
@@ -393,6 +434,290 @@ const FRAAtlas: React.FC = () => {
     }
   };
 
+  // Add persistent layer from Data Management
+  const addPersistentLayer = (geoJSON: any, personalInfo: any) => {
+    try {
+      if (!mapRef.current) return;
+      
+      // Remove existing persistent layer
+      if (persistentLayerRef.current) {
+        persistentLayerRef.current.remove();
+      }
+      
+      // Create new persistent layer group
+      persistentLayerRef.current = L.layerGroup().addTo(mapRef.current);
+      
+      const gj = L.geoJSON(geoJSON, {
+        style: {
+          color: '#ff4444',
+          weight: 3,
+          opacity: 1,
+          fillColor: '#ff6666',
+          fillOpacity: 0.4,
+        },
+        onEachFeature: (_feature, lyr) => {
+          // Enhanced hover with owner details
+          lyr.on('mouseover', (e: any) => {
+            const props = (e?.target?.feature && e.target.feature.properties) || {};
+            const html = getPopupHtml(props, 'Uploaded Plot', personalInfo);
+            (lyr as any).bindTooltip(html, { sticky: true, direction: 'top', opacity: 0.95 }).openTooltip();
+            try {
+              (lyr as any).setStyle && (lyr as any).setStyle({ weight: 5, fillOpacity: 0.6 });
+              (lyr as any).bringToFront && (lyr as any).bringToFront();
+            } catch {}
+          });
+          
+          lyr.on('mouseout', () => {
+            try {
+              (lyr as any).closeTooltip && (lyr as any).closeTooltip();
+              (lyr as any).setStyle && (lyr as any).setStyle({
+                color: '#ff4444',
+                weight: 3,
+                opacity: 1,
+                fillColor: '#ff6666',
+                fillOpacity: 0.4,
+              });
+            } catch {}
+          });
+
+          // Click: show detailed popup with all owner information
+          lyr.on('click', (e: any) => {
+            try {
+              const b = (lyr as any).getBounds?.();
+              if (b && b.isValid() && mapRef.current) {
+                mapRef.current.fitBounds(b, { padding: [16, 16] });
+              }
+              const props = (e?.target?.feature && e.target.feature.properties) || {};
+              const html = getPopupHtml(props, 'Uploaded Plot', personalInfo);
+              (lyr as any).bindPopup(html, { maxWidth: 400, className: 'custom-popup' }).openPopup();
+            } catch {}
+          });
+        }
+      });
+      
+      gj.addTo(persistentLayerRef.current);
+      
+      // Fit to bounds
+      try {
+        const bounds = (gj as any).getBounds();
+        if (bounds && bounds.isValid()) {
+          mapRef.current.fitBounds(bounds, { padding: [20, 20] });
+        }
+      } catch {}
+      
+      // Show info message
+      setInfo(`Persistent layer added: ${personalInfo?.name || 'Uploaded Plot'}. Layer will remain visible until manually closed.`);
+      
+    } catch (e) {
+      console.warn('Failed to add persistent layer:', e);
+    }
+  };
+
+  // Remove persistent layer
+  const removePersistentLayer = () => {
+    try {
+      if (persistentLayerRef.current) {
+        persistentLayerRef.current.remove();
+        persistentLayerRef.current = null;
+      }
+      setPersistentLayerInfo(null);
+      sessionStorage.removeItem('mapFocusGeoJSON');
+      setInfo('Persistent layer removed.');
+    } catch {}
+  };
+
+  // Handle Bhunaksha plot selection
+  const handleBhunakshaPlotSelect = (record: LandRecord) => {
+    try {
+      if (!mapRef.current) return;
+      
+      // Remove existing Bhunaksha layer
+      if (bhunakshaLayerRef.current) {
+        bhunakshaLayerRef.current.remove();
+      }
+      
+      // Create new Bhunaksha layer
+      bhunakshaLayerRef.current = L.layerGroup().addTo(mapRef.current);
+      
+      const gj = L.geoJSON(record.boundaries, {
+        style: {
+          color: record.fraStatus.includes('Granted') ? '#4caf50' : '#ff9800',
+          weight: 3,
+          opacity: 1,
+          fillColor: record.fraStatus.includes('Granted') ? '#66bb6a' : '#ffb74d',
+          fillOpacity: 0.4,
+        },
+        onEachFeature: (_feature, lyr) => {
+          const popupContent = getPlotPopupContent(record);
+          lyr.bindPopup(popupContent, { maxWidth: 400 });
+          
+          // Auto-open popup and fit bounds
+          lyr.openPopup();
+          const bounds = (lyr as any).getBounds();
+          if (bounds && bounds.isValid()) {
+            mapRef.current!.fitBounds(bounds, { padding: [20, 20] });
+          }
+        }
+      });
+      
+      gj.addTo(bhunakshaLayerRef.current);
+      setShowBhunakshaSearch(false);
+      setInfo(`Land record loaded: ${record.ownerName} - Khasra ${record.khasraNumber}`);
+      
+    } catch (e) {
+      console.warn('Failed to add Bhunaksha layer:', e);
+    }
+  };
+
+  // Generate plot popup content
+  const getPlotPopupContent = (record: LandRecord) => {
+    return `
+      <div style="min-width:300px;">
+        <h4 style="margin:0 0 12px 0;color:#1976d2;">🏠 Khasra: ${record.khasraNumber}</h4>
+        <div style="margin:8px 0;padding:8px;background:#f5f5f5;border-radius:4px;">
+          <h5 style="margin:0 0 8px 0;color:#2196f3;">📋 Owner Details</h5>
+          <table style="font-size:12px;width:100%;">
+            <tr><td style="color:#666;padding:2px 8px;">Name:</td><td style="padding:2px 8px;">${record.ownerName}</td></tr>
+            <tr><td style="color:#666;padding:2px 8px;">Father:</td><td style="padding:2px 8px;">${record.fatherName}</td></tr>
+            <tr><td style="color:#666;padding:2px 8px;">Village:</td><td style="padding:2px 8px;">${record.village}</td></tr>
+            <tr><td style="color:#666;padding:2px 8px;">District:</td><td style="padding:2px 8px;">${record.district}</td></tr>
+          </table>
+        </div>
+        <div style="margin:8px 0;">
+          <h5 style="margin:0 0 8px 0;color:#666;">📍 Land Details</h5>
+          <table style="font-size:12px;width:100%;">
+            <tr><td style="color:#666;padding:2px 8px;">Survey No:</td><td style="padding:2px 8px;">${record.surveyNumber}</td></tr>
+            <tr><td style="color:#666;padding:2px 8px;">Area:</td><td style="padding:2px 8px;">${record.area}</td></tr>
+            <tr><td style="color:#666;padding:2px 8px;">Classification:</td><td style="padding:2px 8px;">${record.classification}</td></tr>
+            <tr><td style="color:#666;padding:2px 8px;">FRA Status:</td><td style="padding:2px 8px;color:${record.fraStatus.includes('Granted') ? '#4caf50' : '#ff9800'};font-weight:600;">${record.fraStatus}</td></tr>
+          </table>
+        </div>
+      </div>
+    `;
+  };
+
+  // Toggle All Plots layer
+  const toggleAllPlotsLayer = async () => {
+    try {
+      if (!mapRef.current) return;
+      
+      if (allPlotsVisible) {
+        // Remove all plots layer
+        if (allPlotsLayerRef.current) {
+          allPlotsLayerRef.current.remove();
+          allPlotsLayerRef.current = null;
+        }
+        setAllPlotsVisible(false);
+        setInfo('All plots layer hidden.');
+      } else {
+        // Load and display all plots
+        const allRecords = await getAllLandRecords();
+        
+        if (allPlotsLayerRef.current) {
+          allPlotsLayerRef.current.remove();
+        }
+        
+        allPlotsLayerRef.current = L.layerGroup().addTo(mapRef.current);
+        
+        allRecords.forEach(record => {
+          // Create proper GeoJSON feature
+          const feature = {
+            type: 'Feature' as const,
+            properties: {
+              khasraNumber: record.khasraNumber,
+              ownerName: record.ownerName,
+              fraStatus: record.fraStatus
+            },
+            geometry: record.boundaries
+          };
+          
+          const gj = L.geoJSON(feature as any, {
+            style: {
+              color: record.fraStatus.includes('Granted') ? '#4caf50' : '#ff9800',
+              weight: 3,
+              opacity: 1,
+              fillColor: record.fraStatus.includes('Granted') ? '#66bb6a' : '#ffb74d',
+              fillOpacity: 0.5,
+            },
+            onEachFeature: (_feature, lyr) => {
+              // Hover effect
+              lyr.on('mouseover', () => {
+                (lyr as any).setStyle({ 
+                  weight: 5, 
+                  fillOpacity: 0.8,
+                  color: '#1976d2'
+                });
+                (lyr as any).bringToFront();
+              });
+              
+              lyr.on('mouseout', () => {
+                (lyr as any).setStyle({
+                  color: record.fraStatus.includes('Granted') ? '#4caf50' : '#ff9800',
+                  weight: 3,
+                  fillOpacity: 0.5
+                });
+              });
+              
+              // Click to show details
+              lyr.on('click', () => {
+                const popupContent = getPlotPopupContent(record);
+                (lyr as any).bindPopup(popupContent, { maxWidth: 400 }).openPopup();
+                
+                // Zoom to plot
+                const bounds = (lyr as any).getBounds();
+                if (bounds && bounds.isValid()) {
+                  mapRef.current!.fitBounds(bounds, { padding: [20, 20] });
+                }
+              });
+            }
+          });
+          
+          gj.addTo(allPlotsLayerRef.current!);
+          
+          // Debug: Log each plot creation
+          console.log(`Plot added: ${record.ownerName} at`, record.boundaries.coordinates[0]);
+        });
+        
+        setAllPlotsVisible(true);
+        setInfo(`All plots layer displayed: ${allRecords.length} plots loaded.`);
+        
+        // Debug: Log coordinates
+        console.log('All records loaded:', allRecords.map(r => ({
+          name: r.ownerName,
+          coords: r.boundaries.coordinates[0]
+        })));
+        
+        // Fit map to show all plots
+        if (allRecords.length > 0) {
+          try {
+            // Calculate bounds from all coordinates
+            const allCoords: [number, number][] = [];
+            allRecords.forEach(record => {
+              if (record.boundaries?.coordinates?.[0]) {
+                record.boundaries.coordinates[0].forEach((coord: [number, number]) => {
+                  allCoords.push([coord[1], coord[0]]); // Leaflet uses [lat, lng]
+                });
+              }
+            });
+            
+            if (allCoords.length > 0) {
+              const bounds = L.latLngBounds(allCoords);
+              mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+            } else {
+              // Fallback: zoom to central India if no coordinates
+              mapRef.current.setView([21.5, 82.5], 6);
+            }
+          } catch (e) {
+            console.warn('Could not fit bounds to all plots:', e);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to toggle all plots layer:', e);
+      setError('Failed to load all plots layer.');
+    }
+  };
+
   // Refresh uploaded list when the dialog opens
   useEffect(() => {
     if (showLayersDialog) {
@@ -412,17 +737,49 @@ const FRAAtlas: React.FC = () => {
     } catch {}
   };
 
-  const getPopupHtml = (props: any, fallbackName?: string) => {
+  const getPopupHtml = (props: any, fallbackName?: string, personalInfo?: any) => {
     const entries = props && typeof props === 'object' ? Object.entries(props) : [];
-    const title = (props?.name || props?.Name || props?.title || fallbackName || 'Area');
-    const rows = entries
+    const title = (props?.name || props?.Name || props?.title || personalInfo?.name || fallbackName || 'Area');
+    
+    // Enhanced popup with owner details and area measurement
+    let ownerSection = '';
+    if (personalInfo && Object.keys(personalInfo).length > 0) {
+      const ownerEntries = Object.entries(personalInfo)
+        .filter(([k, v]) => v && String(v).trim())
+        .map(([k, v]) => {
+          const label = k.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+          return `<tr><td style="padding:4px 8px;color:#2196f3;font-weight:600;">${label}:</td><td style="padding:4px 8px;">${String(v)}</td></tr>`;
+        }).join('');
+      
+      if (ownerEntries) {
+        ownerSection = `
+          <div style="margin:12px 0;padding:8px;background:#f5f5f5;border-radius:4px;">
+            <h5 style="margin:0 0 8px 0;color:#1976d2;">📋 Owner Details</h5>
+            <table style="border-collapse:collapse;font-size:12px;width:100%;">${ownerEntries}</table>
+          </div>`;
+      }
+    }
+    
+    // Property attributes section
+    const propRows = entries
       .filter(([k]) => typeof k === 'string')
-      .map(([k, v]) => `<tr><td style="padding:4px 8px;color:#666;">${k}</td><td style="padding:4px 8px;">${String(v)}</td></tr>`) 
+      .map(([k, v]) => `<tr><td style="padding:4px 8px;color:#666;">${k}:</td><td style="padding:4px 8px;">${String(v)}</td></tr>`) 
       .join('');
+    
+    const propSection = propRows ? `
+      <div style="margin:8px 0;">
+        <h5 style="margin:0 0 8px 0;color:#666;">📍 Plot Information</h5>
+        <table style="border-collapse:collapse;font-size:12px;width:100%;">${propRows}</table>
+      </div>` : '';
+    
     return `
-      <div style="min-width:220px">
-        <h4 style="margin:0 0 8px 0;">${title}</h4>
-        <table style="border-collapse:collapse;font-size:12px;">${rows || '<tr><td>No attributes</td></tr>'}</table>
+      <div style="min-width:280px;max-width:400px;">
+        <h4 style="margin:0 0 12px 0;color:#1976d2;border-bottom:2px solid #e3f2fd;padding-bottom:4px;">🏞️ ${title}</h4>
+        ${ownerSection}
+        ${propSection}
+        <div style="margin-top:12px;padding:6px;background:#e8f5e8;border-radius:4px;font-size:11px;color:#2e7d32;">
+          📏 <strong>Area Measurement:</strong> Click and drag to measure distances
+        </div>
       </div>`;
   };
 
@@ -715,6 +1072,15 @@ const FRAAtlas: React.FC = () => {
                     }
                     label="Forest Areas"
                   />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={allPlotsVisible}
+                        onChange={toggleAllPlotsLayer}
+                      />
+                    }
+                    label="All Land Plots"
+                  />
                 </Stack>
               </CardContent>
             </Card>
@@ -801,6 +1167,11 @@ const FRAAtlas: React.FC = () => {
                 <ListIcon />
               </Fab>
             </Tooltip>
+            <Tooltip title="Bhunaksha Land Records">
+              <Fab size="small" color="secondary" onClick={() => setShowBhunakshaSearch(true)}>
+                <MapIcon />
+              </Fab>
+            </Tooltip>
             <Tooltip title="Go to my location">
               <Fab size="small" color="default" onClick={() => locateMe(false)}>
                 <MyLocation />
@@ -833,7 +1204,56 @@ const FRAAtlas: React.FC = () => {
                 <Search />
               </Fab>
             </Tooltip>
+            
+            {persistentLayerRef.current && (
+              <Tooltip title="Remove Persistent Layer">
+                <Fab size="small" color="error" onClick={removePersistentLayer}>
+                  <Close />
+                </Fab>
+              </Tooltip>
+            )}
           </Box>
+
+          {/* Persistent Layer Info Panel */}
+          {persistentLayerInfo && Object.keys(persistentLayerInfo).length > 0 && (
+            <Paper className="persistent-layer-info" sx={{ 
+              position: 'absolute', 
+              top: 80, 
+              right: 16, 
+              p: 2, 
+              bgcolor: 'rgba(255,255,255,0.95)', 
+              border: '2px solid #ff4444',
+              borderRadius: 2,
+              boxShadow: 3,
+              zIndex: 1000,
+              maxWidth: 250
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                <Typography variant="subtitle2" color="error" fontWeight="bold">
+                  📍 Active Layer
+                </Typography>
+                <IconButton size="small" onClick={removePersistentLayer}>
+                  <Close fontSize="small" />
+                </IconButton>
+              </Box>
+              <Typography variant="body2" fontWeight="600" gutterBottom>
+                {persistentLayerInfo.name || 'Uploaded Plot'}
+              </Typography>
+              {persistentLayerInfo.village && (
+                <Typography variant="caption" display="block">
+                  📍 {persistentLayerInfo.village}, {persistentLayerInfo.district}
+                </Typography>
+              )}
+              {persistentLayerInfo.area && (
+                <Typography variant="caption" display="block">
+                  📐 Area: {persistentLayerInfo.area}
+                </Typography>
+              )}
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                Click on plot for detailed information
+              </Typography>
+            </Paper>
+          )}
 
           {/* Hidden File Input */}
           <input
@@ -845,6 +1265,22 @@ const FRAAtlas: React.FC = () => {
           />
         </Box>
       </Box>
+      {/* Bhunaksha Search Dialog */}
+      <Dialog open={showBhunakshaSearch} onClose={() => setShowBhunakshaSearch(false)} maxWidth="lg" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <MapIcon />
+            Bhunaksha FRA - Land Records Search
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <BhunakshaSearch onPlotSelect={handleBhunakshaPlotSelect} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowBhunakshaSearch(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Uploaded Layers Dialog */}
       <Dialog open={showLayersDialog} onClose={() => setShowLayersDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>
@@ -1016,6 +1452,18 @@ const FRAAtlas: React.FC = () => {
           <Box sx={{ width: 16, height: 16, bgcolor: '#ff9800', opacity: 0.25, border: '2px solid #ff6f00', borderRadius: 1 }} />
           <Typography variant="body2">Potential FRA</Typography>
         </Box>
+        {persistentLayerRef.current && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ width: 16, height: 16, bgcolor: '#ff6666', opacity: 0.4, border: '2px solid #ff4444', borderRadius: 1 }} />
+            <Typography variant="body2">Uploaded Data</Typography>
+          </Box>
+        )}
+        {allPlotsVisible && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ width: 16, height: 16, bgcolor: '#66bb6a', opacity: 0.3, border: '2px solid #4caf50', borderRadius: 1 }} />
+            <Typography variant="body2">All Land Plots</Typography>
+          </Box>
+        )}
       </Paper>
     </Box>
   );

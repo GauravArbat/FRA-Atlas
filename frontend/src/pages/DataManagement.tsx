@@ -143,10 +143,17 @@ const DataManagement: React.FC = () => {
     setShowPreviewDialog(true);
   };
 
-  const focusOnMap = (route: string, geo: any) => {
+  const focusOnMap = (route: string, geo: any, personalInfo?: any) => {
     try {
       if (!geo) return;
-      sessionStorage.setItem('mapFocusGeoJSON', JSON.stringify(geo));
+      // Store both GeoJSON and personal info for persistent layer
+      const layerData = {
+        geoJSON: geo,
+        personalInfo: personalInfo || {},
+        timestamp: Date.now(),
+        persistent: true // Flag to keep layer visible
+      };
+      sessionStorage.setItem('mapFocusGeoJSON', JSON.stringify(layerData));
       navigate(route);
     } catch {}
   };
@@ -291,10 +298,10 @@ const DataManagement: React.FC = () => {
         <IconButton size="small" onClick={() => saveToMapLayers(params.row as ProcessedPDFData)} title="Save to Map">
           <MapIcon fontSize="small" />
         </IconButton>
-        <IconButton size="small" onClick={() => focusOnMap('/atlas', (params.row as ProcessedPDFData).geoJSON)} title="Focus on FRA Atlas">
+        <IconButton size="small" onClick={() => focusOnMap('/atlas', (params.row as ProcessedPDFData).geoJSON, (params.row as ProcessedPDFData).personalInfo)} title="Focus on FRA Atlas">
           <MyLocationIcon fontSize="small" />
         </IconButton>
-        <IconButton size="small" onClick={() => focusOnMap('/gis-plot', (params.row as ProcessedPDFData).geoJSON)} title="Focus on GIS Plot">
+        <IconButton size="small" onClick={() => focusOnMap('/gis-plot', (params.row as ProcessedPDFData).geoJSON, (params.row as ProcessedPDFData).personalInfo)} title="Focus on GIS Plot">
           <MyLocationIcon fontSize="small" />
         </IconButton>
       </Box>
