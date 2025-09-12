@@ -197,11 +197,11 @@ const DigitalGISPlot: React.FC = () => {
         const style = layer.style || {};
         const gj = L.geoJSON(layer.data, {
           style: {
-            color: style.strokeColor || '#1976d2',
-            weight: style.strokeWidth || 2,
+            color: style.strokeColor || '#ff3d00',
+            weight: (style.strokeWidth || 2) + 1,
             opacity: style.strokeOpacity ?? 1,
-            fillColor: style.fillColor || '#2196f3',
-            fillOpacity: style.fillOpacity ?? 0.6,
+            fillColor: style.fillColor || '#ff6d00',
+            fillOpacity: style.fillOpacity ?? 0.35,
           },
           onEachFeature: (_feature, lyr) => {
             lyr.on('click', () => {
@@ -216,6 +216,7 @@ const DigitalGISPlot: React.FC = () => {
         });
         gj.bindPopup(`<strong>${layer.name}</strong>`);
         gj.addTo(uploadedLayersRef.current as L.LayerGroup);
+        try { (gj as any).eachLayer?.((l: any) => l.bringToFront && l.bringToFront()); } catch {}
       });
 
       if (uploadedLayersRef.current.getLayers().length > 0) {

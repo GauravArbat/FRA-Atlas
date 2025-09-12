@@ -1,0 +1,39 @@
+services:
+  # Backend API Service
+  - type: web
+    name: fra-atlas-backend
+    env: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: https://fra-atlas-frontend.vercel.app
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fra-atlas-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: fra-atlas-redis
+          property: connectionString
+
+  # PostgreSQL Database
+  - type: pserv
+    name: fra-atlas-db
+    env: postgresql
+    plan: free
+    ipAllowList: []
+
+  # Redis Cache
+  - type: redis
+    name: fra-atlas-redis
+    plan: free
+    ipAllowList: []

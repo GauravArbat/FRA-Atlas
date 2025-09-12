@@ -46,6 +46,7 @@ The Forest Rights Act (FRA) Atlas is a comprehensive digital platform designed t
 - **Redux Toolkit 1.9** for state management
 - **Recharts 2.8** for interactive data visualization
 - **Axios 1.6** for API communication
+- **Leaflet 1.9** with Leaflet Draw for additional mapping capabilities
 
 ### Backend
 - **Node.js 18+** with Express.js 4.19 for API development
@@ -55,6 +56,8 @@ The Forest Rights Act (FRA) Atlas is a comprehensive digital platform designed t
 - **Winston** for comprehensive logging
 - **Helmet** for security headers
 - **CORS** for cross-origin resource sharing
+- **Multer** for file upload handling
+- **Tesseract.js 5.0** for multilingual OCR processing
 
 ### Data Processing
 - **Python 3.9+** with FastAPI for data processing pipelines
@@ -73,6 +76,7 @@ The Forest Rights Act (FRA) Atlas is a comprehensive digital platform designed t
 ### Infrastructure
 - **Docker** for containerization
 - **Nginx** for reverse proxy
+- **Redis** for caching and session management
 - **Environment Configuration** with dotenv
 - **Rate Limiting** with express-rate-limit
 - **Compression** for response optimization
@@ -82,12 +86,28 @@ The Forest Rights Act (FRA) Atlas is a comprehensive digital platform designed t
 ```
 fra-atlas/
 ├── frontend/                 # React.js frontend application
+│   ├── src/
+│   │   ├── components/       # Reusable UI components
+│   │   ├── pages/           # Main application pages
+│   │   ├── services/        # API service layer
+│   │   ├── store/           # Redux store and slices
+│   │   ├── hooks/           # Custom React hooks
+│   │   └── contexts/        # React contexts
+│   └── public/              # Static assets
 ├── backend/                  # Node.js API server
+│   ├── src/
+│   │   ├── routes/          # API route handlers
+│   │   ├── middleware/      # Custom middleware
+│   │   ├── models/          # Data models
+│   │   └── utils/           # Utility functions
+│   └── logs/                # Application logs
 ├── data-processor/           # Python data processing services
 ├── database/                 # Database schemas and migrations
-├── docs/                     # Documentation
-├── docker/                   # Docker configurations
-└── scripts/                  # Utility scripts
+├── nginx/                    # Nginx configuration
+├── uploads/                  # File upload storage
+├── processed/                # Processed data storage
+├── backups/                  # Database backups
+└── logs/                     # System logs
 ```
 
 ## 🚀 Getting Started
@@ -97,6 +117,7 @@ fra-atlas/
 - **Python 3.9+** (for data processing services)
 - **PostgreSQL 14+** with PostGIS extension (for spatial data)
 - **Docker & Docker Compose** (recommended for easy setup)
+- **Redis** (for caching and session management)
 
 ### 🏃‍♂️ Quick Start (Recommended)
 
@@ -115,6 +136,7 @@ docker-compose up -d
 # 4. Access the application
 # Frontend: http://localhost:3000
 # Backend: http://localhost:8000
+# Database: localhost:5432
 ```
 
 #### Option 2: Local Development Setup
@@ -149,6 +171,16 @@ npm start
 ```env
 # Database Configuration
 DATABASE_URL=postgresql://fra_user:fra_password@localhost:5432/fra_atlas
+DB_HOST=postgres
+DB_PORT=5432
+DB_NAME=fra_atlas
+DB_USER=fra_user
+DB_PASSWORD=fra_password
+
+# Redis Configuration
+REDIS_URL=redis://redis:6379
+REDIS_HOST=redis
+REDIS_PORT=6379
 
 # JWT Authentication
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
@@ -160,7 +192,22 @@ PORT=8000
 FRONTEND_URL=http://localhost:3000
 
 # Mapbox Token (Optional)
+MAPBOX_TOKEN=your-mapbox-access-token-here
 REACT_APP_MAPBOX_TOKEN=pk.your-mapbox-token-here
+
+# File Upload Settings
+MAX_FILE_SIZE=10485760  # 10MB
+UPLOAD_PATH=./uploads
+ALLOWED_FILE_TYPES=pdf,jpg,jpeg,png,tiff,shp,kml,kmz
+
+# OCR Configuration
+TESSERACT_CONFIG=--oem 3 --psm 6
+OCR_LANGUAGES=eng+hin
+
+# Security Settings
+CORS_ORIGIN=http://localhost:3000
+RATE_LIMIT_WINDOW_MS=900000  # 15 minutes
+RATE_LIMIT_MAX_REQUESTS=100
 ```
 
 #### Map Configuration
@@ -193,6 +240,15 @@ node test-login.js
 
 # Test profile and logout
 node test-profile-logout.js
+
+# Test data plotting
+node test-data-plotting.js
+
+# Test GeoJSON API
+node test-geojson-api.js
+
+# Clear authentication data
+node clear-auth.js
 ```
 
 ## 📊 Key Features
@@ -212,7 +268,7 @@ node test-profile-logout.js
 - [x] **Advanced NER Extraction** for FRA-specific entities (villages, claimants, land details)
 - [x] **Real-time Text Processing** with confidence scoring
 - [x] **Document Preview** with extracted text and entities
-- [x] **Data Export** in multiple formats (JSON, CSV, GeoJSON)
+- [x] **Data Export** in multiple formats (JSON, CSV, GeoJSON, KML, PDF)
 
 ### 🗺️ Interactive Mapping & Visualization
 - [x] **Professional WebGIS Interface** with Mapbox/MapLibre integration
@@ -222,6 +278,8 @@ node test-profile-logout.js
 - [x] **Remote-sensing Overlays** (ESA WorldCover, JRC Water) via backend proxy
 - [x] **Real-time Statistics** and area analysis
 - [x] **Fullscreen Mode** for detailed mapping work
+- [x] **Location Search** with OpenStreetMap Nominatim
+- [x] **GPS Location Services** and measure tools
 
 ### 🎯 Digital GIS Plot System
 - [x] **QGIS-like Professional Interface** for land record digitization
@@ -231,6 +289,7 @@ node test-profile-logout.js
 - [x] **Step-by-Step Workflow** for guided digitization
 - [x] **Export Capabilities** (PDF, GeoJSON, KML, CSV)
 - [x] **3D Visualization** with tilted perspective
+- [x] **Bookmark System** for saving map states
 
 ### 📊 Analytics & Decision Support
 - [x] **Real-time Dashboards** with interactive charts and statistics
@@ -247,6 +306,8 @@ node test-profile-logout.js
 - [x] **Rate Limiting** for API protection
 - [x] **Security Headers** with Helmet middleware
 - [x] **CORS Configuration** for cross-origin requests
+- [x] **File Upload Management** with validation
+- [x] **Backup and Recovery** systems
 
 ## ✅ Fully Implemented Features
 
@@ -265,6 +326,7 @@ node test-profile-logout.js
 - ✅ **AI/ML assets toggles** (agriculture/forest/water/homestead/infrastructure)
 - ✅ **Remote-sensing overlays** (WorldCover, JRC Water) via backend proxy
 - ✅ **Advanced drawing tools** with polygon validation
+- ✅ **Multiple mapping libraries** (Mapbox GL JS, MapLibre GL JS, Leaflet)
 
 ### 📊 **Analytics & Reports**
 - ✅ **Dashboard & Reports** with time-series and top-districts charts
@@ -394,11 +456,14 @@ GET  /api/data/download/:id         # File download endpoint
 - **[Complete Setup Guide](COMPLETE_SETUP_GUIDE.md)** - Professional system setup instructions
 - **[Profile & Logout Guide](PROFILE_LOGOUT_GUIDE.md)** - User management features
 - **[Mapbox Setup Guide](MAPBOX_SETUP.md)** - Mapbox integration instructions
+- **[Kepler GL Integration Guide](KEPLER_GL_INTEGRATION_GUIDE.md)** - Advanced visualization setup
 
 ### 🔧 System Status
 - **[System Operational Status](SYSTEM_OPERATIONAL_STATUS.md)** - Current system status
 - **[Final Resolution Status](FINAL_RESOLUTION_STATUS.md)** - Issue resolution summary
 - **[Final System Status](FINAL_SYSTEM_STATUS.md)** - Complete system overview
+- **[Data Management Fixes](DATA_MANAGEMENT_FIXES_COMPLETED.md)** - Data processing improvements
+- **[Professional UI Guide](PROFESSIONAL_UI_GUIDE.md)** - UI/UX enhancements
 
 ## 🧪 Testing & Quality Assurance
 
@@ -413,6 +478,12 @@ node test-login.js
 # Test profile and logout
 node test-profile-logout.js
 
+# Test data plotting
+node test-data-plotting.js
+
+# Test GeoJSON API
+node test-geojson-api.js
+
 # Clear authentication data
 node clear-auth.js
 ```
@@ -426,6 +497,19 @@ node clear-auth.js
 - [ ] Decision support system
 - [ ] Reports and analytics
 - [ ] Export functionality
+- [ ] Mobile responsiveness
+- [ ] Error handling and validation
+
+## 🐳 Docker Services
+
+The platform includes comprehensive Docker support with the following services:
+
+- **Frontend**: React application on port 3000
+- **Backend**: Node.js API server on port 8000
+- **Data Processor**: Python service on port 8001
+- **PostgreSQL**: Database with PostGIS on port 5432
+- **Redis**: Cache and session store on port 6379
+- **Nginx**: Reverse proxy on ports 80/443
 
 ## 🤝 Contributing
 
@@ -458,3 +542,26 @@ For support and questions, please contact the development team or create an issu
 
 The FRA Atlas platform is now fully operational with comprehensive features including authentication, WebGIS mapping, document processing, decision support, and analytics. All core modules are implemented and tested, providing a professional-grade solution for Forest Rights Act governance and development planning.
 
+### 🚀 **Quick Start Commands**
+
+```bash
+# Start the entire platform
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop the platform
+docker-compose down
+
+# Rebuild and restart
+docker-compose up -d --build
+```
+
+### 📊 **System Health Check**
+
+Visit `http://localhost:8000/health` to verify all services are running correctly.
+
+---
+
+*Last Updated: December 2024*

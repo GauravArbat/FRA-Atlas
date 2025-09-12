@@ -1,9 +1,20 @@
-const { Pool } = require('pg');
+// Mock database configuration for development without PostgreSQL
+const mockPool = {
+  query: async (text, params) => {
+    console.log('Mock DB Query:', text, params);
+    return { rows: [], rowCount: 0 };
+  },
+  connect: async () => {
+    console.log('Mock DB Connect');
+    return { release: () => {} };
+  },
+  end: async () => {
+    console.log('Mock DB End');
+  }
+};
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://fra_user:fra_password@localhost:5432/fra_atlas',
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-});
+// Use mock database for development
+const pool = mockPool;
 
 module.exports = { pool };
 

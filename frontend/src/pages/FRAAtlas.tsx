@@ -340,6 +340,45 @@ const FRAAtlas: React.FC = () => {
       
       setFraData(mockData);
       setFilteredData(mockData);
+      
+      // Add FRA layers to map
+      const addFRALayersToMap = (data: FRAData[]) => {
+        if (!mapRef.current) return;
+
+        data.forEach(item => {
+          const coordinates = item.coordinates.map(coord => [coord[0], coord[1]] as [number, number]);
+          
+          const polygon = L.polygon(coordinates, {
+            color: item.status === 'granted' ? '#1b5e20' : '#ff6f00',
+            fillColor: item.status === 'granted' ? '#2e7d32' : '#ff9800',
+            fillOpacity: item.status === 'granted' ? 0.35 : 0.25,
+            weight: 2
+          });
+
+          polygon.bindPopup(`
+            <div style="min-width: 200px;">
+              <h4>${item.claimantName}</h4>
+              <p><strong>Status:</strong> ${item.status}</p>
+              <p><strong>Area:</strong> ${item.area} hectares</p>
+              <p><strong>Village:</strong> ${item.village}</p>
+              <p><strong>District:</strong> ${item.district}</p>
+              <p><strong>Survey No:</strong> ${item.surveyNumber || 'N/A'}</p>
+              <p><strong>Date:</strong> ${new Date(item.dateSubmitted).toLocaleDateString()}</p>
+            </div>
+          `);
+          polygon.on('click', () => {
+            try {
+              const b = polygon.getBounds();
+              if (b && b.isValid() && mapRef.current) {
+                mapRef.current.fitBounds(b, { padding: [16, 16] });
+              }
+            } catch {}
+          });
+
+          polygon.addTo(mapRef.current!);
+        });
+      };
+      
       addFRALayersToMap(mockData);
       // Load uploaded layers as well
       await loadUploadedLayers();
@@ -738,9 +777,15 @@ const FRAAtlas: React.FC = () => {
   };
 
   const getPopupHtml = (props: any, fallbackName?: string, personalInfo?: any) => {
-    const entries = props && typeof props === 'object' ? Object.entries(props) : [];
-    const title = (props?.name || props?.Name || props?.title || personalInfo?.name || fallbackName || 'Area');
-    
+    // Prefer a structured card if we detect standard land attributes
+    const name = props?.claimantName || props?.name || props?.Name || personalInfo?.name || fallbackName || 'Area';
+    const status = props?.status || props?.Status;
+    const area = props?.area || props?.Area || props?.area_hectares || props?.['Area (hectares)'];
+    const village = props?.village || props?.Village;
+    const district = props?.district || props?.District;
+    const surveyNo = props?.surveyNumber || props?.SurveyNo || props?.['Survey No'] || props?.Survey || props?.Khasra;
+    const date = props?.dateSubmitted || props?.Date || props?.Created || props?.LastModified;
+
     // Enhanced popup with owner details and area measurement
     let ownerSection = '';
     if (personalInfo && Object.keys(personalInfo).length > 0) {
@@ -759,67 +804,76 @@ const FRAAtlas: React.FC = () => {
           </div>`;
       }
     }
-    
-    // Property attributes section
-    const propRows = entries
+
+    if (status || area || village || district || surveyNo || date) {
+      return `
+        <div style="min-width:280px;max-width:400px;">
+          <h4 style="margin:0 0 12px 0;color:#1976d2;border-bottom:2px solid #e3f2fd;padding-bottom:4px;">🏞️ ${name}</h4>
+          ${ownerSection}
+          <div style="font-size:13px;line-height:1.6">
+            ${status ? `<div><strong>Status:</strong> ${status}</div>` : ''}
+            ${area ? `<div><strong>Area:</strong> ${area}${typeof area === 'number' ? ' hectares' : ''}</div>` : ''}
+            ${village ? `<div><strong>Village:</strong> ${village}</div>` : ''}
+            ${district ? `<div><strong>District:</strong> ${district}</div>` : ''}
+            ${surveyNo ? `<div><strong>Survey No:</strong> ${surveyNo}</div>` : ''}
+            ${date ? `<div><strong>Date:</strong> ${new Date(date).toLocaleDateString?.() || date}</div>` : ''}
+          </div>
+          <div style="margin-top:12px;padding:6px;background:#e8f5e8;border-radius:4px;font-size:11px;color:#2e7d32;">
+            📏 <strong>Area Measurement:</strong> Click and drag to measure distances
+          </div>
+        </div>`;
+    }
+
+    // Fallback: show a simple table of whatever properties exist
+    const entries = props && typeof props === 'object' ? Object.entries(props) : [];
+    const rows = entries
       .filter(([k]) => typeof k === 'string')
       .map(([k, v]) => `<tr><td style="padding:4px 8px;color:#666;">${k}:</td><td style="padding:4px 8px;">${String(v)}</td></tr>`) 
       .join('');
     
-    const propSection = propRows ? `
-      <div style="margin:8px 0;">
-        <h5 style="margin:0 0 8px 0;color:#666;">📍 Plot Information</h5>
-        <table style="border-collapse:collapse;font-size:12px;width:100%;">${propRows}</table>
-      </div>` : '';
-    
     return `
-      <div style="min-width:280px;max-width:400px;">
-        <h4 style="margin:0 0 12px 0;color:#1976d2;border-bottom:2px solid #e3f2fd;padding-bottom:4px;">🏞️ ${title}</h4>
+      <div style="min-width:220px">
+        <h4 style="margin:0 0 8px 0;">${name}</h4>
         ${ownerSection}
-        ${propSection}
-        <div style="margin-top:12px;padding:6px;background:#e8f5e8;border-radius:4px;font-size:11px;color:#2e7d32;">
-          📏 <strong>Area Measurement:</strong> Click and drag to measure distances
-        </div>
+        <table style="border-collapse:collapse;font-size:12px;">${rows || '<tr><td>No attributes</td></tr>'}</table>
       </div>`;
   };
 
-  // Add FRA layers to map
-  const addFRALayersToMap = (data: FRAData[]) => {
-    if (!mapRef.current) return;
-
-    data.forEach(item => {
-      const coordinates = item.coordinates.map(coord => [coord[0], coord[1]] as [number, number]);
-      
-      const polygon = L.polygon(coordinates, {
-        color: item.status === 'granted' ? '#1b5e20' : '#ff6f00',
-        fillColor: item.status === 'granted' ? '#2e7d32' : '#ff9800',
-        fillOpacity: item.status === 'granted' ? 0.35 : 0.25,
-        weight: 2
-      });
-
-      polygon.bindPopup(`
-        <div style="min-width: 200px;">
-          <h4>${item.claimantName}</h4>
-          <p><strong>Status:</strong> ${item.status}</p>
-          <p><strong>Area:</strong> ${item.area} hectares</p>
-          <p><strong>Village:</strong> ${item.village}</p>
-          <p><strong>District:</strong> ${item.district}</p>
-          <p><strong>Survey No:</strong> ${item.surveyNumber || 'N/A'}</p>
-          <p><strong>Date:</strong> ${new Date(item.dateSubmitted).toLocaleDateString()}</p>
-        </div>
-      `);
-      polygon.on('click', () => {
-        try {
-          const b = polygon.getBounds();
-          if (b && b.isValid() && mapRef.current) {
-            mapRef.current.fitBounds(b, { padding: [16, 16] });
-          }
-        } catch {}
-      });
-
-      polygon.addTo(mapRef.current!);
-    });
+  const summarizeLayer = (layer: any) => {
+    try {
+      const feature = layer?.data?.features?.[0];
+      const p = feature?.properties || {};
+      const name = layer?.name || p?.claimantName || p?.name || p?.Name;
+      const parts: string[] = [];
+      if (p?.Village || p?.village) parts.push(`Village: ${p.Village || p.village}`);
+      if (p?.District || p?.district) parts.push(`District: ${p.District || p.district}`);
+      if (p?.area || p?.Area) parts.push(`Area: ${p.area || p.Area}`);
+      return { name, subtitle: parts.join(' • '), props: p };
+    } catch { return { name: layer?.name || 'Layer', subtitle: '', props: {} }; }
   };
+
+  const handleDeleteLayer = async (id: string) => {
+    try {
+      await geojsonPlotAPI.deleteLayer(id);
+      await loadUploadedLayers();
+    } catch {}
+  };
+
+  const handleExportLayer = async (id: string) => {
+    try {
+      const res = await geojsonPlotAPI.exportLayer(id, 'geojson');
+      const blob = new Blob([JSON.stringify(res.data.data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${id}.geojson.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {}
+  };
+
 
   // Change map style
   const changeMapStyle = (style: 'satellite' | 'terrain' | 'osm') => {
@@ -1294,31 +1348,50 @@ const FRAAtlas: React.FC = () => {
             <Typography color="text.secondary">No uploaded data found.</Typography>
           ) : (
             <List>
-              {uploadedLayers.map((l: any) => (
-                <ListItem
-                  key={l.id}
-                  secondaryAction={
-                    <Button size="small" variant="outlined" onClick={() => {
-                      try {
-                        if (!mapRef.current) return;
-                        const gj = L.geoJSON(l.data);
-                        const b = (gj as any).getBounds?.();
-                        if (b && b.isValid()) {
-                          mapRef.current.fitBounds(b, { padding: [20, 20] });
-                        }
-                        gj.remove();
-                        setShowLayersDialog(false);
-                        flashHighlight(l.data);
-                      } catch {}
-                    }}>Focus</Button>
-                  }
-                >
-                  <ListItemText
-                    primary={l.name}
-                    secondary={`Features: ${l.data?.features?.length ?? 0}`}
-                  />
-                </ListItem>
-              ))}
+              {uploadedLayers.map((l: any) => {
+                const meta = summarizeLayer(l);
+                return (
+                  <ListItem
+                    key={l.id}
+                    secondaryAction={
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button size="small" variant="outlined" onClick={() => {
+                          try {
+                            if (!mapRef.current) return;
+                            const gj = L.geoJSON(l.data);
+                            const b = (gj as any).getBounds?.();
+                            if (b && b.isValid()) {
+                              mapRef.current.fitBounds(b, { padding: [20, 20] });
+                            }
+                            // Open a popup at the center with summarized props
+                            const center = b?.getCenter?.();
+                            if (center) {
+                              const layerProps = l?.data?.features?.[0]?.properties || {};
+                              const html = getPopupHtml(layerProps, meta.name);
+                              L.popup({ autoClose: true })
+                                .setLatLng(center)
+                                .setContent(html)
+                                .openOn(mapRef.current);
+                            }
+                            gj.remove();
+                            setShowLayersDialog(false);
+                            // Also draw a visible dashed highlight
+                            const highlight = L.geoJSON(l.data, { style: { color: '#ff1744', weight: 3, dashArray: '6,4', fillOpacity: 0 } }).addTo(mapRef.current);
+                            setTimeout(() => { try { mapRef.current && highlight.remove(); } catch {} }, 5000);
+                          } catch {}
+                        }}>Focus</Button>
+                        <Button size="small" onClick={() => handleExportLayer(l.id)}>Export</Button>
+                        <Button size="small" color="error" onClick={() => handleDeleteLayer(l.id)}>Delete</Button>
+                      </Box>
+                    }
+                  >
+                    <ListItemText
+                      primary={meta.name || l.name}
+                      secondary={meta.subtitle || `Features: ${l.data?.features?.length ?? 0}`}
+                    />
+                  </ListItem>
+                );
+              })}
             </List>
           )}
         </DialogContent>
