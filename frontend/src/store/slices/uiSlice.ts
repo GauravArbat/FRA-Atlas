@@ -9,6 +9,7 @@ interface UIState {
     id: string;
     message: string;
     type: 'success' | 'error' | 'warning' | 'info';
+    timestamp: string;
   }>;
 }
 

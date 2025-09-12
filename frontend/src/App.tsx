@@ -11,6 +11,7 @@ import DataManagement from './pages/DataManagement';
 import DecisionSupport from './pages/DecisionSupport';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import Notifications from './pages/Notifications';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Profile from './pages/Profile';
@@ -145,7 +146,7 @@ function App() {
         <Sidebar />
         <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
           <Header />
-          <Box component="main" sx={{ flex: 1, overflow: 'auto', p: { xs: 2, md: 3 }, mt: { xs: 7, md: 8 } }}>
+          <Box component="main" sx={{ flex: 1, overflow: 'auto', p: { xs: 2, md: 3 }, mt: { xs: '60px', md: '60px' } }}>
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/atlas" element={<FRAAtlas />} />
@@ -156,6 +157,7 @@ function App() {
               <Route path="/reports" element={<Reports />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/notifications" element={<Notifications />} />
             </Routes>
           </Box>
         </Box>

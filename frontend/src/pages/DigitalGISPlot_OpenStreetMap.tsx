@@ -46,6 +46,7 @@ import {
   MyLocation
 } from '@mui/icons-material';
 import L from 'leaflet';
+import { geojsonPlotAPI } from '../services/api';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import 'leaflet-draw';
@@ -78,6 +79,7 @@ const DigitalGISPlot: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const drawnItemsRef = useRef<L.FeatureGroup | null>(null);
+  const uploadedLayersRef = useRef<L.LayerGroup | null>(null);
 
   // Theme and responsive
   const theme = useTheme();
@@ -116,19 +118,21 @@ const DigitalGISPlot: React.FC = () => {
       const map = L.map(containerRef.current, {
         center: [12.9716, 77.5946], // Bangalore coordinates
         zoom: 10,
-        zoomControl: true
+        zoomControl: true,
+        minZoom: 3,
+        maxZoom: 17
       });
 
       // Add satellite imagery with labels
       L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         attribution: 'Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-        maxZoom: 19
+        maxZoom: 17
       }).addTo(map);
 
       // Add labels overlay for place names
       L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
         attribution: '',
-        maxZoom: 19
+        maxZoom: 17
       }).addTo(map);
 
       // Create feature group for drawn items
@@ -159,6 +163,24 @@ const DigitalGISPlot: React.FC = () => {
       mapRef.current = map;
       setLoading(false);
       console.log('Map loaded successfully with satellite imagery');
+
+      // Load uploaded layers so they are permanently visible
+      try { loadUploadedLayers(); } catch {}
+
+      // Focus from Data Management if provided
+      try {
+        const raw = sessionStorage.getItem('mapFocusGeoJSON');
+        if (raw) {
+          const focus = JSON.parse(raw);
+          sessionStorage.removeItem('mapFocusGeoJSON');
+          const gj = L.geoJSON(focus);
+          const b = (gj as any).getBounds?.();
+          if (b && b.isValid()) {
+            map.fitBounds(b, { padding: [20, 20] });
+          }
+          gj.remove();
+        }
+      } catch {}
 
       // Cleanup
       return () => {
@@ -220,6 +242,54 @@ const DigitalGISPlot: React.FC = () => {
         
         setShowAreaDialog(true);
       }
+    }
+  };
+
+  const loadUploadedLayers = async () => {
+    try {
+      if (!mapRef.current) return;
+      if (!uploadedLayersRef.current) {
+        uploadedLayersRef.current = L.layerGroup().addTo(mapRef.current);
+      }
+      uploadedLayersRef.current.clearLayers();
+
+      const res = await geojsonPlotAPI.getLayers();
+      const layers = res.data.data || [];
+      layers.forEach((layer: any) => {
+        const style = layer.style || {};
+        const gj = L.geoJSON(layer.data, {
+          style: {
+            color: style.strokeColor || '#1976d2',
+            weight: style.strokeWidth || 2,
+            opacity: style.strokeOpacity ?? 1,
+            fillColor: style.fillColor || '#2196f3',
+            fillOpacity: style.fillOpacity ?? 0.6,
+          },
+          onEachFeature: (_feature, lyr) => {
+            lyr.on('click', () => {
+              try {
+                const b = (lyr as any).getBounds?.();
+                if (b && b.isValid() && mapRef.current) {
+                  mapRef.current.fitBounds(b, { padding: [16, 16] });
+                }
+              } catch {}
+            });
+          }
+        });
+        gj.bindPopup(`<strong>${layer.name}</strong>`);
+        gj.addTo(uploadedLayersRef.current as L.LayerGroup);
+      });
+
+      if (uploadedLayersRef.current.getLayers().length > 0) {
+        try {
+          const bounds = (uploadedLayersRef.current as any).getBounds();
+          if (bounds && bounds.isValid()) {
+            mapRef.current.fitBounds(bounds, { padding: [20, 20] });
+          }
+        } catch {}
+      }
+    } catch (e) {
+      console.warn('Failed to load uploaded layers');
     }
   };
 

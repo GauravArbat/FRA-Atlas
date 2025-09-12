@@ -36,7 +36,9 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import MyLocationIcon from '@mui/icons-material/MyLocation';
 import { api, pdfProcessorAPI, geojsonPlotAPI } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 import { loadOcrItems, addOcrItem, deleteOcrItem, updateOcrItem, type OcrItem } from '../utils/ocrStore';
 
 interface ProcessedPDFData {
@@ -52,6 +54,7 @@ interface ProcessedPDFData {
 }
 
 const DataManagement: React.FC = () => {
+  const navigate = useNavigate();
   // Original states
   const [uploadInfo, setUploadInfo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -138,6 +141,14 @@ const DataManagement: React.FC = () => {
   const viewOnMap = (pdfData: ProcessedPDFData) => {
     setSelectedPDF(pdfData);
     setShowPreviewDialog(true);
+  };
+
+  const focusOnMap = (route: string, geo: any) => {
+    try {
+      if (!geo) return;
+      sessionStorage.setItem('mapFocusGeoJSON', JSON.stringify(geo));
+      navigate(route);
+    } catch {}
   };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -272,13 +283,19 @@ const DataManagement: React.FC = () => {
     { field: 'area', headerName: 'Area', flex: 1 },
     { field: 'applicationDate', headerName: 'Application Date', flex: 1 },
     { field: 'processedAt', headerName: 'Processed At', flex: 1, valueGetter: (p) => new Date(p.value as string).toLocaleString() },
-    { field: 'actions', headerName: 'Actions', sortable: false, filterable: false, width: 120, renderCell: (params) => (
+    { field: 'actions', headerName: 'Actions', sortable: false, filterable: false, width: 200, renderCell: (params) => (
       <Box>
         <IconButton size="small" onClick={() => viewOnMap(params.row as ProcessedPDFData)} title="View on Map">
           <VisibilityIcon fontSize="small" />
         </IconButton>
         <IconButton size="small" onClick={() => saveToMapLayers(params.row as ProcessedPDFData)} title="Save to Map">
           <MapIcon fontSize="small" />
+        </IconButton>
+        <IconButton size="small" onClick={() => focusOnMap('/atlas', (params.row as ProcessedPDFData).geoJSON)} title="Focus on FRA Atlas">
+          <MyLocationIcon fontSize="small" />
+        </IconButton>
+        <IconButton size="small" onClick={() => focusOnMap('/gis-plot', (params.row as ProcessedPDFData).geoJSON)} title="Focus on GIS Plot">
+          <MyLocationIcon fontSize="small" />
         </IconButton>
       </Box>
     ) },

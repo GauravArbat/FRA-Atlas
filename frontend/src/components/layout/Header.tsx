@@ -31,13 +31,15 @@ import {
   Brightness4,
   Brightness7,
   Language,
-  Help
+  Help,
+  ChevronLeft,
+  ChevronRight
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { ThemeToggle } from '../ThemeToggle';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { toggleSidebar } from '../../store/slices/uiSlice';
+import { toggleSidebar, toggleSidebarCollapse } from '../../store/slices/uiSlice';
 import { logout } from '../../store/slices/authSlice';
 import { RootState } from '../../store';
 
@@ -47,6 +49,7 @@ const Header: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { user } = useSelector((state: RootState) => state.auth);
+  const { sidebarCollapsed, notifications } = useSelector((state: RootState) => state.ui);
   
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -109,20 +112,32 @@ const Header: React.FC = () => {
         borderBottom: 1,
         borderColor: 'divider',
         backdropFilter: 'blur(20px)',
-        background: (theme) => `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.02)} 0%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+        background: (theme) => `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.03)} 0%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`,
+        boxShadow: '2px 0 12px rgba(0,0,0,0.05)',
+        width: { 
+          xs: '100%', 
+          md: sidebarCollapsed ? 'calc(100% - 80px)' : 'calc(100% - 240px)' 
+        },
+        ml: { 
+          xs: 0, 
+          md: sidebarCollapsed ? '80px' : '240px' 
+        },
+        transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
       }}
     >
-      <Toolbar sx={{ px: { xs: 2, md: 4 }, minHeight: { xs: 64, md: 80 } }}>
-        <IconButton
-          edge="start"
-          color="inherit"
-          aria-label="open sidebar"
-          onClick={() => dispatch(toggleSidebar())}
-          sx={{ mr: 2, display: 'inline-flex' }}
-        >
-          <MenuIcon />
-        </IconButton>
+      <Toolbar sx={{ px: { xs: 2, md: 2 }, minHeight: { xs: 60, md: 60 } }}>
+        {isMobile && (
+          <IconButton
+            edge="start"
+            color="inherit"
+            aria-label="open sidebar"
+            onClick={() => dispatch(toggleSidebar())}
+            sx={{ mr: 2, display: 'inline-flex' }}
+          >
+            <MenuIcon />
+          </IconButton>
+        )}
+        {/* Sidebar collapse button removed */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexGrow: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Box
@@ -131,7 +146,7 @@ const Header: React.FC = () => {
                 height: 40,
                 borderRadius: 2,
                 background: 'linear-gradient(135deg, #2e7d32 0%, #4caf50 100%)',
-                display: 'flex',
+                display: { xs: 'flex', md: sidebarCollapsed ? 'flex' : 'none' },
                 alignItems: 'center',
                 justifyContent: 'center',
                 boxShadow: '0 4px 12px rgba(46, 125, 50, 0.3)'
@@ -157,7 +172,8 @@ const Header: React.FC = () => {
                   letterSpacing: -0.8,
                   color: 'text.primary',
                   lineHeight: 1.2,
-                  fontSize: { xs: '1.25rem', md: '1.5rem' }
+                  fontSize: { xs: '1.25rem', md: '1.5rem' },
+                  display: { xs: 'block', md: sidebarCollapsed ? 'block' : 'none' }
                 }}
               >
                 FRA Atlas
@@ -168,28 +184,13 @@ const Header: React.FC = () => {
         </Box>
         
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          {/* Search Icon */}
-          {!isMobile && (
-            <Tooltip title="Search">
-              <IconButton
-                size="medium"
-                sx={{ 
-                  color: 'text.secondary',
-                  '&:hover': { 
-                    bgcolor: 'action.hover',
-                    color: 'primary.main'
-                  }
-                }}
-              >
-                <Search />
-              </IconButton>
-            </Tooltip>
-          )}
+          {/* Search Icon removed */}
           
           {/* Notifications */}
           <Tooltip title="Notifications">
             <IconButton
               size="medium"
+              onClick={() => navigate('/notifications')}
               sx={{ 
                 color: 'text.secondary',
                 '&:hover': { 
@@ -198,7 +199,7 @@ const Header: React.FC = () => {
                 }
               }}
             >
-              <Badge badgeContent={3} color="error" variant="dot">
+              <Badge badgeContent={notifications.length} color="primary" variant="standard">
                 <Notifications />
               </Badge>
             </IconButton>

@@ -67,10 +67,12 @@ import {
   Visibility,
   VisibilityOff
 } from '@mui/icons-material';
+import ListIcon from '@mui/icons-material/List';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import 'leaflet-draw';
+import { geojsonPlotAPI } from '../services/api';
 
 // Fix Leaflet default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -98,6 +100,7 @@ const FRAAtlas: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const drawControlRef = useRef<L.Control.Draw | null>(null);
   const drawnItemsRef = useRef<L.FeatureGroup | null>(null);
+  const uploadedLayersRef = useRef<L.LayerGroup | null>(null);
   
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
@@ -130,6 +133,9 @@ const FRAAtlas: React.FC = () => {
   const [nerResults, setNerResults] = useState<any>(null);
   const [processingOCR, setProcessingOCR] = useState(false);
   const [processingNER, setProcessingNER] = useState(false);
+  const [showLayersDialog, setShowLayersDialog] = useState(false);
+  const [uploadedLayers, setUploadedLayers] = useState<any[]>([]);
+  const uploadedLayerBoundsRef = useRef<L.LatLngBounds | null>(null);
 
   // Initialize map
   useEffect(() => {
@@ -156,6 +162,9 @@ const FRAAtlas: React.FC = () => {
 
       satelliteLayer.addTo(map);
       labelsLayer.addTo(map);
+
+      // Ensure uploaded layers are drawn on initial load
+      setTimeout(() => { loadUploadedLayers(); }, 0);
 
       // Add zoom control to top-left
       L.control.zoom({ position: 'topleft' }).addTo(map);
@@ -231,6 +240,21 @@ const FRAAtlas: React.FC = () => {
 
       // Load FRA data
       loadFRAData();
+
+      // If a focus payload exists, fit to it
+      try {
+        const raw = sessionStorage.getItem('mapFocusGeoJSON');
+        if (raw) {
+          const focus = JSON.parse(raw);
+          sessionStorage.removeItem('mapFocusGeoJSON');
+          const gj = L.geoJSON(focus);
+          const b = (gj as any).getBounds?.();
+          if (b && b.isValid()) {
+            map.fitBounds(b, { padding: [20, 20] });
+          }
+          gj.remove();
+        }
+      } catch {}
     }
 
     return () => {
@@ -276,12 +300,130 @@ const FRAAtlas: React.FC = () => {
       setFraData(mockData);
       setFilteredData(mockData);
       addFRALayersToMap(mockData);
+      // Load uploaded layers as well
+      await loadUploadedLayers();
     } catch (error) {
       setError('Failed to load FRA data');
       console.error('Error loading FRA data:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadUploadedLayers = async () => {
+    try {
+      if (!mapRef.current) return;
+      if (!uploadedLayersRef.current) {
+        uploadedLayersRef.current = L.layerGroup().addTo(mapRef.current);
+      }
+      uploadedLayersRef.current.clearLayers();
+
+      const res = await geojsonPlotAPI.getLayers();
+      const layers = res.data.data || [];
+      setUploadedLayers(layers);
+      uploadedLayerBoundsRef.current = null;
+      layers.forEach((layer: any) => {
+        const style = layer.style || {};
+        const gj = L.geoJSON(layer.data, {
+          style: {
+            color: style.strokeColor || '#1976d2',
+            weight: style.strokeWidth || 2,
+            opacity: style.strokeOpacity ?? 1,
+            fillColor: style.fillColor || '#2196f3',
+            fillOpacity: style.fillOpacity ?? 0.6,
+          },
+          onEachFeature: (_feature, lyr) => {
+            // Hover: show info tooltip and highlight
+            lyr.on('mouseover', (e: any) => {
+              const props = (e?.target?.feature && e.target.feature.properties) || {};
+              const html = getPopupHtml(props, layer.name);
+              (lyr as any).bindTooltip(html, { sticky: true, direction: 'top', opacity: 0.95 }).openTooltip();
+              try {
+                (lyr as any).setStyle && (lyr as any).setStyle({ weight: (style.strokeWidth || 2) + 1, fillOpacity: Math.max(0.1, (style.fillOpacity ?? 0.6)) });
+                (lyr as any).bringToFront && (lyr as any).bringToFront();
+              } catch {}
+            });
+            lyr.on('mouseout', () => {
+              try {
+                (lyr as any).closeTooltip && (lyr as any).closeTooltip();
+                (lyr as any).setStyle && (lyr as any).setStyle({
+                  color: style.strokeColor || '#1976d2',
+                  weight: style.strokeWidth || 2,
+                  opacity: style.strokeOpacity ?? 1,
+                  fillColor: style.fillColor || '#2196f3',
+                  fillOpacity: style.fillOpacity ?? 0.6,
+                });
+              } catch {}
+            });
+
+            // Click: focus and open popup with details
+            lyr.on('click', (e: any) => {
+              try {
+                const b = (lyr as any).getBounds?.();
+                if (b && b.isValid() && mapRef.current) {
+                  mapRef.current.fitBounds(b, { padding: [16, 16] });
+                }
+                const props = (e?.target?.feature && e.target.feature.properties) || {};
+                const html = getPopupHtml(props, layer.name);
+                (lyr as any).bindPopup(html).openPopup();
+              } catch {}
+            });
+          }
+        });
+        gj.bindPopup(getPopupHtml({}, layer.name));
+        gj.addTo(uploadedLayersRef.current as L.LayerGroup);
+        try {
+          const b = (gj as any).getBounds?.();
+          if (b && b.isValid()) {
+            uploadedLayerBoundsRef.current = uploadedLayerBoundsRef.current ? uploadedLayerBoundsRef.current.extend(b) : b;
+          }
+        } catch {}
+      });
+
+      if (uploadedLayersRef.current.getLayers().length > 0) {
+        try {
+          const bounds = (uploadedLayersRef.current as any).getBounds();
+          if (bounds && bounds.isValid()) {
+            mapRef.current.fitBounds(bounds, { padding: [20, 20] });
+          }
+        } catch {}
+      }
+    } catch (e) {
+      console.warn('Failed to load uploaded layers');
+    }
+  };
+
+  // Refresh uploaded list when the dialog opens
+  useEffect(() => {
+    if (showLayersDialog) {
+      loadUploadedLayers();
+    }
+  }, [showLayersDialog]);
+
+  const flashHighlight = (geojson: any) => {
+    try {
+      if (!mapRef.current) return;
+      const highlight = L.geoJSON(geojson, {
+        style: { color: '#ff1744', weight: 3, dashArray: '6,4', fillOpacity: 0 }
+      }).addTo(mapRef.current);
+      setTimeout(() => {
+        try { mapRef.current && highlight.remove(); } catch {}
+      }, 4000);
+    } catch {}
+  };
+
+  const getPopupHtml = (props: any, fallbackName?: string) => {
+    const entries = props && typeof props === 'object' ? Object.entries(props) : [];
+    const title = (props?.name || props?.Name || props?.title || fallbackName || 'Area');
+    const rows = entries
+      .filter(([k]) => typeof k === 'string')
+      .map(([k, v]) => `<tr><td style="padding:4px 8px;color:#666;">${k}</td><td style="padding:4px 8px;">${String(v)}</td></tr>`) 
+      .join('');
+    return `
+      <div style="min-width:220px">
+        <h4 style="margin:0 0 8px 0;">${title}</h4>
+        <table style="border-collapse:collapse;font-size:12px;">${rows || '<tr><td>No attributes</td></tr>'}</table>
+      </div>`;
   };
 
   // Add FRA layers to map
@@ -309,6 +451,14 @@ const FRAAtlas: React.FC = () => {
           <p><strong>Date:</strong> ${new Date(item.dateSubmitted).toLocaleDateString()}</p>
         </div>
       `);
+      polygon.on('click', () => {
+        try {
+          const b = polygon.getBounds();
+          if (b && b.isValid() && mapRef.current) {
+            mapRef.current.fitBounds(b, { padding: [16, 16] });
+          }
+        } catch {}
+      });
 
       polygon.addTo(mapRef.current!);
     });
@@ -646,6 +796,11 @@ const FRAAtlas: React.FC = () => {
                 <Layers />
               </Fab>
             </Tooltip>
+            <Tooltip title="Uploaded Data (Data Management)">
+              <Fab size="small" color="default" onClick={() => setShowLayersDialog(true)}>
+                <ListIcon />
+              </Fab>
+            </Tooltip>
             <Tooltip title="Go to my location">
               <Fab size="small" color="default" onClick={() => locateMe(false)}>
                 <MyLocation />
@@ -690,6 +845,51 @@ const FRAAtlas: React.FC = () => {
           />
         </Box>
       </Box>
+      {/* Uploaded Layers Dialog */}
+      <Dialog open={showLayersDialog} onClose={() => setShowLayersDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <ListIcon />
+            Uploaded Data (Data Management)
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          {uploadedLayers.length === 0 ? (
+            <Typography color="text.secondary">No uploaded data found.</Typography>
+          ) : (
+            <List>
+              {uploadedLayers.map((l: any) => (
+                <ListItem
+                  key={l.id}
+                  secondaryAction={
+                    <Button size="small" variant="outlined" onClick={() => {
+                      try {
+                        if (!mapRef.current) return;
+                        const gj = L.geoJSON(l.data);
+                        const b = (gj as any).getBounds?.();
+                        if (b && b.isValid()) {
+                          mapRef.current.fitBounds(b, { padding: [20, 20] });
+                        }
+                        gj.remove();
+                        setShowLayersDialog(false);
+                        flashHighlight(l.data);
+                      } catch {}
+                    }}>Focus</Button>
+                  }
+                >
+                  <ListItemText
+                    primary={l.name}
+                    secondary={`Features: ${l.data?.features?.length ?? 0}`}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowLayersDialog(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
 
       {/* OCR Results Dialog */}
       <Dialog open={showOCRDialog} onClose={() => setShowOCRDialog(false)} maxWidth="md" fullWidth>

@@ -8,6 +8,7 @@ import './index.css';
 import { hydrate, setUser, clearAuth } from './store/slices/authSlice';
 import { api } from './services/api';
 import { CustomThemeProvider } from './contexts/ThemeContext';
+import { addSampleNotifications } from './store/slices/addSampleNotifications';
 
 // Leaflet CSS (already imported in components that use it)
 // import 'leaflet/dist/leaflet.css';
@@ -28,6 +29,9 @@ if (token) {
     });
 }
 
+// Add sample notifications for demonstration
+addSampleNotifications();
+
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
@@ -35,7 +39,11 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <Provider store={store}>
-      <BrowserRouter>
+      <BrowserRouter
+        future={{
+          v7_relativeSplatPath: true,
+        }}
+      >
         <CustomThemeProvider>
           <App />
         </CustomThemeProvider>

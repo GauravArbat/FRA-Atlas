@@ -53,8 +53,8 @@ const Sidebar: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  const drawerWidth = 300;
-  const drawerWidthMini = 72;
+  const drawerWidth = 280;
+  const drawerWidthMini = 68;
   const currentWidth = sidebarCollapsed ? drawerWidthMini : drawerWidth;
 
   const [expandedSections, setExpandedSections] = React.useState<string[]>(['main']);
@@ -124,14 +124,14 @@ const Sidebar: React.FC = () => {
         sx={{
           position: 'sticky',
           top: 0,
-          height: 64,
+          height: 60,
           display: 'flex',
           alignItems: 'center',
           gap: 1,
-          justifyContent: 'space-between',
+          justifyContent: 'center',
           px: sidebarCollapsed ? 1 : 2,
           bgcolor: 'background.paper',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
+          borderBottom: '1px solid rgba(0,0,0,0.08)',
           zIndex: 1
         }}
       >
@@ -149,52 +149,50 @@ const Sidebar: React.FC = () => {
           {!sidebarCollapsed && (
             <Typography
               variant="subtitle1"
-              sx={{ fontWeight: 700, letterSpacing: 0.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+              sx={{ fontWeight: 600, letterSpacing: 0.2, fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
             >
               FRA Atlas
             </Typography>
           )}
         </Box>
-        {!isMobile && (
-          <Box
-            onClick={() => dispatch(toggleSidebarCollapse())}
-            sx={{
-              cursor: 'pointer',
-              p: 0.5,
-              borderRadius: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              '&:hover': {
-                bgcolor: 'action.hover'
-              },
-              transition: 'all 0.2s ease'
-            }}
-          >
-            {sidebarCollapsed ? (
-              <ChevronRight sx={{ fontSize: 20, color: 'text.secondary' }} />
-            ) : (
-              <ChevronLeft sx={{ fontSize: 20, color: 'text.secondary' }} />
-            )}
-          </Box>
-        )}
+        
+        {/* Menu minimize button */}
+        <Box
+          onClick={() => dispatch(toggleSidebarCollapse())}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            width: 28,
+            height: 28,
+            borderRadius: '50%',
+            '&:hover': {
+              backgroundColor: alpha(theme.palette.primary.main, 0.08),
+            },
+            transition: 'background-color 0.2s ease'
+          }}
+        >
+          {sidebarCollapsed ? <ChevronRight /> : <ChevronLeft />}
+        </Box>
+
       </Box>
       {!sidebarCollapsed && (
         <Box sx={{ 
-          p: 3, 
+          p: 2.5, 
           borderBottom: 1, 
           borderColor: 'divider',
-          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.background.paper, 0.95)} 100%)`,
+          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.06)} 0%, ${alpha(theme.palette.background.paper, 0.97)} 100%)`,
           backdropFilter: 'blur(10px)'
         }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5, mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5 }}>
             <Avatar
               sx={{
                 background: 'linear-gradient(135deg, #2e7d32 0%, #4caf50 100%)',
-                width: 56,
-                height: 56,
-                fontSize: '1.75rem',
-                fontWeight: 800,
+                width: 48,
+                height: 48,
+                fontSize: '1.5rem',
+                fontWeight: 700,
                 boxShadow: '0 6px 20px rgba(46, 125, 50, 0.4)',
                 border: '3px solid rgba(255, 255, 255, 0.2)'
               }}
@@ -203,11 +201,11 @@ const Sidebar: React.FC = () => {
             </Avatar>
             <Box sx={{ flex: 1 }}>
               <Typography variant="h6" sx={{ 
-                fontWeight: 800, 
+                fontWeight: 600, 
                 color: 'text.primary',
                 lineHeight: 1.1,
-                fontSize: '1.3rem',
-                letterSpacing: -0.5
+                fontSize: '1.1rem',
+                letterSpacing: -0.3
               }}>
                 FRA Atlas
               </Typography>
@@ -216,7 +214,7 @@ const Sidebar: React.FC = () => {
         </Box>
       )}
       <Divider />
-      <List sx={{ pt: 2, px: sidebarCollapsed ? 0.5 : 1 }}>
+      <List sx={{ pt: 1.5, px: sidebarCollapsed ? 0.5 : 1.5 }}>
         {sidebarCollapsed ? (
           // Collapsed view - show only icons
           <>
@@ -226,10 +224,10 @@ const Sidebar: React.FC = () => {
                   onClick={() => navigate(item.path)}
                   selected={location.pathname === item.path}
                   sx={{
-                    borderRadius: 2,
-                    mx: 1,
-                    py: 1.5,
-                    minHeight: 48,
+                    borderRadius: 1.5,
+                    mx: 0.75,
+                    py: 1.25,
+                    minHeight: 42,
                     justifyContent: 'center',
                     '&:hover': {
                       backgroundColor: alpha(theme.palette.primary.main, 0.08),
@@ -273,34 +271,34 @@ const Sidebar: React.FC = () => {
                 <ListItemButton
                   onClick={() => toggleSection(section.id)}
                   sx={{
-                    borderRadius: 3,
-                    mb: 1.5,
+                    borderRadius: 2,
+                    mb: 1,
                     mx: 1,
-                    py: 1.5,
+                    py: 1.25,
                     bgcolor: expandedSections.includes(section.id) 
-                      ? alpha(theme.palette.primary.main, 0.12) 
+                      ? alpha(theme.palette.primary.main, 0.08) 
                       : 'transparent',
                     '&:hover': {
-                      bgcolor: alpha(theme.palette.primary.main, 0.16),
+                      bgcolor: alpha(theme.palette.primary.main, 0.12),
                       transform: 'translateX(2px)'
                     },
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    border: `1px solid ${expandedSections.includes(section.id) ? alpha(theme.palette.primary.main, 0.2) : 'transparent'}`
+                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    border: `1px solid ${expandedSections.includes(section.id) ? alpha(theme.palette.primary.main, 0.15) : 'transparent'}`
                   }}
                 >
                   <ListItemText 
                     primary={section.title}
                     primaryTypographyProps={{
-                      fontSize: '0.85rem',
-                      fontWeight: 700,
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
                       color: expandedSections.includes(section.id) ? 'primary.main' : 'text.secondary',
                       textTransform: 'uppercase',
-                      letterSpacing: 1
+                      letterSpacing: 0.8
                     }}
                   />
                   {expandedSections.includes(section.id) ? 
-                    <ExpandLess sx={{ color: 'primary.main', fontSize: '1.2rem' }} /> : 
-                    <ExpandMore sx={{ color: 'text.secondary', fontSize: '1.2rem' }} />
+                    <ExpandLess sx={{ color: 'primary.main', fontSize: '1rem' }} /> : 
+                    <ExpandMore sx={{ color: 'text.secondary', fontSize: '1rem' }} />
                   }
                 </ListItemButton>
             
@@ -312,25 +310,25 @@ const Sidebar: React.FC = () => {
                       onClick={() => navigate(item.path)}
                       selected={location.pathname === item.path}
                       sx={{
-                        borderRadius: 3,
-                        mb: 1,
-                        mx: 2,
-                        py: 2,
-                        pl: 3,
+                        borderRadius: 1.5,
+                        mb: 0.75,
+                        mx: 1,
+                        py: 1.5,
+                        pl: 2,
                         '&:hover': {
-                          backgroundColor: alpha(theme.palette.primary.main, 0.08),
-                          transform: 'translateX(6px)',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                          backgroundColor: alpha(theme.palette.primary.main, 0.06),
+                          transform: 'translateX(4px)',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
                         },
                         '&.Mui-selected': {
-                          backgroundColor: alpha(theme.palette.primary.main, 0.15),
-                          borderLeft: `4px solid ${theme.palette.primary.main}`,
+                          backgroundColor: alpha(theme.palette.primary.main, 0.12),
+                          borderLeft: `3px solid ${theme.palette.primary.main}`,
                           '&:hover': {
-                            backgroundColor: alpha(theme.palette.primary.main, 0.2)
+                            backgroundColor: alpha(theme.palette.primary.main, 0.15)
                           }
                         },
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                        border: `1px solid ${location.pathname === item.path ? alpha(theme.palette.primary.main, 0.3) : 'transparent'}`
+                        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                        border: `1px solid ${location.pathname === item.path ? alpha(theme.palette.primary.main, 0.2) : 'transparent'}`
                       }}
                     >
                       <ListItemIcon sx={{ 
@@ -353,8 +351,8 @@ const Sidebar: React.FC = () => {
                       <ListItemText 
                         primary={item.text}
                         primaryTypographyProps={{
-                          fontSize: '0.9rem',
-                          fontWeight: location.pathname === item.path ? 700 : 500,
+                          fontSize: '0.85rem',
+                          fontWeight: location.pathname === item.path ? 600 : 400,
                           color: location.pathname === item.path ? 'primary.main' : 'text.primary'
                         }}
                       />
@@ -365,9 +363,9 @@ const Sidebar: React.FC = () => {
                           color={item.badge === 'New' ? 'success' : 'primary'}
                           variant="filled"
                           sx={{
-                            fontSize: '0.7rem',
-                            height: 22,
-                            fontWeight: 600,
+                            fontSize: '0.65rem',
+                            height: 20,
+                            fontWeight: 500,
                             background: item.badge === 'New' 
                               ? 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)'
                               : 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
@@ -382,7 +380,7 @@ const Sidebar: React.FC = () => {
             </Collapse>
             
                 
-                {section.id !== 'system' && <Divider sx={{ my: 2, mx: 1 }} />}
+                {section.id !== 'system' && <Divider sx={{ my: 1.5, mx: 1.5 }} />}
               </Box>
             ))}
           </>
