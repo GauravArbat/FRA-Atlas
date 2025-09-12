@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs').promises;
 
 const router = express.Router();
+const { addLayer } = require('../utils/layersStore');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -302,6 +303,13 @@ router.get('/processed-data', async (req, res) => {
         district: 'Shivnagar',
         area: '1.25 hectares',
         applicationDate: '15/01/2024',
+        personalInfo: {
+          name: 'Rajesh Kumar Singh',
+          village: 'Greenpur',
+          district: 'Shivnagar',
+          area: '1.25 hectares',
+          applicationDate: '15/01/2024'
+        },
         geoJSON: {
           type: 'FeatureCollection',
           features: [{
@@ -374,6 +382,8 @@ router.post('/save-to-layers', async (req, res) => {
       updatedAt: new Date().toISOString()
     };
     
+    addLayer(layerData);
+
     logger.info('PDF data saved to layers', {
       layerId,
       name: personalInfo.name,

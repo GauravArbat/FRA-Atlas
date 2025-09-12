@@ -121,7 +121,14 @@ const DataManagement: React.FC = () => {
   const saveToMapLayers = async (data: any) => {
     try {
       setError(null);
-      const response = await pdfProcessorAPI.saveToLayers(data.geoJSON, data.personalInfo);
+      const fallbackPersonalInfo = data.personalInfo || {
+        name: data.name || 'Unknown',
+        village: data.village || '',
+        district: data.district || '',
+        area: data.area || '',
+        applicationDate: data.applicationDate || ''
+      };
+      const response = await pdfProcessorAPI.saveToLayers(data.geoJSON, fallbackPersonalInfo);
       setUploadInfo(`Data saved to map layers successfully! Layer: ${response.data.data.name}`);
     } catch (err: any) {
       setError(err?.response?.data?.error || 'Failed to save to map layers');
@@ -360,7 +367,7 @@ const DataManagement: React.FC = () => {
                       Personal Information
                     </Typography>
                     <List dense>
-                      {Object.entries(processedData.personalInfo).map(([key, value]) => (
+                      {Object.entries(processedData?.personalInfo || {}).map(([key, value]) => (
                         <ListItem key={key} sx={{ py: 0.5 }}>
                           <ListItemText 
                             primary={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
@@ -381,12 +388,12 @@ const DataManagement: React.FC = () => {
                       Geographic Data
                     </Typography>
                     <Typography variant="body2" gutterBottom>
-                      Coordinates Found: {processedData.coordinates.length}
+                      Coordinates Found: {processedData?.coordinates?.length || 0}
                     </Typography>
                     <Typography variant="body2" gutterBottom>
-                      Geometry Type: {processedData.geoJSON.features[0]?.geometry.type || 'None'}
+                      Geometry Type: {processedData?.geoJSON?.features?.[0]?.geometry?.type || 'None'}
                     </Typography>
-                    {processedData.coordinates.length > 0 && (
+                    {processedData?.coordinates?.length > 0 && (
                       <Box>
                         <Typography variant="body2" gutterBottom>Coordinates:</Typography>
                         {processedData.coordinates.map((coord: number[], idx: number) => (
@@ -418,13 +425,13 @@ const DataManagement: React.FC = () => {
                 onClick={() => {
                   const tempPDF: ProcessedPDFData = {
                     id: 'temp',
-                    name: processedData.personalInfo.name || 'Unknown',
-                    village: processedData.personalInfo.village || 'Unknown',
-                    district: processedData.personalInfo.district || 'Unknown',
-                    area: processedData.personalInfo.area || 'Unknown',
-                    applicationDate: processedData.personalInfo.applicationDate || 'Unknown',
-                    geoJSON: processedData.geoJSON,
-                    personalInfo: processedData.personalInfo,
+                    name: processedData?.personalInfo?.name || 'Unknown',
+                    village: processedData?.personalInfo?.village || 'Unknown',
+                    district: processedData?.personalInfo?.district || 'Unknown',
+                    area: processedData?.personalInfo?.area || 'Unknown',
+                    applicationDate: processedData?.personalInfo?.applicationDate || 'Unknown',
+                    geoJSON: processedData?.geoJSON || {},
+                    personalInfo: processedData?.personalInfo || {},
                     processedAt: new Date().toISOString()
                   };
                   viewOnMap(tempPDF);
@@ -527,7 +534,7 @@ const DataManagement: React.FC = () => {
                 <Grid item xs={12} md={6}>
                   <Typography variant="h6" gutterBottom>Personal Information</Typography>
                   <List dense>
-                    {Object.entries(selectedPDF.personalInfo).map(([key, value]) => (
+                    {Object.entries(selectedPDF?.personalInfo || {}).map(([key, value]) => (
                       <ListItem key={key} sx={{ py: 0.5 }}>
                         <ListItemText 
                           primary={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
@@ -548,7 +555,7 @@ const DataManagement: React.FC = () => {
                     fontFamily: 'monospace',
                     fontSize: '0.8rem'
                   }}>
-                    <pre>{JSON.stringify(selectedPDF.geoJSON, null, 2)}</pre>
+                    <pre>{JSON.stringify(selectedPDF?.geoJSON || {}, null, 2)}</pre>
                   </Box>
                 </Grid>
               </Grid>

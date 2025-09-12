@@ -5,7 +5,7 @@ import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
 import Dashboard from './pages/Dashboard';
 import FRAAtlas from './pages/FRAAtlas';
-import DigitalGISPlot from './pages/DigitalGISPlot';
+import DigitalGISPlot from './pages/DigitalGISPlot_OpenStreetMap';
 import DataPlottingDemo from './pages/DataPlottingDemo';
 import DataManagement from './pages/DataManagement';
 import DecisionSupport from './pages/DecisionSupport';

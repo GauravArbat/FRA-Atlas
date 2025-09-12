@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth-mock');
+const { authenticateToken, optionalAuth } = require('../middleware/auth-mock');
 const { logger } = require('../utils/logger');
 
 // In-memory storage for demo (in production, use database)
@@ -146,7 +146,7 @@ let cadastralLayers = [
 ];
 
 // Get all Patta records
-router.get('/patta', authenticateToken, async (req, res) => {
+router.get('/patta', optionalAuth, async (req, res) => {
   try {
     logger.info('Fetching all Patta records');
     res.json({
@@ -307,7 +307,7 @@ router.delete('/patta/:id', authenticateToken, async (req, res) => {
 });
 
 // Get cadastral layers
-router.get('/cadastral-layers', authenticateToken, async (req, res) => {
+router.get('/cadastral-layers', optionalAuth, async (req, res) => {
   try {
     logger.info('Fetching cadastral layers');
     res.json({
@@ -667,7 +667,7 @@ function calculatePolygonArea(geometry) {
 }
 
 // Get statistics for dashboard
-router.get('/statistics', authenticateToken, async (req, res) => {
+router.get('/statistics', optionalAuth, async (req, res) => {
   try {
     const totalPattas = pattaRecords.length;
     const digitizedPattas = pattaRecords.filter(p => p.status === 'digitized').length;

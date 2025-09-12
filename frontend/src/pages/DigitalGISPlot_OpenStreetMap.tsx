@@ -27,8 +27,12 @@ import {
   Paper,
   Divider,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 import {
   Close,
   Settings,
@@ -75,6 +79,13 @@ const DigitalGISPlot: React.FC = () => {
   const mapRef = useRef<L.Map | null>(null);
   const drawnItemsRef = useRef<L.FeatureGroup | null>(null);
 
+  // Theme and responsive
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
+  // Redux state for sidebar
+  const { sidebarOpen, sidebarCollapsed } = useSelector((state: RootState) => state.ui);
+
   // UI state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,8 +100,10 @@ const DigitalGISPlot: React.FC = () => {
   const [cursorInfo, setCursorInfo] = useState<any>(null);
   const [areaPlots, setAreaPlots] = useState<AreaPlot[]>([]);
 
-  // Control panel dimensions
+  // Dynamic dimensions based on sidebar state
+  const mainSidebarWidth = isMobile ? 0 : (sidebarCollapsed ? 72 : 300);
   const controlsWidth = showSidebar ? 400 : 0;
+  const totalLeftOffset = mainSidebarWidth + controlsWidth;
 
   // Initialize map
   useEffect(() => {
@@ -175,14 +188,14 @@ const DigitalGISPlot: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Resize map when sidebar visibility changes
+  // Resize map when sidebar visibility or collapse state changes
   useEffect(() => {
     if (mapRef.current) {
       setTimeout(() => {
         mapRef.current!.invalidateSize();
       }, 300);
     }
-  }, [showSidebar]);
+  }, [showSidebar, sidebarCollapsed, sidebarOpen]);
 
   // Handle drawing creation
   const handleDrawingCreate = (e: any) => {
@@ -267,11 +280,12 @@ const DigitalGISPlot: React.FC = () => {
               position: 'fixed',
               height: { xs: 'calc(100vh - 64px)', md: 'calc(100vh - 80px)' },
               top: { xs: 64, md: 80 },
-              left: 300,
+              left: mainSidebarWidth,
               zIndex: 1300,
               backgroundColor: 'background.paper',
               borderRight: '1px solid rgba(0,0,0,0.08)',
-              boxShadow: '2px 0 12px rgba(0,0,0,0.05)'
+              boxShadow: '2px 0 12px rgba(0,0,0,0.05)',
+              transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
             }
           }}
         >
@@ -338,10 +352,10 @@ const DigitalGISPlot: React.FC = () => {
         sx={{
           position: 'fixed',
           top: { xs: 64, md: 80 },
-          left: showSidebar ? `${300 + controlsWidth}px` : '300px',
+          left: isMobile ? (sidebarOpen ? 0 : 0) : `${totalLeftOffset}px`,
           right: 0,
           bottom: 0,
-          transition: 'left 0.3s ease',
+          transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           overflow: 'hidden'
         }}
       >

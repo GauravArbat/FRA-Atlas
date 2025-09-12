@@ -21,11 +21,12 @@ code {
   height: 20px;
 }
 
-.mapboxgl-popup {
+/* Leaflet popup styles */
+.leaflet-popup {
   max-width: 300px;
 }
 
-.mapboxgl-popup-content {
+.leaflet-popup-content {
   padding: 15px;
   border-radius: 8px;
 }

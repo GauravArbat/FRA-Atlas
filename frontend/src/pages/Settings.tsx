@@ -1,23 +1,16 @@
 import React, { useState } from 'react';
-import { Box, Typography, Paper, Stack, TextField, Button, Divider, FormControlLabel, Switch, Alert } from '@mui/material';
+import { Box, Typography, Paper, Stack, TextField, Button, Divider, Alert } from '@mui/material';
 import { api } from '../services/api';
 
 const Settings: React.FC = () => {
-  const [mapboxToken, setMapboxToken] = useState(localStorage.getItem('REACT_APP_MAPBOX_TOKEN') || '');
-  const [osmMode, setOsmMode] = useState(!mapboxToken);
   const [apiUrl, setApiUrl] = useState(localStorage.getItem('API_URL') || (process.env.REACT_APP_API_URL || 'http://localhost:8000/api'));
   const [info, setInfo] = useState<string | null>(null);
 
   const save = () => {
     setInfo(null);
     localStorage.setItem('API_URL', apiUrl);
-    if (mapboxToken) {
-      localStorage.setItem('REACT_APP_MAPBOX_TOKEN', mapboxToken);
-      setOsmMode(false);
-    } else {
-      localStorage.removeItem('REACT_APP_MAPBOX_TOKEN');
-      setOsmMode(true);
-    }
+    // Clean up any old Mapbox tokens since we no longer use them
+    localStorage.removeItem('REACT_APP_MAPBOX_TOKEN');
     setInfo('Settings saved. Please reload the app for changes to take effect.');
   };
 
@@ -38,8 +31,9 @@ const Settings: React.FC = () => {
         <Typography variant="h6" gutterBottom>Map</Typography>
         <Divider sx={{ mb: 2 }} />
         <Stack spacing={2}>
-          <FormControlLabel control={<Switch checked={osmMode} onChange={(e) => setOsmMode(e.target.checked)} />} label="Use free OpenStreetMap (no token)" />
-          <TextField label="Mapbox Token" value={mapboxToken} onChange={(e) => setMapboxToken(e.target.value)} helperText="Required for drawing/validation and Mapbox basemap" disabled={osmMode} />
+          <Alert severity="info">
+            This application now uses free Leaflet maps with Esri satellite imagery. No tokens or API keys are required for mapping functionality.
+          </Alert>
         </Stack>
       </Paper>
 

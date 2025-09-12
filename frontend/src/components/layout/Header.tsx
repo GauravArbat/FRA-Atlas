@@ -13,7 +13,11 @@ import {
   ListItemIcon,
   ListItemText,
   Tooltip,
-  Badge
+  Badge,
+  Chip,
+  alpha,
+  Slide,
+  useScrollTrigger
 } from '@mui/material';
 import { 
   Menu as MenuIcon, 
@@ -21,9 +25,16 @@ import {
   Person, 
   Settings, 
   Logout,
-  Dashboard
+  Dashboard,
+  Notifications,
+  Search,
+  Brightness4,
+  Brightness7,
+  Language,
+  Help
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
+import { ThemeToggle } from '../ThemeToggle';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toggleSidebar } from '../../store/slices/uiSlice';
@@ -90,8 +101,19 @@ const Header: React.FC = () => {
   };
 
   return (
-    <AppBar position="fixed" color="primary" elevation={2}>
-      <Toolbar sx={{ px: { xs: 2, md: 3 } }}>
+    <AppBar 
+      position="fixed" 
+      elevation={1}
+      sx={{
+        bgcolor: 'background.paper',
+        borderBottom: 1,
+        borderColor: 'divider',
+        backdropFilter: 'blur(20px)',
+        background: (theme) => `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.02)} 0%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+      }}
+    >
+      <Toolbar sx={{ px: { xs: 2, md: 4 }, minHeight: { xs: 64, md: 80 } }}>
         <IconButton
           edge="start"
           color="inherit"
@@ -101,21 +123,113 @@ const Header: React.FC = () => {
         >
           <MenuIcon />
         </IconButton>
-        <Typography
-          variant={isMobile ? 'h6' : 'h5'}
-          component="div"
-          sx={{ flexGrow: 1, fontWeight: 600, letterSpacing: 0.2 }}
-        >
-          FRA Atlas
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexGrow: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: 2,
+                background: 'linear-gradient(135deg, #2e7d32 0%, #4caf50 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(46, 125, 50, 0.3)'
+              }}
+            >
+              <Typography
+                variant="h6"
+                sx={{
+                  color: 'white',
+                  fontWeight: 800,
+                  fontSize: '1.2rem'
+                }}
+              >
+                F
+              </Typography>
+            </Box>
+            <Box>
+              <Typography
+                variant={isMobile ? 'h6' : 'h5'}
+                component="div"
+                sx={{ 
+                  fontWeight: 800, 
+                  letterSpacing: -0.8,
+                  color: 'text.primary',
+                  lineHeight: 1.2,
+                  fontSize: { xs: '1.25rem', md: '1.5rem' }
+                }}
+              >
+                FRA Atlas
+              </Typography>
+            </Box>
+          </Box>
+          
+        </Box>
         
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          {/* Search Icon */}
+          {!isMobile && (
+            <Tooltip title="Search">
+              <IconButton
+                size="medium"
+                sx={{ 
+                  color: 'text.secondary',
+                  '&:hover': { 
+                    bgcolor: 'action.hover',
+                    color: 'primary.main'
+                  }
+                }}
+              >
+                <Search />
+              </IconButton>
+            </Tooltip>
+          )}
+          
+          {/* Notifications */}
+          <Tooltip title="Notifications">
+            <IconButton
+              size="medium"
+              sx={{ 
+                color: 'text.secondary',
+                '&:hover': { 
+                  bgcolor: 'action.hover',
+                  color: 'primary.main'
+                }
+              }}
+            >
+              <Badge badgeContent={3} color="error" variant="dot">
+                <Notifications />
+              </Badge>
+            </IconButton>
+          </Tooltip>
+          
+          {/* Theme Toggle */}
+          <ThemeToggle size="medium" variant="default" />
+          
+          {/* Help */}
+          {!isMobile && (
+            <Tooltip title="Help & Documentation">
+              <IconButton
+                size="medium"
+                sx={{ 
+                  color: 'text.secondary',
+                  '&:hover': { 
+                    bgcolor: 'action.hover',
+                    color: 'primary.main'
+                  }
+                }}
+              >
+                <Help />
+              </IconButton>
+            </Tooltip>
+          )}
           {!isMobile && user && (
             <Box sx={{ textAlign: 'right', mr: 2 }}>
-              <Typography variant="body2" sx={{ color: 'white', fontWeight: 500 }}>
+              <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 600 }}>
                 {user.username}
               </Typography>
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)' }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                 {getRoleDisplayName(user.role)}
               </Typography>
             </Box>
@@ -123,13 +237,17 @@ const Header: React.FC = () => {
           
           <Tooltip title="Account menu">
             <IconButton
-              color="inherit"
               aria-label="account menu"
               aria-controls={open ? 'account-menu' : undefined}
               aria-haspopup="true"
               aria-expanded={open ? 'true' : undefined}
               onClick={handleProfileClick}
-              sx={{ p: 0.5 }}
+              sx={{ 
+                p: 0.5,
+                '&:hover': {
+                  bgcolor: 'action.hover'
+                }
+              }}
             >
               {user ? (
                 <Badge
@@ -140,12 +258,14 @@ const Header: React.FC = () => {
                 >
                   <Avatar
                     sx={{ 
-                      width: 32, 
-                      height: 32, 
-                      bgcolor: 'secondary.main',
+                      width: 36, 
+                      height: 36, 
+                      bgcolor: 'primary.main',
                       fontSize: '0.875rem',
-                      fontWeight: 600,
-                      boxShadow: 2
+                      fontWeight: 700,
+                      boxShadow: 3,
+                      border: 2,
+                      borderColor: 'background.paper'
                     }}
                   >
                     {getInitials(user.username)}
@@ -168,12 +288,14 @@ const Header: React.FC = () => {
             elevation: 0,
             sx: {
               overflow: 'visible',
-              filter: 'drop-shadow(0px 8px 24px rgba(0,0,0,0.24))',
+              filter: 'drop-shadow(0px 16px 32px rgba(0,0,0,0.15))',
               mt: 1.5,
-              width: 320,
-              borderRadius: 2,
-              border: '1px solid rgba(0,0,0,0.06)',
-              backdropFilter: 'blur(8px)',
+              width: 340,
+              borderRadius: 3,
+              border: 1,
+              borderColor: 'divider',
+              backdropFilter: 'blur(12px)',
+              background: (theme) => alpha(theme.palette.background.paper, 0.95),
               '& .MuiAvatar-root': {
                 width: 32,
                 height: 32,
@@ -200,21 +322,32 @@ const Header: React.FC = () => {
           {user && (
             <Box sx={{ px: 2, pt: 2, pb: 1.5 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <Avatar sx={{ bgcolor: 'primary.main', boxShadow: 2 }}>
+                <Avatar sx={{ 
+                  bgcolor: 'primary.main', 
+                  boxShadow: 3,
+                  width: 48,
+                  height: 48,
+                  fontSize: '1.25rem',
+                  fontWeight: 700
+                }}>
                   {getInitials(user.username)}
                 </Avatar>
                 <Box sx={{ minWidth: 0 }}>
-                  <Typography noWrap variant="subtitle2" sx={{ fontWeight: 700 }}>
+                  <Typography noWrap variant="subtitle1" sx={{ fontWeight: 700 }}>
                     {user.username}
                   </Typography>
-                  <Typography noWrap variant="caption" color="text.secondary">
+                  <Typography noWrap variant="body2" color="text.secondary">
                     {user.email}
                   </Typography>
+                  <Chip 
+                    label={getRoleDisplayName(user.role)} 
+                    size="small" 
+                    color="primary" 
+                    variant="outlined"
+                    sx={{ mt: 0.5, height: 20, fontSize: '0.7rem' }}
+                  />
                 </Box>
               </Box>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>
-                {getRoleDisplayName(user.role)}
-              </Typography>
             </Box>
           )}
           

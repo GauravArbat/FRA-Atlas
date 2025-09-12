@@ -1,6 +1,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { logger } = require('../utils/logger');
+const { listLayers, addLayer, updateLayerStyle: storeUpdateStyle, deleteLayer: storeDelete } = require('../utils/layersStore');
 const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
@@ -166,7 +167,7 @@ router.post('/save', [
     // Generate unique layer ID
     const layerId = `layer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-    // In a real implementation, you would save this to a database
+    // Save to in-memory store (replace with DB in production)
     const layerData = {
       id: layerId,
       name,
@@ -191,6 +192,8 @@ router.post('/save', [
       userId
     });
 
+    addLayer(layerData);
+
     res.json({
       success: true,
       data: layerData,
@@ -209,7 +212,7 @@ router.post('/save', [
 // Get user's GeoJSON layers
 router.get('/layers', async (req, res) => {
   try {
-    // For now, return sample data without authentication requirement
+    // Combine persisted demo sample and in-memory layers
     const userLayers = [
       {
         id: 'layer-1',
@@ -226,7 +229,8 @@ router.get('/layers', async (req, res) => {
         userId: 'demo-user',
         createdAt: '2024-01-15T10:00:00Z',
         updatedAt: '2024-01-15T10:00:00Z'
-      }
+      },
+      ...listLayers()
     ];
 
     logger.info('User GeoJSON layers requested', { count: userLayers.length });
@@ -255,12 +259,12 @@ router.put('/layers/:id/style', [
     const { style } = req.body;
     const userId = req.user?.userId || 'demo-user';
 
-    // In a real implementation, you would update the database
+    const updated = storeUpdateStyle(id, style) || { id, style };
     logger.info('Layer style updated', { layerId: id, userId, style });
 
     res.json({
       success: true,
-      data: { id, style },
+      data: updated,
       message: 'Layer style updated successfully'
     });
 
@@ -279,7 +283,7 @@ router.delete('/layers/:id', async (req, res) => {
     const { id } = req.params;
     const userId = req.user?.userId || 'demo-user';
 
-    // In a real implementation, you would delete from database
+    storeDelete(id);
     logger.info('Layer deleted', { layerId: id, userId });
 
     res.json({

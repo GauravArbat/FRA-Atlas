@@ -1,59 +1,31 @@
-// Map configuration utility
+// Map configuration utility for Leaflet-based maps
+// This app now uses free Leaflet maps with Esri satellite imagery
 export const getMapLibrary = () => {
-  const token = process.env.REACT_APP_MAPBOX_TOKEN;
-  
-  // If no token or invalid token, use MapLibre GL JS
-  if (!token || token === '' || token.includes('test-placeholder')) {
-    return 'maplibre';
-  }
-  
-  return 'mapbox';
+  // Always return 'leaflet' since we no longer use Mapbox
+  return 'leaflet';
 };
 
-export const getMapStyle = (library: 'maplibre' | 'mapbox') => {
-  if (library === 'maplibre') {
-    return {
-      version: 8 as const,
-      sources: {
-        'osm': {
-          type: 'raster' as const,
-          tiles: [
-            'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-          ],
-          tileSize: 256,
-          attribution: '© OpenStreetMap contributors'
-        }
-      },
-      layers: [
-        {
-          id: 'osm',
-          type: 'raster' as const,
-          source: 'osm',
-          paint: { 'raster-opacity': 1 }
-        }
-      ]
-    } as const;
-  }
-  
-  // Mapbox style (requires valid token)
+export const getLeafletTileConfig = () => {
   return {
-    version: 8 as const,
-    sources: {
-      'satellite': {
-        type: 'raster' as const,
-        tiles: [
-          'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-        ],
-        tileSize: 256
-      }
+    satellite: {
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      attribution: '&copy; <a href="https://www.esri.com/">Esri</a>, Maxar, Earthstar Geographics',
+      maxZoom: 19
     },
-    layers: [
-      {
-        id: 'satellite',
-        type: 'raster' as const,
-        source: 'satellite',
-        paint: { 'raster-opacity': 1 }
-      }
-    ]
-  } as const;
+    labels: {
+      url: 'https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+      attribution: '',
+      maxZoom: 19
+    },
+    terrain: {
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}',
+      attribution: '&copy; <a href="https://www.esri.com/">Esri</a>',
+      maxZoom: 19
+    },
+    osm: {
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
+    }
+  };
 };

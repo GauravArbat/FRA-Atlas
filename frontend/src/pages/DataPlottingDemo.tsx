@@ -39,18 +39,20 @@ import {
   Edit,
   Delete
 } from '@mui/icons-material';
-import * as maplibregl from 'maplibre-gl';
-import mapboxgl from 'mapbox-gl';
-import GeoJSONPlotter from '../components/GeoJSONPlotter';
-import { getMapLibrary, getMapStyle } from '../utils/mapConfig';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { getMapLibrary, getLeafletTileConfig } from '../utils/mapConfig';
 
-const token = process.env.REACT_APP_MAPBOX_TOKEN || '';
-if (token && !token.includes('test-placeholder')) {
-  mapboxgl.accessToken = token;
-}
+// Fix Leaflet default markers
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 const DataPlottingDemo: React.FC = () => {
-  const mapRef = useRef<maplibregl.Map | mapboxgl.Map | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
@@ -214,45 +216,37 @@ const DataPlottingDemo: React.FC = () => {
     }
 
     try {
-      const mapLibrary = getMapLibrary();
-      const mapStyle = getMapStyle(mapLibrary);
+      const tileConfig = getLeafletTileConfig();
       
-      let map;
-      
-      if (mapLibrary === 'maplibre') {
-        // Use MapLibre GL JS (no token required)
-        map = new maplibregl.Map({
-          container: containerRef.current,
-          style: mapStyle as any,
-          center: [78.125, 23.075], // Center on the CFR area
-          zoom: 12,
-          pitch: 0,
-          bearing: 0
-        });
-      } else {
-        // Use Mapbox GL JS (requires valid token)
-        map = new mapboxgl.Map({
-          container: containerRef.current,
-          style: mapStyle as any,
-          center: [78.125, 23.075], // Center on the CFR area
-          zoom: 12,
-          pitch: 45,
-          bearing: 0
-        });
-      }
-
-      map.on('load', () => {
-        // Wait for style to be fully loaded
-        if (map.isStyleLoaded()) {
-          setMapLoaded(true);
-        } else {
-          map.on('styledata', () => {
-            if (map.isStyleLoaded()) {
-              setMapLoaded(true);
-            }
-          });
-        }
+      // Create Leaflet map
+      const map = L.map(containerRef.current, {
+        center: [23.075, 78.125], // Center on the CFR area (lat, lng for Leaflet)
+        zoom: 12,
+        zoomControl: false,
+        attributionControl: true
       });
+
+      // Add satellite base layer
+      const satelliteLayer = L.tileLayer(tileConfig.satellite.url, {
+        attribution: tileConfig.satellite.attribution,
+        maxZoom: tileConfig.satellite.maxZoom
+      });
+      
+      // Add labels layer
+      const labelsLayer = L.tileLayer(tileConfig.labels.url, {
+        attribution: tileConfig.labels.attribution,
+        maxZoom: tileConfig.labels.maxZoom
+      });
+
+      // Add layers to map
+      satelliteLayer.addTo(map);
+      labelsLayer.addTo(map);
+
+      // Add zoom control
+      L.control.zoom({ position: 'topleft' }).addTo(map);
+
+      // Map is ready immediately with Leaflet
+      setMapLoaded(true);
 
       mapRef.current = map;
     } catch (error) {
@@ -524,11 +518,12 @@ const DataPlottingDemo: React.FC = () => {
 
           {/* GeoJSON Plotter */}
           <Box sx={{ height: 300, borderTop: '1px solid', borderColor: 'divider' }}>
-            <GeoJSONPlotter
-              mapRef={mapRef}
-              onDataLoaded={handleDataLoaded}
-              onLayerAdded={handleLayerAdded}
-            />
+            <Alert severity="info" sx={{ m: 2 }}>
+              <Typography variant="body2">
+                GeoJSON plotting functionality is being updated to work with Leaflet maps. 
+                This demo is currently disabled while the migration is in progress.
+              </Typography>
+            </Alert>
           </Box>
         </Box>
       </Box>
