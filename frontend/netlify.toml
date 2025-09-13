@@ -1,11 +1,13 @@
 [build]
-  base = "."
+  base = "frontend"
   publish = "build"
   command = "npm run build"
 
 [build.environment]
   NODE_VERSION = "18"
   REACT_APP_API_URL = "https://fra-atlas-backend-ig8n.onrender.com"
+  GENERATE_SOURCEMAP = "false"
+  CI = "false"
 
 # Ensure proper build process
 [build.processing]
