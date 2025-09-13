@@ -29,7 +29,11 @@ const PORT = process.env.PORT || 8000;
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'https://fra-f-atlas.netlify.app',
+    'https://68c51ad7c8e8307e5460a263--fra-f-atlas.netlify.app'
+  ],
   credentials: true,
 }));
 
