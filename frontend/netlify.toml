@@ -8,6 +8,7 @@
   REACT_APP_API_URL = "https://fra-atlas-backend-ig8n.onrender.com"
   GENERATE_SOURCEMAP = "false"
   CI = "false"
+  NODE_ENV = "production"
 
 # Ensure proper build process
 [build.processing]
