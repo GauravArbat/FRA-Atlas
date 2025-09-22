@@ -1,0 +1,52 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "FRA-001",
+        "status": "granted",
+        "person": "Savitri Devi",
+        "village": "Bhavanipur",
+        "district": "Pune",
+        "area_ha": 1.8
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[73.8505,19.0905],[73.8545,19.0905],[73.8545,19.0938],[73.8505,19.0938],[73.8505,19.0905]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "FRA-002",
+        "status": "potential",
+        "person": "Ramesh Pawar",
+        "village": "Sangvi",
+        "district": "Pune",
+        "area_ha": 2.4
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[73.8608,19.0820],[73.8642,19.0820],[73.8642,19.0852],[73.8608,19.0852],[73.8608,19.0820]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "FRA-003",
+        "status": "granted",
+        "person": "Asha Kolekar",
+        "village": "Junnar",
+        "district": "Pune",
+        "area_ha": 1.2
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[73.8710,19.0970],[73.8740,19.0970],[73.8740,19.1000],[73.8710,19.1000],[73.8710,19.0970]]]
+      }
+    }
+  ]
+}
+
+
