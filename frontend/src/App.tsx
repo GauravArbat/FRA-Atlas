@@ -114,7 +114,10 @@ function App() {
           message.includes('AxiosError') ||
           message.includes('v7_startTransition') ||
           message.includes('reactrouter.com') ||
-          message.includes('future flag')) {
+          message.includes('future flag') ||
+          message.includes('React DevTools') ||
+          message.includes('reactjs.org/link/react-devtools') ||
+          message.includes('better development experience')) {
         return; // Suppress these specific errors
       }
       originalConsoleError.apply(console, args);
@@ -126,7 +129,10 @@ function App() {
       const message = args.join(' ');
       if (message.includes('Style not loaded yet') ||
           message.includes('Map not ready') ||
-          message.includes('No routes matched location')) {
+          message.includes('No routes matched location') ||
+          message.includes('React DevTools') ||
+          message.includes('reactjs.org/link/react-devtools') ||
+          message.includes('better development experience')) {
         return; // Suppress these specific warnings
       }
       originalConsoleWarn.apply(console, args);
