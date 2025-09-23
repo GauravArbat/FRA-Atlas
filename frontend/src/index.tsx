@@ -7,8 +7,7 @@ import { store } from './store';
 import './index.css';
 import { hydrate, setUser, clearAuth } from './store/slices/authSlice';
 import { api } from './services/api';
-import { CustomThemeProvider } from './contexts/ThemeContext';
-import { LanguageProvider } from './contexts/LanguageContext';
+
 import { addSampleNotifications } from './store/slices/addSampleNotifications';
 
 // Leaflet CSS (already imported in components that use it)
@@ -45,11 +44,7 @@ root.render(
           v7_relativeSplatPath: true,
         }}
       >
-        <CustomThemeProvider>
-          <LanguageProvider>
-            <App />
-          </LanguageProvider>
-        </CustomThemeProvider>
+        <App />
       </BrowserRouter>
     </Provider>
   </React.StrictMode>

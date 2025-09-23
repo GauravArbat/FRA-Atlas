@@ -19,6 +19,7 @@ import ContactUs from './pages/ContactUs';
 import { useAuth } from './hooks/useAuth';
 import ErrorBoundary from './components/ErrorBoundary';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { CustomThemeProvider } from './contexts/ThemeContext';
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -143,9 +144,10 @@ function App() {
   }
 
   return (
-    <LanguageProvider>
-      <ErrorBoundary>
-        <Box sx={{ display: 'flex' }}>
+    <CustomThemeProvider>
+      <LanguageProvider>
+        <ErrorBoundary>
+          <Box sx={{ display: 'flex' }}>
         <Sidebar />
         <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
           <Header />
@@ -164,10 +166,11 @@ function App() {
               <Route path="/contact" element={<ContactUs />} />
             </Routes>
           </Box>
+            </Box>
           </Box>
-        </Box>
-      </ErrorBoundary>
-    </LanguageProvider>
+        </ErrorBoundary>
+      </LanguageProvider>
+    </CustomThemeProvider>
   );
 }
 

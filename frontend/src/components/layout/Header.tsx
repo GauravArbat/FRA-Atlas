@@ -29,6 +29,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import LanguageSwitcher from '../LanguageSwitcher';
+import { ThemeToggle } from '../ThemeToggle';
 
 const Header: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -86,6 +87,7 @@ const Header: React.FC = () => {
           </Box>
           
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <ThemeToggle size="small" variant="outlined" />
             <LanguageSwitcher />
             <Button 
               size="small" 
