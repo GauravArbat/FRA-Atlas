@@ -15,8 +15,10 @@ import Notifications from './pages/Notifications';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Profile from './pages/Profile';
+import ContactUs from './pages/ContactUs';
 import { useAuth } from './hooks/useAuth';
 import ErrorBoundary from './components/ErrorBoundary';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -141,12 +143,13 @@ function App() {
   }
 
   return (
-    <ErrorBoundary>
-      <Box sx={{ display: 'flex' }}>
+    <LanguageProvider>
+      <ErrorBoundary>
+        <Box sx={{ display: 'flex' }}>
         <Sidebar />
         <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
           <Header />
-          <Box component="main" sx={{ flex: 1, overflow: 'auto', p: { xs: 2, md: 3 }, mt: { xs: '60px', md: '60px' } }}>
+          <Box component="main" sx={{ flex: 1, overflow: 'auto', p: { xs: 2, md: 3 }, mt: { xs: '88px', md: '88px' } }}>
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/atlas" element={<FRAAtlas />} />
@@ -158,11 +161,13 @@ function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/notifications" element={<Notifications />} />
+              <Route path="/contact" element={<ContactUs />} />
             </Routes>
           </Box>
+          </Box>
         </Box>
-      </Box>
-    </ErrorBoundary>
+      </ErrorBoundary>
+    </LanguageProvider>
   );
 }
 

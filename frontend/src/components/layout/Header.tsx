@@ -1,72 +1,46 @@
-import React, { useState } from 'react';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  IconButton, 
-  Box, 
-  useMediaQuery,
+import React from 'react';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
+  Badge,
+  Avatar,
+  Box,
   Menu,
   MenuItem,
-  Avatar,
   Divider,
-  ListItemIcon,
-  ListItemText,
-  Tooltip,
-  Badge,
-  Chip,
-  alpha,
-  Slide,
-  useScrollTrigger
+  Button,
+  Select,
+  FormControl,
+  InputLabel
 } from '@mui/material';
-import { 
-  Menu as MenuIcon, 
-  AccountCircle, 
-  Person, 
-  Settings, 
-  Logout,
-  Dashboard,
+import {
   Notifications,
-  Search,
-  Brightness4,
-  Brightness7,
+  AccountCircle,
+  Settings,
+  Logout,
   Language,
-  Help,
-  ChevronLeft,
-  ChevronRight
+  TextIncrease,
+  TextDecrease,
+  Contrast
 } from '@mui/icons-material';
-import { useTheme } from '@mui/material/styles';
-import { ThemeToggle } from '../ThemeToggle';
-import LanguageSwitcher from '../LanguageSwitcher';
-import { useDispatch, useSelector } from 'react-redux';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toggleSidebar, toggleSidebarCollapse } from '../../store/slices/uiSlice';
-import { logout } from '../../store/slices/authSlice';
-import { RootState } from '../../store';
+import { useAuth } from '../../hooks/useAuth';
+import LanguageSwitcher from '../LanguageSwitcher';
 
 const Header: React.FC = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const { user } = useSelector((state: RootState) => state.auth);
-  const { sidebarCollapsed, notifications } = useSelector((state: RootState) => state.ui);
-  
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
-  const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
+  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
   const handleClose = () => {
     setAnchorEl(null);
-  };
-
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
-    handleClose();
   };
 
   const handleProfile = () => {
@@ -79,321 +53,240 @@ const Header: React.FC = () => {
     handleClose();
   };
 
-  const handleDashboard = () => {
-    navigate('/');
+  const handleLogout = () => {
+    logout();
     handleClose();
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
-  const getRoleDisplayName = (role: string) => {
-    const roleMap: { [key: string]: string } = {
-      'admin': 'System Administrator',
-      'state_admin': 'State Administrator',
-      'district_admin': 'District Administrator',
-      'block_admin': 'Block Administrator',
-      'user': 'User'
-    };
-    return roleMap[role] || role;
-  };
-
   return (
-    <AppBar 
-      position="fixed" 
-      elevation={1}
-      sx={{
-        bgcolor: 'background.paper',
-        borderBottom: 1,
-        borderColor: 'divider',
-        backdropFilter: 'blur(20px)',
-        background: (theme) => `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.03)} 0%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`,
-        boxShadow: '2px 0 12px rgba(0,0,0,0.05)',
-        width: { 
-          xs: '100%', 
-          md: sidebarCollapsed ? 'calc(100% - 80px)' : 'calc(100% - 240px)' 
-        },
-        ml: { 
-          xs: 0, 
-          md: sidebarCollapsed ? '80px' : '240px' 
-        },
-        transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-      }}
-    >
-      <Toolbar sx={{ px: { xs: 2, md: 2 }, minHeight: { xs: 60, md: 60 } }}>
-        {isMobile && (
-          <IconButton
-            edge="start"
-            color="inherit"
-            aria-label="open sidebar"
-            onClick={() => dispatch(toggleSidebar())}
-            sx={{ mr: 2, display: 'inline-flex' }}
-          >
-            <MenuIcon />
-          </IconButton>
-        )}
-        {/* Sidebar collapse button removed */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexGrow: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 2,
-                background: 'linear-gradient(135deg, #2e7d32 0%, #4caf50 100%)',
-                display: { xs: 'flex', md: sidebarCollapsed ? 'flex' : 'none' },
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(46, 125, 50, 0.3)'
-              }}
-            >
-              <Typography
-                variant="h6"
-                sx={{
-                  color: 'white',
-                  fontWeight: 800,
-                  fontSize: '1.2rem'
-                }}
-              >
-                F
-              </Typography>
-            </Box>
-            <Box>
-              <Typography
-                variant={isMobile ? 'h6' : 'h5'}
-                component="div"
-                sx={{ 
-                  fontWeight: 800, 
-                  letterSpacing: -0.8,
-                  color: 'text.primary',
-                  lineHeight: 1.2,
-                  fontSize: { xs: '1.25rem', md: '1.5rem' },
-                  display: { xs: 'block', md: sidebarCollapsed ? 'block' : 'none' }
-                }}
-              >
-                FRA Atlas
-              </Typography>
-            </Box>
+    <>
+      {/* Top Header Bar */}
+      <AppBar 
+        position="fixed" 
+        sx={{ 
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          bgcolor: '#1976d2',
+          boxShadow: 'none',
+          borderBottom: '1px solid #ddd'
+        }}
+      >
+        <Toolbar sx={{ minHeight: '48px !important', px: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+            <img 
+              src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K" 
+              alt="Government Logo" 
+              style={{ width: 24, height: 24, marginRight: 8 }}
+            />
+            <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
+              Forest Rights Act (FRA) Atlas
+            </Typography>
+            <Typography variant="caption" sx={{ ml: 1, opacity: 0.8 }}>
+              Ministry of Tribal Affairs, Government of India
+            </Typography>
           </Box>
           
-        </Box>
-        
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          {/* Search Icon removed */}
-          
-          {/* Notifications */}
-          <Tooltip title="Notifications">
-            <IconButton
-              size="medium"
-              onClick={() => navigate('/notifications')}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <LanguageSwitcher />
+            <Button 
+              size="small" 
+              sx={{ color: 'white', minWidth: 'auto', p: 0.5 }}
+              title="Increase Font Size"
+            >
+              A+
+            </Button>
+            <Button 
+              size="small" 
+              sx={{ color: 'white', minWidth: 'auto', p: 0.5 }}
+              title="Normal Font Size"
+            >
+              A
+            </Button>
+            <Button 
+              size="small" 
+              sx={{ color: 'white', minWidth: 'auto', p: 0.5 }}
+              title="Decrease Font Size"
+            >
+              A-
+            </Button>
+            <Button 
+              size="small" 
+              sx={{ color: 'white', minWidth: 'auto', p: 0.5 }}
+              title="High Contrast"
+            >
+              <Contrast fontSize="small" />
+            </Button>
+            <Button 
+              variant="contained" 
+              size="small" 
               sx={{ 
-                color: 'text.secondary',
-                '&:hover': { 
-                  bgcolor: 'action.hover',
-                  color: 'primary.main'
-                }
+                bgcolor: '#4caf50', 
+                color: 'white',
+                '&:hover': { bgcolor: '#45a049' },
+                ml: 1
               }}
             >
-              <Badge badgeContent={notifications.length} color="primary" variant="standard">
-                <Notifications />
+              Login
+            </Button>
+          </Box>
+        </Toolbar>
+      </AppBar>
+
+      {/* Navigation Bar */}
+      <AppBar 
+        position="fixed" 
+        sx={{ 
+          top: 48,
+          zIndex: (theme) => theme.zIndex.drawer,
+          bgcolor: '#f5f5f5',
+          color: '#333',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        }}
+      >
+        <Toolbar sx={{ minHeight: '40px !important', px: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <Button 
+              sx={{ 
+                color: '#1976d2', 
+                fontWeight: 600,
+                '&:hover': { bgcolor: '#e3f2fd' }
+              }}
+              onClick={() => navigate('/')}
+            >
+              Home
+            </Button>
+            <Button 
+              sx={{ 
+                color: '#333',
+                '&:hover': { bgcolor: '#e3f2fd' }
+              }}
+              onClick={() => navigate('/atlas')}
+            >
+              About FRA
+            </Button>
+            <Button 
+              sx={{ 
+                color: '#333',
+                '&:hover': { bgcolor: '#e3f2fd' }
+              }}
+              onClick={() => navigate('/')}
+            >
+              Dashboard
+            </Button>
+            <Button 
+              sx={{ 
+                color: '#333',
+                '&:hover': { bgcolor: '#e3f2fd' }
+              }}
+              onClick={() => navigate('/data')}
+            >
+              Data Discovery
+            </Button>
+            <Button 
+              sx={{ 
+                color: '#333',
+                '&:hover': { bgcolor: '#e3f2fd' }
+              }}
+              onClick={() => navigate('/gis-plot')}
+            >
+              GIS Platform
+            </Button>
+            <Button 
+              sx={{ 
+                color: '#333',
+                '&:hover': { bgcolor: '#e3f2fd' }
+              }}
+              onClick={() => navigate('/reports')}
+            >
+              Reports
+            </Button>
+            <Button 
+              sx={{ 
+                color: '#333',
+                '&:hover': { bgcolor: '#e3f2fd' }
+              }}
+              onClick={() => navigate('/data')}
+            >
+              Downloads
+            </Button>
+            <Button 
+              sx={{ 
+                color: '#333',
+                '&:hover': { bgcolor: '#e3f2fd' }
+              }}
+              onClick={() => navigate('/contact')}
+            >
+              Contact Us
+            </Button>
+          </Box>
+          
+          <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1 }}>
+            <IconButton 
+              size="small"
+              onClick={() => navigate('/notifications')}
+              sx={{ color: '#333' }}
+            >
+              <Badge badgeContent={3} color="error">
+                <Notifications fontSize="small" />
               </Badge>
             </IconButton>
-          </Tooltip>
-          
-          {/* Language Switcher */}
-          <LanguageSwitcher />
-          
-          {/* Theme Toggle */}
-          <ThemeToggle size="medium" variant="default" />
-          
-          {/* Help */}
-          {!isMobile && (
-            <Tooltip title="Help & Documentation">
-              <IconButton
-                size="medium"
+            
+            <IconButton
+              size="small"
+              onClick={handleMenu}
+              sx={{ color: '#333' }}
+            >
+              <Avatar 
                 sx={{ 
-                  color: 'text.secondary',
-                  '&:hover': { 
-                    bgcolor: 'action.hover',
-                    color: 'primary.main'
-                  }
+                  width: 24, 
+                  height: 24, 
+                  bgcolor: '#1976d2',
+                  fontSize: '0.8rem'
                 }}
               >
-                <Help />
-              </IconButton>
-            </Tooltip>
-          )}
-          {!isMobile && user && (
-            <Box sx={{ textAlign: 'right', mr: 2 }}>
-              <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 600 }}>
-                {user.username}
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {getRoleDisplayName(user.role)}
-              </Typography>
-            </Box>
-          )}
-          
-          <Tooltip title="Account menu">
-            <IconButton
-              aria-label="account menu"
-              aria-controls={open ? 'account-menu' : undefined}
-              aria-haspopup="true"
-              aria-expanded={open ? 'true' : undefined}
-              onClick={handleProfileClick}
-              sx={{ 
-                p: 0.5,
-                '&:hover': {
-                  bgcolor: 'action.hover'
+                {user?.username?.charAt(0) || 'U'}
+              </Avatar>
+            </IconButton>
+            
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleClose}
+              PaperProps={{
+                sx: {
+                  mt: 1,
+                  minWidth: 180,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
                 }
               }}
             >
-              {user ? (
-                <Badge
-                  overlap="circular"
-                  variant="dot"
-                  color="success"
-                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                >
-                  <Avatar
-                    sx={{ 
-                      width: 36, 
-                      height: 36, 
-                      bgcolor: 'primary.main',
-                      fontSize: '0.875rem',
-                      fontWeight: 700,
-                      boxShadow: 3,
-                      border: 2,
-                      borderColor: 'background.paper'
-                    }}
-                  >
-                    {getInitials(user.username)}
-                  </Avatar>
-                </Badge>
-              ) : (
-                <AccountCircle sx={{ fontSize: 32 }} />
-              )}
-            </IconButton>
-          </Tooltip>
-        </Box>
-
-        <Menu
-          anchorEl={anchorEl}
-          id="account-menu"
-          open={open}
-          onClose={handleClose}
-          onClick={handleClose}
-          PaperProps={{
-            elevation: 0,
-            sx: {
-              overflow: 'visible',
-              filter: 'drop-shadow(0px 16px 32px rgba(0,0,0,0.15))',
-              mt: 1.5,
-              width: 340,
-              borderRadius: 3,
-              border: 1,
-              borderColor: 'divider',
-              backdropFilter: 'blur(12px)',
-              background: (theme) => alpha(theme.palette.background.paper, 0.95),
-              '& .MuiAvatar-root': {
-                width: 32,
-                height: 32,
-                ml: -0.5,
-                mr: 1,
-              },
-              '&:before': {
-                content: '""',
-                display: 'block',
-                position: 'absolute',
-                top: 0,
-                right: 14,
-                width: 10,
-                height: 10,
-                bgcolor: 'background.paper',
-                transform: 'translateY(-50%) rotate(45deg)',
-                zIndex: 0,
-              },
-            },
-          }}
-          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-        >
-          {user && (
-            <Box sx={{ px: 2, pt: 2, pb: 1.5 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <Avatar sx={{ 
-                  bgcolor: 'primary.main', 
-                  boxShadow: 3,
-                  width: 48,
-                  height: 48,
-                  fontSize: '1.25rem',
-                  fontWeight: 700
-                }}>
-                  {getInitials(user.username)}
-                </Avatar>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography noWrap variant="subtitle1" sx={{ fontWeight: 700 }}>
-                    {user.username}
-                  </Typography>
-                  <Typography noWrap variant="body2" color="text.secondary">
-                    {user.email}
-                  </Typography>
-                  <Chip 
-                    label={getRoleDisplayName(user.role)} 
-                    size="small" 
-                    color="primary" 
-                    variant="outlined"
-                    sx={{ mt: 0.5, height: 20, fontSize: '0.7rem' }}
-                  />
-                </Box>
+              <Box sx={{ px: 2, py: 1 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  {user?.username || 'User'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {user?.email || 'user@example.com'}
+                </Typography>
               </Box>
-            </Box>
-          )}
-          
-          <Divider />
-          
-          <MenuItem onClick={handleDashboard} sx={{ py: 1.25 }}>
-            <ListItemIcon>
-              <Dashboard fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Dashboard</ListItemText>
-          </MenuItem>
-          
-          <MenuItem onClick={handleProfile} sx={{ py: 1.25 }}>
-            <ListItemIcon>
-              <Person fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Profile</ListItemText>
-          </MenuItem>
-          
-          <MenuItem onClick={handleSettings} sx={{ py: 1.25 }}>
-            <ListItemIcon>
-              <Settings fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Settings</ListItemText>
-          </MenuItem>
-          
-          <Divider />
-          
-          <MenuItem onClick={handleLogout} sx={{ py: 1.25 }}>
-            <ListItemIcon>
-              <Logout fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Logout</ListItemText>
-          </MenuItem>
-        </Menu>
-      </Toolbar>
-    </AppBar>
+              <Divider />
+              <MenuItem onClick={handleProfile}>
+                <AccountCircle sx={{ mr: 1, fontSize: 18 }} />
+                Profile
+              </MenuItem>
+              <MenuItem onClick={handleSettings}>
+                <Settings sx={{ mr: 1, fontSize: 18 }} />
+                Settings
+              </MenuItem>
+              <Divider />
+              <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
+                <Logout sx={{ mr: 1, fontSize: 18 }} />
+                Logout
+              </MenuItem>
+            </Menu>
+          </Box>
+        </Toolbar>
+      </AppBar>
+    </>
   );
 };
 
 export default Header;
-
-
-
