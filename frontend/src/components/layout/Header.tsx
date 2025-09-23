@@ -249,70 +249,7 @@ const Header: React.FC = () => {
             </Button>
           </Box>
           
-          <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton 
-              size="small"
-              onClick={() => navigate('/notifications')}
-              sx={{ color: 'text.primary' }}
-            >
-              <Badge badgeContent={3} color="error">
-                <Notifications fontSize="small" />
-              </Badge>
-            </IconButton>
-            
-            <IconButton
-              size="small"
-              onClick={handleMenu}
-              sx={{ color: 'text.primary' }}
-            >
-              <Avatar 
-                sx={{ 
-                  width: 24, 
-                  height: 24, 
-                  bgcolor: 'primary.main',
-                  fontSize: '0.8rem'
-                }}
-              >
-                {user?.username?.charAt(0) || 'U'}
-              </Avatar>
-            </IconButton>
-            
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
-              PaperProps={{
-                sx: {
-                  mt: 1,
-                  minWidth: 180,
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-                }
-              }}
-            >
-              <Box sx={{ px: 2, py: 1 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  {user?.username || 'User'}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {user?.email || 'user@example.com'}
-                </Typography>
-              </Box>
-              <Divider />
-              <MenuItem onClick={handleProfile} data-translate>
-                <AccountCircle sx={{ mr: 1, fontSize: 18 }} />
-                Profile
-              </MenuItem>
-              <MenuItem onClick={handleSettings} data-translate>
-                <Settings sx={{ mr: 1, fontSize: 18 }} />
-                Settings
-              </MenuItem>
-              <Divider />
-              <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }} data-translate>
-                <Logout sx={{ mr: 1, fontSize: 18 }} />
-                Logout
-              </MenuItem>
-            </Menu>
-          </Box>
+
         </Toolbar>
       </AppBar>
     </>
