@@ -68,8 +68,8 @@ const Header: React.FC = () => {
         position="fixed" 
         sx={{ 
           zIndex: (theme) => theme.zIndex.drawer + 1,
-          bgcolor: 'primary.main',
-          color: 'primary.contrastText',
+          bgcolor: '#1976d2',
+          color: 'white',
           boxShadow: 'none',
           borderBottom: (theme) => `1px solid ${theme.palette.divider}`
         }}
