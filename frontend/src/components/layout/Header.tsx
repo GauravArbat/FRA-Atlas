@@ -275,7 +275,7 @@ const Header: React.FC = () => {
               onClick={() => navigate('/')}
               data-translate
             >
-              Home
+              Dashboard
             </Button>
             <Button 
               sx={{ 
@@ -285,27 +285,7 @@ const Header: React.FC = () => {
               onClick={() => navigate('/atlas')}
               data-translate
             >
-              About FRA
-            </Button>
-            <Button 
-              sx={{ 
-                color: 'text.primary',
-                '&:hover': { bgcolor: 'action.hover' }
-              }}
-              onClick={() => navigate('/')}
-              data-translate
-            >
-              Dashboard
-            </Button>
-            <Button 
-              sx={{ 
-                color: 'text.primary',
-                '&:hover': { bgcolor: 'action.hover' }
-              }}
-              onClick={() => navigate('/data')}
-              data-translate
-            >
-              Data Discovery
+              FRA Atlas
             </Button>
             <Button 
               sx={{ 
@@ -315,17 +295,7 @@ const Header: React.FC = () => {
               onClick={() => navigate('/gis-plot')}
               data-translate
             >
-              GIS Platform
-            </Button>
-            <Button 
-              sx={{ 
-                color: 'text.primary',
-                '&:hover': { bgcolor: 'action.hover' }
-              }}
-              onClick={() => navigate('/reports')}
-              data-translate
-            >
-              Reports
+              Digital GIS
             </Button>
             <Button 
               sx={{ 
@@ -335,7 +305,27 @@ const Header: React.FC = () => {
               onClick={() => navigate('/data')}
               data-translate
             >
-              Downloads
+              Data Management
+            </Button>
+            <Button 
+              sx={{ 
+                color: 'text.primary',
+                '&:hover': { bgcolor: 'action.hover' }
+              }}
+              onClick={() => navigate('/decisions')}
+              data-translate
+            >
+              Decision Support
+            </Button>
+            <Button 
+              sx={{ 
+                color: 'text.primary',
+                '&:hover': { bgcolor: 'action.hover' }
+              }}
+              onClick={() => navigate('/reports')}
+              data-translate
+            >
+              Reports & Analytics
             </Button>
             <Button 
               sx={{ 
