@@ -71,7 +71,10 @@ function App() {
           e.message?.includes('Loading chunk') ||
           e.message?.includes('ChunkLoadError') ||
           e.message?.includes('Network Error') ||
-          e.message?.includes('ERR_CONNECTION_REFUSED')) {
+          e.message?.includes('ERR_CONNECTION_REFUSED') ||
+          e.message?.includes('message channel closed') ||
+          e.message?.includes('listener indicated an asynchronous response') ||
+          e.message?.includes('runtime.lastError')) {
         e.stopImmediatePropagation();
         return false;
       }
@@ -84,7 +87,10 @@ function App() {
           e.reason?.message?.includes('ChunkLoadError') ||
           e.reason?.message?.includes('Style is not done loading') ||
           e.reason?.message?.includes('Network Error') ||
-          e.reason?.message?.includes('ERR_CONNECTION_REFUSED')) {
+          e.reason?.message?.includes('ERR_CONNECTION_REFUSED') ||
+          e.reason?.message?.includes('message channel closed') ||
+          e.reason?.message?.includes('listener indicated an asynchronous response') ||
+          e.reason?.message?.includes('runtime.lastError')) {
         e.preventDefault();
         return false;
       }
@@ -104,7 +110,10 @@ function App() {
           message.includes('container must be a String or HTMLElement') ||
           message.includes('Network Error') ||
           message.includes('ERR_CONNECTION_REFUSED') ||
-          message.includes('AxiosError')) {
+          message.includes('AxiosError') ||
+          message.includes('v7_startTransition') ||
+          message.includes('reactrouter.com') ||
+          message.includes('future flag')) {
         return; // Suppress these specific errors
       }
       originalConsoleError.apply(console, args);
