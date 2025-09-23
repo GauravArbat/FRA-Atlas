@@ -66,9 +66,10 @@ const Header: React.FC = () => {
         position="fixed" 
         sx={{ 
           zIndex: (theme) => theme.zIndex.drawer + 1,
-          bgcolor: '#1976d2',
+          bgcolor: 'primary.main',
+          color: 'primary.contrastText',
           boxShadow: 'none',
-          borderBottom: '1px solid #ddd'
+          borderBottom: (theme) => `1px solid ${theme.palette.divider}`
         }}
       >
         <Toolbar sx={{ minHeight: '48px !important', px: 2 }}>
@@ -78,41 +79,41 @@ const Header: React.FC = () => {
               alt="Government Logo" 
               style={{ width: 24, height: 24, marginRight: 8 }}
             />
-            <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem', color: 'inherit' }}>
               Forest Rights Act (FRA) Atlas
             </Typography>
-            <Typography variant="caption" sx={{ ml: 1, opacity: 0.8 }}>
+            <Typography variant="caption" sx={{ ml: 1, opacity: 0.8, color: 'inherit' }}>
               Ministry of Tribal Affairs, Government of India
             </Typography>
           </Box>
           
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <ThemeToggle size="small" variant="outlined" />
+            <ThemeToggle size="small" variant="contained" />
             <LanguageSwitcher />
             <Button 
               size="small" 
-              sx={{ color: 'white', minWidth: 'auto', p: 0.5 }}
+              sx={{ color: 'inherit', minWidth: 'auto', p: 0.5 }}
               title="Increase Font Size"
             >
               A+
             </Button>
             <Button 
               size="small" 
-              sx={{ color: 'white', minWidth: 'auto', p: 0.5 }}
+              sx={{ color: 'inherit', minWidth: 'auto', p: 0.5 }}
               title="Normal Font Size"
             >
               A
             </Button>
             <Button 
               size="small" 
-              sx={{ color: 'white', minWidth: 'auto', p: 0.5 }}
+              sx={{ color: 'inherit', minWidth: 'auto', p: 0.5 }}
               title="Decrease Font Size"
             >
               A-
             </Button>
             <Button 
               size="small" 
-              sx={{ color: 'white', minWidth: 'auto', p: 0.5 }}
+              sx={{ color: 'inherit', minWidth: 'auto', p: 0.5 }}
               title="High Contrast"
             >
               <Contrast fontSize="small" />
@@ -121,9 +122,9 @@ const Header: React.FC = () => {
               variant="contained" 
               size="small" 
               sx={{ 
-                bgcolor: '#4caf50', 
-                color: 'white',
-                '&:hover': { bgcolor: '#45a049' },
+                bgcolor: 'success.main', 
+                color: 'success.contrastText',
+                '&:hover': { bgcolor: 'success.dark' },
                 ml: 1
               }}
             >
@@ -139,18 +140,18 @@ const Header: React.FC = () => {
         sx={{ 
           top: 48,
           zIndex: (theme) => theme.zIndex.drawer,
-          bgcolor: '#f5f5f5',
-          color: '#333',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          bgcolor: 'background.paper',
+          color: 'text.primary',
+          boxShadow: (theme) => `0 2px 4px ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`
         }}
       >
         <Toolbar sx={{ minHeight: '40px !important', px: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
             <Button 
               sx={{ 
-                color: '#1976d2', 
+                color: 'primary.main', 
                 fontWeight: 600,
-                '&:hover': { bgcolor: '#e3f2fd' }
+                '&:hover': { bgcolor: 'action.hover' }
               }}
               onClick={() => navigate('/')}
             >
@@ -158,8 +159,8 @@ const Header: React.FC = () => {
             </Button>
             <Button 
               sx={{ 
-                color: '#333',
-                '&:hover': { bgcolor: '#e3f2fd' }
+                color: 'text.primary',
+                '&:hover': { bgcolor: 'action.hover' }
               }}
               onClick={() => navigate('/atlas')}
             >
@@ -167,8 +168,8 @@ const Header: React.FC = () => {
             </Button>
             <Button 
               sx={{ 
-                color: '#333',
-                '&:hover': { bgcolor: '#e3f2fd' }
+                color: 'text.primary',
+                '&:hover': { bgcolor: 'action.hover' }
               }}
               onClick={() => navigate('/')}
             >
@@ -176,8 +177,8 @@ const Header: React.FC = () => {
             </Button>
             <Button 
               sx={{ 
-                color: '#333',
-                '&:hover': { bgcolor: '#e3f2fd' }
+                color: 'text.primary',
+                '&:hover': { bgcolor: 'action.hover' }
               }}
               onClick={() => navigate('/data')}
             >
@@ -185,8 +186,8 @@ const Header: React.FC = () => {
             </Button>
             <Button 
               sx={{ 
-                color: '#333',
-                '&:hover': { bgcolor: '#e3f2fd' }
+                color: 'text.primary',
+                '&:hover': { bgcolor: 'action.hover' }
               }}
               onClick={() => navigate('/gis-plot')}
             >
@@ -194,8 +195,8 @@ const Header: React.FC = () => {
             </Button>
             <Button 
               sx={{ 
-                color: '#333',
-                '&:hover': { bgcolor: '#e3f2fd' }
+                color: 'text.primary',
+                '&:hover': { bgcolor: 'action.hover' }
               }}
               onClick={() => navigate('/reports')}
             >
@@ -203,8 +204,8 @@ const Header: React.FC = () => {
             </Button>
             <Button 
               sx={{ 
-                color: '#333',
-                '&:hover': { bgcolor: '#e3f2fd' }
+                color: 'text.primary',
+                '&:hover': { bgcolor: 'action.hover' }
               }}
               onClick={() => navigate('/data')}
             >
@@ -212,8 +213,8 @@ const Header: React.FC = () => {
             </Button>
             <Button 
               sx={{ 
-                color: '#333',
-                '&:hover': { bgcolor: '#e3f2fd' }
+                color: 'text.primary',
+                '&:hover': { bgcolor: 'action.hover' }
               }}
               onClick={() => navigate('/contact')}
             >
@@ -225,7 +226,7 @@ const Header: React.FC = () => {
             <IconButton 
               size="small"
               onClick={() => navigate('/notifications')}
-              sx={{ color: '#333' }}
+              sx={{ color: 'text.primary' }}
             >
               <Badge badgeContent={3} color="error">
                 <Notifications fontSize="small" />
@@ -235,13 +236,13 @@ const Header: React.FC = () => {
             <IconButton
               size="small"
               onClick={handleMenu}
-              sx={{ color: '#333' }}
+              sx={{ color: 'text.primary' }}
             >
               <Avatar 
                 sx={{ 
                   width: 24, 
                   height: 24, 
-                  bgcolor: '#1976d2',
+                  bgcolor: 'primary.main',
                   fontSize: '0.8rem'
                 }}
               >

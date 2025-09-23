@@ -104,9 +104,19 @@ const themeOptions: ThemeOptions = {
   components: {
     MuiCssBaseline: {
       styleOverrides: {
+        '*': {
+          boxSizing: 'border-box',
+        },
+        html: {
+          height: '100%',
+        },
         body: {
+          height: '100%',
+          backgroundColor: brand.headerGray,
+          color: brand.textPrimary,
           scrollbarWidth: 'thin',
           scrollbarColor: `${neutral[300]} ${neutral[100]}`,
+          transition: 'background-color 0.3s ease, color 0.3s ease',
           '&::-webkit-scrollbar': { width: 8 },
           '&::-webkit-scrollbar-track': { background: neutral[100] },
           '&::-webkit-scrollbar-thumb': {
@@ -114,6 +124,10 @@ const themeOptions: ThemeOptions = {
             borderRadius: 4,
             '&:hover': { backgroundColor: neutral[400] },
           },
+        },
+        '#root': {
+          height: '100%',
+          backgroundColor: brand.headerGray,
         },
       },
     },
@@ -173,6 +187,35 @@ export const professionalDarkTheme = createTheme({
   },
   components: {
     ...themeOptions.components,
+    MuiCssBaseline: {
+      styleOverrides: {
+        '*': {
+          boxSizing: 'border-box',
+        },
+        html: {
+          height: '100%',
+        },
+        body: {
+          height: '100%',
+          backgroundColor: '#0a0e13',
+          color: '#ffffff',
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#78909c #263238',
+          transition: 'background-color 0.3s ease, color 0.3s ease',
+          '&::-webkit-scrollbar': { width: 8 },
+          '&::-webkit-scrollbar-track': { background: '#263238' },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: '#78909c',
+            borderRadius: 4,
+            '&:hover': { backgroundColor: '#90a4ae' },
+          },
+        },
+        '#root': {
+          height: '100%',
+          backgroundColor: '#0a0e13',
+        },
+      },
+    },
     MuiAppBar: { 
       styleOverrides: { 
         root: { 

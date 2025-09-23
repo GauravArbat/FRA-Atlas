@@ -90,7 +90,8 @@ function App() {
           e.reason?.message?.includes('ERR_CONNECTION_REFUSED') ||
           e.reason?.message?.includes('message channel closed') ||
           e.reason?.message?.includes('listener indicated an asynchronous response') ||
-          e.reason?.message?.includes('runtime.lastError')) {
+          e.reason?.message?.includes('runtime.lastError') ||
+          e.reason?.toString?.()?.includes('listener indicated an asynchronous response')) {
         e.preventDefault();
         return false;
       }
@@ -124,7 +125,8 @@ function App() {
     console.warn = (...args) => {
       const message = args.join(' ');
       if (message.includes('Style not loaded yet') ||
-          message.includes('Map not ready')) {
+          message.includes('Map not ready') ||
+          message.includes('No routes matched location')) {
         return; // Suppress these specific warnings
       }
       originalConsoleWarn.apply(console, args);
@@ -142,41 +144,46 @@ function App() {
     };
   }, []);
 
-  if (!isAuthenticated) {
-    return (
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="*" element={<Login />} />
-      </Routes>
-    );
-  }
-
   return (
     <CustomThemeProvider>
       <LanguageProvider>
         <ErrorBoundary>
-          <Box sx={{ display: 'flex' }}>
-        <Sidebar />
-        <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-          <Header />
-          <Box component="main" sx={{ flex: 1, overflow: 'auto', p: { xs: 2, md: 3 }, mt: { xs: '88px', md: '88px' } }}>
+          {!isAuthenticated ? (
             <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/atlas" element={<FRAAtlas />} />
-              <Route path="/gis-plot" element={<DigitalGISPlot />} />
-              {/* <Route path="/data-plotting" element={<DataPlottingDemo />} /> */}
-              <Route path="/data" element={<DataManagement />} />
-              <Route path="/decisions" element={<DecisionSupport />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/notifications" element={<Notifications />} />
-              <Route path="/contact" element={<ContactUs />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="*" element={<Login />} />
             </Routes>
-          </Box>
+          ) : (
+            <Box sx={{ display: 'flex' }}>
+              <Sidebar />
+              <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                <Header />
+                <Box component="main" sx={{ flex: 1, overflow: 'auto', p: { xs: 2, md: 3 }, mt: { xs: '88px', md: '88px' } }}>
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/atlas" element={<FRAAtlas />} />
+                    <Route path="/gis-plot" element={<DigitalGISPlot />} />
+                    <Route path="/data" element={<DataManagement />} />
+                    <Route path="/decisions" element={<DecisionSupport />} />
+                    <Route path="/reports" element={<Reports />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/notifications" element={<Notifications />} />
+                    <Route path="/contact" element={<ContactUs />} />
+                    <Route path="/training" element={<DataManagement />} />
+                    <Route path="/standardization" element={<DataManagement />} />
+                    <Route path="/digitization" element={<DataManagement />} />
+                    <Route path="/spatial" element={<FRAAtlas />} />
+                    <Route path="/visualization" element={<FRAAtlas />} />
+                    <Route path="/rules" element={<DecisionSupport />} />
+                    <Route path="/guidelines" element={<DecisionSupport />} />
+                    <Route path="/circulars" element={<Reports />} />
+                  </Routes>
+                </Box>
+              </Box>
             </Box>
-          </Box>
+          )}
         </ErrorBoundary>
       </LanguageProvider>
     </CustomThemeProvider>
