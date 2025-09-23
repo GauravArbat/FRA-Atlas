@@ -98,13 +98,12 @@ const Sidebar: React.FC = () => {
               }}
               onClick={() => handleToggleSection(section.title)}
             >
-              <ListItem>
+              <ListItem data-translate>
                 <ListItemText 
                   primary={section.title}
                   primaryTypographyProps={{
                     fontSize: '0.9rem',
-                    fontWeight: 600,
-                    'data-translate': true
+                    fontWeight: 600
                   }}
                 />
                 {openSections[section.title] ? <ExpandLess /> : <ExpandMore />}
@@ -114,7 +113,7 @@ const Sidebar: React.FC = () => {
             <Collapse in={openSections[section.title]} timeout="auto" unmountOnExit>
               <List component="div" disablePadding>
                 {section.items.map((item, itemIndex) => (
-                  <ListItem key={itemIndex} disablePadding>
+                  <ListItem key={itemIndex} disablePadding data-translate>
                     <ListItemButton
                       onClick={() => navigate(item.path)}
                       sx={{
@@ -132,8 +131,7 @@ const Sidebar: React.FC = () => {
                       <ListItemText 
                         primary={item.text}
                         primaryTypographyProps={{
-                          fontSize: '0.85rem',
-                          'data-translate': true
+                          fontSize: '0.85rem'
                         }}
                       />
                     </ListItemButton>
