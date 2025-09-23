@@ -25,7 +25,8 @@ import {
   Language,
   TextIncrease,
   TextDecrease,
-  Contrast
+  Contrast,
+  AdminPanelSettings
 } from '@mui/icons-material';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -194,21 +195,13 @@ const Header: React.FC = () => {
                   }
                 }}
               >
-                <Avatar 
+                <AdminPanelSettings 
                   sx={{ 
-                    width: 28, 
-                    height: 28, 
-                    bgcolor: 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%)',
-                    color: '#1976d2',
-                    fontSize: '0.8rem',
-                    fontWeight: 700,
-                    border: '2px solid rgba(255,255,255,0.3)',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  {user?.username?.charAt(0)?.toUpperCase() || 'A'}
-                </Avatar>
+                    fontSize: 24,
+                    color: '#ffffff',
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
+                  }} 
+                />
               </IconButton>
             </Tooltip>
           </Box>
