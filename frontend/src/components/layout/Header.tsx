@@ -25,8 +25,7 @@ import {
   Language,
   TextIncrease,
   TextDecrease,
-  Contrast,
-  AdminPanelSettings
+  Contrast
 } from '@mui/icons-material';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -195,15 +194,61 @@ const Header: React.FC = () => {
                   }
                 }}
               >
-                <AdminPanelSettings 
+                <Avatar 
                   sx={{ 
-                    fontSize: 24,
-                    color: '#ffffff',
-                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
-                  }} 
-                />
+                    width: 28, 
+                    height: 28, 
+                    bgcolor: 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%)',
+                    color: '#1976d2',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {user?.username?.charAt(0)?.toUpperCase() || 'A'}
+                </Avatar>
               </IconButton>
             </Tooltip>
+            
+            {/* Admin Menu */}
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleClose}
+              PaperProps={{
+                sx: {
+                  mt: 1,
+                  minWidth: 180,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  borderRadius: '8px'
+                }
+              }}
+            >
+              <Box sx={{ px: 2, py: 1 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  {user?.username || 'Admin'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {user?.email || 'admin@fraatlas.gov.in'}
+                </Typography>
+              </Box>
+              <Divider />
+              <MenuItem onClick={handleProfile} data-translate>
+                <AccountCircle sx={{ mr: 1, fontSize: 18 }} />
+                Profile
+              </MenuItem>
+              <MenuItem onClick={handleSettings} data-translate>
+                <Settings sx={{ mr: 1, fontSize: 18 }} />
+                Settings
+              </MenuItem>
+              <Divider />
+              <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }} data-translate>
+                <Logout sx={{ mr: 1, fontSize: 18 }} />
+                Logout
+              </MenuItem>
+            </Menu>
           </Box>
         </Toolbar>
       </AppBar>
