@@ -89,54 +89,9 @@ const Header: React.FC = () => {
             </Typography>
           </Box>
           
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <ThemeToggle size="small" variant="contained" />
             <LanguageSwitcher />
-            <Button 
-              size="small" 
-              sx={{ color: 'inherit', minWidth: 'auto', p: 0.5 }}
-              title="Increase Font Size"
-              data-translate
-            >
-              A+
-            </Button>
-            <Button 
-              size="small" 
-              sx={{ color: 'inherit', minWidth: 'auto', p: 0.5 }}
-              title="Normal Font Size"
-              data-translate
-            >
-              A
-            </Button>
-            <Button 
-              size="small" 
-              sx={{ color: 'inherit', minWidth: 'auto', p: 0.5 }}
-              title="Decrease Font Size"
-              data-translate
-            >
-              A-
-            </Button>
-            <Button 
-              size="small" 
-              sx={{ color: 'inherit', minWidth: 'auto', p: 0.5 }}
-              title="High Contrast"
-              data-translate
-            >
-              <Contrast fontSize="small" />
-            </Button>
-            <Button 
-              variant="contained" 
-              size="small" 
-              sx={{ 
-                bgcolor: 'success.main', 
-                color: 'success.contrastText',
-                '&:hover': { bgcolor: 'success.dark' },
-                ml: 1
-              }}
-              data-translate
-            >
-              Login
-            </Button>
           </Box>
         </Toolbar>
       </AppBar>
