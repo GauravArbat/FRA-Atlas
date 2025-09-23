@@ -13,7 +13,9 @@ import {
   Button,
   Select,
   FormControl,
-  InputLabel
+  InputLabel,
+  Tooltip,
+  alpha
 } from '@mui/material';
 import {
   Notifications,
@@ -92,6 +94,61 @@ const Header: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <ThemeToggle size="small" variant="contained" />
             <LanguageSwitcher />
+            
+            {/* Notifications */}
+            <Tooltip title="Notifications" placement="bottom">
+              <IconButton 
+                onClick={() => navigate('/notifications')}
+                sx={{
+                  color: '#ffffff',
+                  border: `1px solid ${alpha('#ffffff', 0.3)}`,
+                  borderRadius: '6px',
+                  padding: '6px',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    backgroundColor: alpha('#ffffff', 0.1),
+                    border: `1px solid ${alpha('#ffffff', 0.5)}`,
+                    transform: 'scale(1.05)'
+                  }
+                }}
+              >
+                <Badge badgeContent={3} color="error">
+                  <Notifications sx={{ fontSize: 20 }} />
+                </Badge>
+              </IconButton>
+            </Tooltip>
+            
+            {/* Admin Profile */}
+            <Tooltip title="Admin Profile" placement="bottom">
+              <IconButton
+                onClick={handleMenu}
+                sx={{
+                  color: '#ffffff',
+                  border: `1px solid ${alpha('#ffffff', 0.3)}`,
+                  borderRadius: '6px',
+                  padding: '6px',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    backgroundColor: alpha('#ffffff', 0.1),
+                    border: `1px solid ${alpha('#ffffff', 0.5)}`,
+                    transform: 'scale(1.05)'
+                  }
+                }}
+              >
+                <Avatar 
+                  sx={{ 
+                    width: 20, 
+                    height: 20, 
+                    bgcolor: '#ffffff',
+                    color: '#1976d2',
+                    fontSize: '0.7rem',
+                    fontWeight: 600
+                  }}
+                >
+                  {user?.username?.charAt(0) || 'A'}
+                </Avatar>
+              </IconButton>
+            </Tooltip>
           </Box>
         </Toolbar>
       </AppBar>
