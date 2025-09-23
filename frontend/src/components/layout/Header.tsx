@@ -91,61 +91,123 @@ const Header: React.FC = () => {
             </Typography>
           </Box>
           
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <ThemeToggle size="small" variant="contained" />
             <LanguageSwitcher />
             
             {/* Notifications */}
-            <Tooltip title="Notifications" placement="bottom">
+            <Tooltip 
+              title="Notifications" 
+              placement="bottom"
+              componentsProps={{
+                tooltip: {
+                  sx: {
+                    bgcolor: 'rgba(0,0,0,0.9)',
+                    color: '#ffffff',
+                    fontSize: '0.75rem',
+                    fontWeight: 500,
+                    borderRadius: '6px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                  }
+                }
+              }}
+            >
               <IconButton 
                 onClick={() => navigate('/notifications')}
                 sx={{
                   color: '#ffffff',
-                  border: `1px solid ${alpha('#ffffff', 0.3)}`,
-                  borderRadius: '6px',
-                  padding: '6px',
-                  transition: 'all 0.3s ease',
+                  backgroundColor: alpha('#ffffff', 0.08),
+                  border: `1px solid ${alpha('#ffffff', 0.2)}`,
+                  borderRadius: '8px',
+                  padding: '8px',
+                  minWidth: '40px',
+                  height: '40px',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  backdropFilter: 'blur(10px)',
                   '&:hover': {
-                    backgroundColor: alpha('#ffffff', 0.1),
-                    border: `1px solid ${alpha('#ffffff', 0.5)}`,
-                    transform: 'scale(1.05)'
+                    backgroundColor: alpha('#ffffff', 0.15),
+                    border: `1px solid ${alpha('#ffffff', 0.4)}`,
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                  },
+                  '&:active': {
+                    transform: 'translateY(0px)'
                   }
                 }}
               >
-                <Badge badgeContent={3} color="error">
-                  <Notifications sx={{ fontSize: 20 }} />
+                <Badge 
+                  badgeContent={3} 
+                  color="error"
+                  sx={{
+                    '& .MuiBadge-badge': {
+                      fontSize: '0.7rem',
+                      minWidth: '18px',
+                      height: '18px',
+                      borderRadius: '9px',
+                      fontWeight: 600,
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                    }
+                  }}
+                >
+                  <Notifications sx={{ fontSize: 22 }} />
                 </Badge>
               </IconButton>
             </Tooltip>
             
             {/* Admin Profile */}
-            <Tooltip title="Admin Profile" placement="bottom">
+            <Tooltip 
+              title={`${user?.username || 'Admin'} Profile`} 
+              placement="bottom"
+              componentsProps={{
+                tooltip: {
+                  sx: {
+                    bgcolor: 'rgba(0,0,0,0.9)',
+                    color: '#ffffff',
+                    fontSize: '0.75rem',
+                    fontWeight: 500,
+                    borderRadius: '6px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                  }
+                }
+              }}
+            >
               <IconButton
                 onClick={handleMenu}
                 sx={{
                   color: '#ffffff',
-                  border: `1px solid ${alpha('#ffffff', 0.3)}`,
-                  borderRadius: '6px',
+                  backgroundColor: alpha('#ffffff', 0.08),
+                  border: `1px solid ${alpha('#ffffff', 0.2)}`,
+                  borderRadius: '8px',
                   padding: '6px',
-                  transition: 'all 0.3s ease',
+                  minWidth: '40px',
+                  height: '40px',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  backdropFilter: 'blur(10px)',
                   '&:hover': {
-                    backgroundColor: alpha('#ffffff', 0.1),
-                    border: `1px solid ${alpha('#ffffff', 0.5)}`,
-                    transform: 'scale(1.05)'
+                    backgroundColor: alpha('#ffffff', 0.15),
+                    border: `1px solid ${alpha('#ffffff', 0.4)}`,
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                  },
+                  '&:active': {
+                    transform: 'translateY(0px)'
                   }
                 }}
               >
                 <Avatar 
                   sx={{ 
-                    width: 20, 
-                    height: 20, 
-                    bgcolor: '#ffffff',
+                    width: 28, 
+                    height: 28, 
+                    bgcolor: 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%)',
                     color: '#1976d2',
-                    fontSize: '0.7rem',
-                    fontWeight: 600
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                    transition: 'all 0.3s ease'
                   }}
                 >
-                  {user?.username?.charAt(0) || 'A'}
+                  {user?.username?.charAt(0)?.toUpperCase() || 'A'}
                 </Avatar>
               </IconButton>
             </Tooltip>
