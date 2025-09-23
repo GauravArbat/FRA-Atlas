@@ -27,11 +27,13 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
+import { usePageTranslation } from '../../hooks/usePageTranslation';
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>({});
+  usePageTranslation();
 
   const handleToggleSection = (section: string) => {
     setOpenSections(prev => ({
@@ -81,7 +83,7 @@ const Sidebar: React.FC = () => {
       <Box sx={{ overflow: 'auto', height: '100%' }}>
         {/* Welcome Section */}
         <Box sx={{ p: 2, bgcolor: '#1976d2', color: 'white' }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '0.9rem' }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '0.9rem' }} data-translate>
             Welcome
           </Typography>
         </Box>
@@ -101,7 +103,8 @@ const Sidebar: React.FC = () => {
                   primary={section.title}
                   primaryTypographyProps={{
                     fontSize: '0.9rem',
-                    fontWeight: 600
+                    fontWeight: 600,
+                    'data-translate': true
                   }}
                 />
                 {openSections[section.title] ? <ExpandLess /> : <ExpandMore />}
@@ -129,7 +132,8 @@ const Sidebar: React.FC = () => {
                       <ListItemText 
                         primary={item.text}
                         primaryTypographyProps={{
-                          fontSize: '0.85rem'
+                          fontSize: '0.85rem',
+                          'data-translate': true
                         }}
                       />
                     </ListItemButton>
@@ -143,21 +147,21 @@ const Sidebar: React.FC = () => {
         {/* Statistics Section */}
         <Box sx={{ mt: 2 }}>
           <Box sx={{ bgcolor: '#1976d2', color: 'white', p: 1 }}>
-            <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '0.9rem' }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '0.9rem' }} data-translate>
               Statistics
             </Typography>
           </Box>
           <Box sx={{ p: 2, bgcolor: 'white' }}>
-            <Typography variant="body2" sx={{ mb: 1 }}>
+            <Typography variant="body2" sx={{ mb: 1 }} data-translate>
               <strong>Toll Free:</strong> 1800-11-2345
             </Typography>
-            <Typography variant="body2" sx={{ mb: 1 }}>
+            <Typography variant="body2" sx={{ mb: 1 }} data-translate>
               <strong>Email:</strong> helpdesk@fraatlas.gov.in
             </Typography>
-            <Typography variant="body2" sx={{ mb: 1 }}>
+            <Typography variant="body2" sx={{ mb: 1 }} data-translate>
               <strong>Last Updated:</strong> 15 Nov 2024
             </Typography>
-            <Typography variant="body2">
+            <Typography variant="body2" data-translate>
               <strong>Visitors:</strong> 1,23,456
             </Typography>
           </Box>

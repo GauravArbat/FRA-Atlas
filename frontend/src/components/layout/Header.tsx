@@ -30,11 +30,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import LanguageSwitcher from '../LanguageSwitcher';
 import { ThemeToggle } from '../ThemeToggle';
+import { usePageTranslation } from '../../hooks/usePageTranslation';
 
 const Header: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  usePageTranslation();
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -79,10 +81,10 @@ const Header: React.FC = () => {
               alt="Government Logo" 
               style={{ width: 24, height: 24, marginRight: 8 }}
             />
-            <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem', color: 'inherit' }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem', color: 'inherit' }} data-translate>
               Forest Rights Act (FRA) Atlas
             </Typography>
-            <Typography variant="caption" sx={{ ml: 1, opacity: 0.8, color: 'inherit' }}>
+            <Typography variant="caption" sx={{ ml: 1, opacity: 0.8, color: 'inherit' }} data-translate>
               Ministry of Tribal Affairs, Government of India
             </Typography>
           </Box>
@@ -94,6 +96,7 @@ const Header: React.FC = () => {
               size="small" 
               sx={{ color: 'inherit', minWidth: 'auto', p: 0.5 }}
               title="Increase Font Size"
+              data-translate
             >
               A+
             </Button>
@@ -101,6 +104,7 @@ const Header: React.FC = () => {
               size="small" 
               sx={{ color: 'inherit', minWidth: 'auto', p: 0.5 }}
               title="Normal Font Size"
+              data-translate
             >
               A
             </Button>
@@ -108,6 +112,7 @@ const Header: React.FC = () => {
               size="small" 
               sx={{ color: 'inherit', minWidth: 'auto', p: 0.5 }}
               title="Decrease Font Size"
+              data-translate
             >
               A-
             </Button>
@@ -115,6 +120,7 @@ const Header: React.FC = () => {
               size="small" 
               sx={{ color: 'inherit', minWidth: 'auto', p: 0.5 }}
               title="High Contrast"
+              data-translate
             >
               <Contrast fontSize="small" />
             </Button>
@@ -127,6 +133,7 @@ const Header: React.FC = () => {
                 '&:hover': { bgcolor: 'success.dark' },
                 ml: 1
               }}
+              data-translate
             >
               Login
             </Button>
@@ -154,6 +161,7 @@ const Header: React.FC = () => {
                 '&:hover': { bgcolor: 'action.hover' }
               }}
               onClick={() => navigate('/')}
+              data-translate
             >
               Home
             </Button>
@@ -163,6 +171,7 @@ const Header: React.FC = () => {
                 '&:hover': { bgcolor: 'action.hover' }
               }}
               onClick={() => navigate('/atlas')}
+              data-translate
             >
               About FRA
             </Button>
@@ -172,6 +181,7 @@ const Header: React.FC = () => {
                 '&:hover': { bgcolor: 'action.hover' }
               }}
               onClick={() => navigate('/')}
+              data-translate
             >
               Dashboard
             </Button>
@@ -181,6 +191,7 @@ const Header: React.FC = () => {
                 '&:hover': { bgcolor: 'action.hover' }
               }}
               onClick={() => navigate('/data')}
+              data-translate
             >
               Data Discovery
             </Button>
@@ -190,6 +201,7 @@ const Header: React.FC = () => {
                 '&:hover': { bgcolor: 'action.hover' }
               }}
               onClick={() => navigate('/gis-plot')}
+              data-translate
             >
               GIS Platform
             </Button>
@@ -199,6 +211,7 @@ const Header: React.FC = () => {
                 '&:hover': { bgcolor: 'action.hover' }
               }}
               onClick={() => navigate('/reports')}
+              data-translate
             >
               Reports
             </Button>
@@ -208,6 +221,7 @@ const Header: React.FC = () => {
                 '&:hover': { bgcolor: 'action.hover' }
               }}
               onClick={() => navigate('/data')}
+              data-translate
             >
               Downloads
             </Button>
@@ -217,6 +231,7 @@ const Header: React.FC = () => {
                 '&:hover': { bgcolor: 'action.hover' }
               }}
               onClick={() => navigate('/contact')}
+              data-translate
             >
               Contact Us
             </Button>
@@ -271,16 +286,16 @@ const Header: React.FC = () => {
                 </Typography>
               </Box>
               <Divider />
-              <MenuItem onClick={handleProfile}>
+              <MenuItem onClick={handleProfile} data-translate>
                 <AccountCircle sx={{ mr: 1, fontSize: 18 }} />
                 Profile
               </MenuItem>
-              <MenuItem onClick={handleSettings}>
+              <MenuItem onClick={handleSettings} data-translate>
                 <Settings sx={{ mr: 1, fontSize: 18 }} />
                 Settings
               </MenuItem>
               <Divider />
-              <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
+              <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }} data-translate>
                 <Logout sx={{ mr: 1, fontSize: 18 }} />
                 Logout
               </MenuItem>
