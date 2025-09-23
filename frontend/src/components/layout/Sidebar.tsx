@@ -22,8 +22,7 @@ import {
   Description,
   LocationOn,
   BarChart,
-  Storage,
-  AccountTree
+  Storage
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
@@ -44,21 +43,21 @@ const Sidebar: React.FC = () => {
 
   const menuItems = [
     {
-      title: 'Quick Links',
+      title: 'Core Modules',
       items: [
-        { text: 'FRA Rules, 2008', icon: <Description />, path: '/rules' },
-        { text: 'Guidelines', icon: <Description />, path: '/guidelines' },
-        { text: 'Circulars & Guidelines', icon: <Description />, path: '/circulars' },
-        { text: 'Training Manual', icon: <Description />, path: '/training' }
+        { text: 'FRA Atlas', icon: <Map />, path: '/atlas' },
+        { text: 'Digital GIS Plot', icon: <LocationOn />, path: '/gis-plot' },
+        { text: 'Data Management', icon: <Storage />, path: '/data' },
+        { text: 'Decision Support', icon: <Assessment />, path: '/decisions' }
       ]
     },
     {
-      title: 'Notifications',
+      title: 'Resources',
       items: [
-        { text: 'Digitization', icon: <Storage />, path: '/digitization' },
-        { text: 'Standardization', icon: <AccountTree />, path: '/standardization' },
-        { text: 'Spatial Integration', icon: <LocationOn />, path: '/spatial' },
-        { text: 'Integrated Visualization', icon: <BarChart />, path: '/visualization' }
+        { text: 'FRA Rules 2008', icon: <Description />, path: '/rules' },
+        { text: 'Guidelines', icon: <Description />, path: '/guidelines' },
+        { text: 'Reports & Analytics', icon: <BarChart />, path: '/reports' },
+        { text: 'User Settings', icon: <Settings />, path: '/settings' }
       ]
     }
   ];
