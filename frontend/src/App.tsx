@@ -74,7 +74,9 @@ function App() {
           e.message?.includes('ERR_CONNECTION_REFUSED') ||
           e.message?.includes('message channel closed') ||
           e.message?.includes('listener indicated an asynchronous response') ||
-          e.message?.includes('runtime.lastError')) {
+          e.message?.includes('runtime.lastError') ||
+          e.message?.includes('removeChild') ||
+          e.message?.includes('node to be removed is not a child')) {
         e.stopImmediatePropagation();
         return false;
       }
@@ -117,7 +119,10 @@ function App() {
           message.includes('future flag') ||
           message.includes('React DevTools') ||
           message.includes('reactjs.org/link/react-devtools') ||
-          message.includes('better development experience')) {
+          message.includes('better development experience') ||
+          message.includes('removeChild') ||
+          message.includes('node to be removed is not a child') ||
+          message.includes('NotFoundError')) {
         return; // Suppress these specific errors
       }
       originalConsoleError.apply(console, args);
