@@ -6,7 +6,6 @@ import {
   Typography,
   Button,
   IconButton,
-  Drawer,
   Grid,
   Chip,
   Stack,
@@ -47,8 +46,6 @@ import { usePageTranslation } from '../hooks/usePageTranslation';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import 'leaflet-draw';
-
-// Remove conflicting type declarations - use existing Leaflet Draw types
 
 // Fix Leaflet default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -325,40 +322,49 @@ const DigitalGISPlot: React.FC = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden', position: 'relative' }}>
-      {/* Sidebar */}
+    <Box 
+      sx={{ 
+        display: 'flex', 
+        height: 'calc(100vh - 104px)', 
+        bgcolor: 'background.default',
+        position: 'relative',
+        left: '260px',
+        width: 'calc(100vw - 260px)'
+      }}
+    >
+      {/* GIS Controls Sidebar */}
       {showSidebar && (
-        <Drawer
-          variant="persistent"
-          anchor="left"
-          open={showSidebar}
+        <Box
           sx={{
             width: controlsWidth,
             flexShrink: 0,
-            '& .MuiDrawer-paper': {
-              width: controlsWidth,
-              boxSizing: 'border-box',
-              position: 'fixed',
-              height: { xs: 'calc(100vh - 64px)', md: 'calc(100vh - 80px)' },
-              top: { xs: 64, md: 80 },
-              left: 300,
-              zIndex: 1300,
-              backgroundColor: 'background.paper',
-              borderRight: '1px solid rgba(0,0,0,0.08)',
-              boxShadow: '2px 0 12px rgba(0,0,0,0.05)'
+            bgcolor: 'background.paper',
+            borderRight: (theme) => `1px solid ${theme.palette.divider}`,
+            boxShadow: (theme) => theme.palette.mode === 'dark' 
+              ? '2px 0 12px rgba(255,255,255,0.05)' 
+              : '2px 0 12px rgba(0,0,0,0.05)',
+            height: '100%',
+            overflow: 'auto',
+            '&::-webkit-scrollbar': { width: '6px' },
+            '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
+            '&::-webkit-scrollbar-thumb': { 
+              bgcolor: (theme) => theme.palette.mode === 'dark' 
+                ? 'rgba(255,255,255,0.2)' 
+                : 'rgba(0,0,0,0.2)', 
+              borderRadius: '3px' 
             }
           }}
         >
-          <Box sx={{ p: 2, height: '100%', overflow: 'auto' }}>
-            <Typography variant="h6" gutterBottom>
+          <Box sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom color="text.primary">
               <span data-translate>GIS Plot Controls</span>
             </Typography>
             
             {/* Map Configuration */}
-            <Card sx={{ mb: 2 }}>
+            <Card sx={{ mb: 2, bgcolor: 'background.paper' }}>
               <CardContent>
-                <Typography variant="subtitle2" gutterBottom>
-                  <span data-translate>Map</span>
+                <Typography variant="subtitle2" gutterBottom color="text.primary">
+                  <span data-translate>Map Configuration</span>
                 </Typography>
                 <Divider sx={{ mb: 2 }} />
                 <Stack spacing={2}>
@@ -369,56 +375,71 @@ const DigitalGISPlot: React.FC = () => {
                         onChange={(e) => setUseOpenStreetMap(e.target.checked)}
                       />
                     }
-                    label={<span data-translate>Use satellite imagery with labels</span>}
+                    label={<span data-translate>Satellite imagery with labels</span>}
                   />
-                  {!useOpenStreetMap && (
-                    <TextField
-                      label={<span data-translate>Mapbox Token</span>}
-                      size="small"
-                      fullWidth
-                      helperText={<span data-translate>Required for drawing/validation and Mapbox basemap</span>}
-                      disabled
-                    />
-                  )}
+                </Stack>
+              </CardContent>
+            </Card>
+
+            {/* Drawing Tools */}
+            <Card sx={{ mb: 2, bgcolor: 'background.paper' }}>
+              <CardContent>
+                <Typography variant="subtitle2" gutterBottom color="text.primary">
+                  <span data-translate>Drawing Tools</span>
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                <Stack direction="row" spacing={1}>
+                  <Button
+                    variant={drawingMode === 'polygon' ? 'contained' : 'outlined'}
+                    size="small"
+                    startIcon={<CropFree />}
+                    onClick={() => toggleDrawingMode('polygon')}
+                  >
+                    <span data-translate>Polygon</span>
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Cancel />}
+                    onClick={() => toggleDrawingMode(null)}
+                  >
+                    <span data-translate>Clear</span>
+                  </Button>
                 </Stack>
               </CardContent>
             </Card>
 
             {/* System Status */}
-            <Card sx={{ mb: 2 }}>
+            <Card sx={{ mb: 2, bgcolor: 'background.paper' }}>
               <CardContent>
-                <Typography variant="subtitle2" gutterBottom>
+                <Typography variant="subtitle2" gutterBottom color="text.primary">
                   <span data-translate>System Status</span>
                 </Typography>
+                <Divider sx={{ mb: 2 }} />
                 <Grid container spacing={1}>
-                  <Grid item xs={12} sm={6}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Chip 
-                        label={<span data-translate>{areaPlots.length} Area Plots</span>}
-                        color="primary"
-                        size="small"
-                      />
-                    </Box>
+                  <Grid item xs={12}>
+                    <Chip 
+                      label={<span data-translate>{areaPlots.length} Area Plots</span>}
+                      color="primary"
+                      size="small"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Chip 
+                      label={<span data-translate>Ready</span>}
+                      color="success"
+                      size="small"
+                    />
                   </Grid>
                 </Grid>
               </CardContent>
             </Card>
           </Box>
-        </Drawer>
+        </Box>
       )}
 
-      {/* Main Content */}
-      <Box
-        sx={{
-          position: 'fixed',
-          top: { xs: 64, md: 80 },
-          left: showSidebar ? `${300 + controlsWidth}px` : '300px',
-          right: 0,
-          bottom: 0,
-          transition: 'left 0.3s ease',
-          overflow: 'hidden'
-        }}
-      >
+      {/* Main Map Content */}
+      <Box sx={{ flex: 1, position: 'relative', overflow: 'hidden', bgcolor: 'background.default' }}>
         {/* Map Container */}
         <Box
           ref={containerRef}
@@ -427,7 +448,7 @@ const DigitalGISPlot: React.FC = () => {
             width: '100%',
             height: '100%',
             position: 'relative',
-            backgroundColor: '#f5f5f5',
+            bgcolor: 'background.default',
             '& .leaflet-container': {
               width: '100% !important',
               height: '100% !important'
@@ -442,11 +463,12 @@ const DigitalGISPlot: React.FC = () => {
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
-                zIndex: 1000
+                zIndex: 1000,
+                textAlign: 'center'
               }}
             >
               <CircularProgress />
-              <Typography variant="body2" sx={{ mt: 2 }}>
+              <Typography variant="body2" sx={{ mt: 2 }} color="text.primary">
                 <span data-translate>Loading map...</span>
               </Typography>
             </Box>
@@ -476,42 +498,6 @@ const DigitalGISPlot: React.FC = () => {
           )}
         </Box>
 
-        {/* Map Controls */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 16,
-            right: 16,
-            zIndex: 1001,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 1
-          }}
-        >
-          {/* Drawing Tools */}
-          <Card sx={{ p: 1 }}>
-            <Stack direction="row" spacing={1}>
-              <Tooltip title="Draw Polygon">
-                <IconButton
-                  size="small"
-                  color={drawingMode === 'polygon' ? 'primary' : 'default'}
-                  onClick={() => toggleDrawingMode('polygon')}
-                >
-                  <CropFree />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Cancel Drawing">
-                <IconButton
-                  size="small"
-                  onClick={() => toggleDrawingMode(null)}
-                >
-                  <Cancel />
-                </IconButton>
-              </Tooltip>
-            </Stack>
-          </Card>
-        </Box>
-
         {/* Cursor Info */}
         {cursorInfo && (
           <Box
@@ -519,8 +505,10 @@ const DigitalGISPlot: React.FC = () => {
               position: 'absolute',
               bottom: 16,
               left: 16,
-              backgroundColor: 'rgba(0,0,0,0.7)',
-              color: 'white',
+              bgcolor: (theme) => theme.palette.mode === 'dark' 
+                ? 'rgba(255,255,255,0.9)' 
+                : 'rgba(0,0,0,0.7)',
+              color: (theme) => theme.palette.mode === 'dark' ? 'black' : 'white',
               px: 2,
               py: 1,
               borderRadius: 1,

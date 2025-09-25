@@ -20,6 +20,7 @@ const geojsonPlotRoutes = require('./routes/geojson-plot');
 const pdfProcessorRoutes = require('./routes/pdf-processor');
 const bhunakshaRoutes = require('./routes/bhunaksha');
 const translateRoutes = require('./routes/translate');
+const voiceRoutes = require('./routes/voice');
 
 const { errorHandler } = require('./middleware/errorHandler');
 const { authenticateToken, authorize } = require('./middleware/auth');
@@ -75,6 +76,7 @@ app.use('/api/geojson-plot', geojsonPlotRoutes); // GeoJSON plotting functionali
 app.use('/api/pdf-processor', pdfProcessorRoutes); // PDF processing and data extraction
 app.use('/api/bhunaksha', bhunakshaRoutes); // Bhunaksha-style land records
 app.use('/api/translate', translateRoutes); // Google Translate API
+app.use('/api/voice', voiceRoutes); // Voice Assistant API
 
 // Error handling middleware
 app.use(errorHandler);

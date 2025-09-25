@@ -20,6 +20,7 @@ import { useAuth } from './hooks/useAuth';
 import ErrorBoundary from './components/ErrorBoundary';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { CustomThemeProvider } from './contexts/ThemeContext';
+import VoiceAssistant from './components/VoiceAssistant';
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -170,7 +171,7 @@ function App() {
               <Sidebar />
               <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                 <Header />
-                <Box component="main" sx={{ flex: 1, overflow: 'auto', p: { xs: 2, md: 3 }, mt: { xs: '88px', md: '88px' } }}>
+                <Box component="main" sx={{ flex: 1, overflow: 'auto', p: { xs: 2, md: 3 }, mt: { xs: '104px', md: '104px' }, bgcolor: 'background.default' }}>
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/atlas" element={<FRAAtlas />} />
@@ -193,6 +194,7 @@ function App() {
                   </Routes>
                 </Box>
               </Box>
+              <VoiceAssistant />
             </Box>
           )}
         </ErrorBoundary>

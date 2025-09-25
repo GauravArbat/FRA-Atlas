@@ -23,7 +23,7 @@ import {
 } from '@mui/material';
 import { Home, NavigateNext } from '@mui/icons-material';
 import { api } from '../services/api';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 const Dashboard: React.FC = () => {
   const [summary, setSummary] = useState<any>(null);
@@ -79,16 +79,16 @@ const Dashboard: React.FC = () => {
         <Breadcrumbs separator={<NavigateNext fontSize="small" />}>
           <Link color="inherit" href="/" sx={{ display: 'flex', alignItems: 'center' }}>
             <Home sx={{ mr: 0.5, fontSize: 16 }} />
-            Home
+            <span data-translate>Home</span>
           </Link>
-          <Typography color="text.primary">Dashboard</Typography>
+          <Typography color="text.primary"><span data-translate>Dashboard</span></Typography>
         </Breadcrumbs>
       </Box>
 
       <Box sx={{ p: 3 }}>
         {/* Page Title */}
         <Typography variant="h4" sx={{ mb: 3, color: '#1976d2', fontWeight: 600 }}>
-          FRA Dashboard
+          <span data-translate>FRA Dashboard</span>
         </Typography>
 
         <Grid container spacing={3}>
@@ -103,7 +103,7 @@ const Dashboard: React.FC = () => {
                       42,56,789
                     </Typography>
                     <Typography variant="body2" sx={{ color: '#1976d2', fontWeight: 600 }}>
-                      Total Claims
+                      <span data-translate>Total Claims</span>
                     </Typography>
                   </CardContent>
                 </Card>
@@ -115,7 +115,7 @@ const Dashboard: React.FC = () => {
                       21,34,567
                     </Typography>
                     <Typography variant="body2" sx={{ color: '#4caf50', fontWeight: 600 }}>
-                      Approved Claims
+                      <span data-translate>Approved Claims</span>
                     </Typography>
                   </CardContent>
                 </Card>
@@ -127,7 +127,7 @@ const Dashboard: React.FC = () => {
                       18,45,678
                     </Typography>
                     <Typography variant="body2" sx={{ color: '#ff9800', fontWeight: 600 }}>
-                      Pending Claims
+                      <span data-translate>Pending Claims</span>
                     </Typography>
                   </CardContent>
                 </Card>
@@ -139,7 +139,7 @@ const Dashboard: React.FC = () => {
                       35,67,890
                     </Typography>
                     <Typography variant="body2" sx={{ color: '#9c27b0', fontWeight: 600 }}>
-                      Total Area (HA)
+                      <span data-translate>Total Area (HA)</span>
                     </Typography>
                   </CardContent>
                 </Card>
@@ -150,12 +150,37 @@ const Dashboard: React.FC = () => {
             <Card sx={{ mb: 3 }}>
               <CardContent>
                 <Typography variant="h6" sx={{ mb: 2, color: '#1976d2', fontWeight: 600 }}>
-                  District-wise Claims Status
+                  <span data-translate>District-wise Claims Status</span>
                 </Typography>
-                <Box sx={{ height: 200, mb: 2 }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mt: 8 }}>
-                    [Bar Chart: District-wise Claims Dashboard]
-                  </Typography>
+                <Box sx={{ height: 300, p: 2, bgcolor: '#fafafa', borderRadius: 2 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={summary?.districts || []} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                      <XAxis 
+                        dataKey="district" 
+                        tick={{ fontSize: 12, fill: '#666' }}
+                        axisLine={{ stroke: '#ccc' }}
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 12, fill: '#666' }}
+                        axisLine={{ stroke: '#ccc' }}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#fff', 
+                          border: '1px solid #ddd', 
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                        }}
+                      />
+                      <Legend 
+                        wrapperStyle={{ paddingTop: '20px' }}
+                      />
+                      <Bar dataKey="approved" fill="#4caf50" name="Approved" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="pending" fill="#ff9800" name="Pending" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="rejected" fill="#f44336" name="Rejected" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </Box>
               </CardContent>
             </Card>
@@ -164,12 +189,69 @@ const Dashboard: React.FC = () => {
             <Card>
               <CardContent>
                 <Typography variant="h6" sx={{ mb: 2, color: '#1976d2', fontWeight: 600 }}>
-                  Monthly Trend of Claim Processing
+                  <span data-translate>Monthly Trend of Claim Processing</span>
                 </Typography>
-                <Box sx={{ height: 200, mb: 2 }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mt: 8 }}>
-                    [Line Chart: Monthly Trend Data]
-                  </Typography>
+                <Box sx={{ height: 300, p: 2, bgcolor: '#fafafa', borderRadius: 2 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart 
+                      data={[
+                        { month: 'Jan', claims: 1200, approved: 800, pending: 400 },
+                        { month: 'Feb', claims: 1800, approved: 1200, pending: 600 },
+                        { month: 'Mar', claims: 2200, approved: 1500, pending: 700 },
+                        { month: 'Apr', claims: 1900, approved: 1300, pending: 600 },
+                        { month: 'May', claims: 2400, approved: 1700, pending: 700 },
+                        { month: 'Jun', claims: 2800, approved: 2000, pending: 800 }
+                      ]}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                      <XAxis 
+                        dataKey="month" 
+                        tick={{ fontSize: 12, fill: '#666' }}
+                        axisLine={{ stroke: '#ccc' }}
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 12, fill: '#666' }}
+                        axisLine={{ stroke: '#ccc' }}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#fff', 
+                          border: '1px solid #ddd', 
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                        }}
+                      />
+                      <Legend 
+                        wrapperStyle={{ paddingTop: '20px' }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="claims" 
+                        stroke="#1976d2" 
+                        strokeWidth={3}
+                        dot={{ fill: '#1976d2', strokeWidth: 2, r: 6 }}
+                        activeDot={{ r: 8, stroke: '#1976d2', strokeWidth: 2 }}
+                        name="Total Claims"
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="approved" 
+                        stroke="#4caf50" 
+                        strokeWidth={2}
+                        dot={{ fill: '#4caf50', strokeWidth: 2, r: 4 }}
+                        name="Approved"
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="pending" 
+                        stroke="#ff9800" 
+                        strokeWidth={2}
+                        dot={{ fill: '#ff9800', strokeWidth: 2, r: 4 }}
+                        name="Pending"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </Box>
               </CardContent>
             </Card>
@@ -181,20 +263,20 @@ const Dashboard: React.FC = () => {
             <Card sx={{ mb: 3 }}>
               <CardContent>
                 <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, bgcolor: '#1976d2', color: 'white', p: 1, mx: -2, mt: -2 }}>
-                  Quick Links
+                  <span data-translate>Quick Links</span>
                 </Typography>
                 <List dense>
                   <ListItem button>
-                    <ListItemText primary="FRA Rules, 2008" />
+                    <ListItemText primary={<span data-translate>FRA Rules, 2008</span>} />
                   </ListItem>
                   <ListItem button>
-                    <ListItemText primary="Guidelines" />
+                    <ListItemText primary={<span data-translate>Guidelines</span>} />
                   </ListItem>
                   <ListItem button>
-                    <ListItemText primary="Circulars & Guidelines" />
+                    <ListItemText primary={<span data-translate>Circulars & Guidelines</span>} />
                   </ListItem>
                   <ListItem button>
-                    <ListItemText primary="Training Manual" />
+                    <ListItemText primary={<span data-translate>Training Manual</span>} />
                   </ListItem>
                 </List>
               </CardContent>
@@ -204,25 +286,25 @@ const Dashboard: React.FC = () => {
             <Card sx={{ mb: 3 }}>
               <CardContent>
                 <Typography variant="h6" sx={{ mb: 2, color: 'white', fontWeight: 600, bgcolor: '#1976d2', p: 1, mx: -2, mt: -2 }}>
-                  Notifications
+                  <span data-translate>Notifications</span>
                 </Typography>
                 <List dense>
                   <ListItem>
                     <ListItemText 
-                      primary="Digitization" 
-                      secondary="New Guidelines for FRA Implementation"
+                      primary={<span data-translate>Digitization</span>}
+                      secondary={<span data-translate>New Guidelines for FRA Implementation</span>}
                     />
                   </ListItem>
                   <ListItem>
                     <ListItemText 
-                      primary="Standardization" 
-                      secondary="Updated Forms and Procedures"
+                      primary={<span data-translate>Standardization</span>}
+                      secondary={<span data-translate>Updated Forms and Procedures</span>}
                     />
                   </ListItem>
                   <ListItem>
                     <ListItemText 
-                      primary="Spatial Integration" 
-                      secondary="GIS Mapping Guidelines"
+                      primary={<span data-translate>Spatial Integration</span>}
+                      secondary={<span data-translate>GIS Mapping Guidelines</span>}
                     />
                   </ListItem>
                 </List>
@@ -233,24 +315,24 @@ const Dashboard: React.FC = () => {
             <Card sx={{ mb: 3 }}>
               <CardContent>
                 <Typography variant="h6" sx={{ mb: 2, color: 'white', fontWeight: 600, bgcolor: '#1976d2', p: 1, mx: -2, mt: -2 }}>
-                  News & Updates
+                  <span data-translate>News & Updates</span>
                 </Typography>
                 <List dense>
                   <ListItem>
                     <ListItemText 
-                      primary="Workshop on GIS Mapping" 
+                      primary={<span data-translate>Workshop on GIS Mapping</span>}
                       secondary="15 Nov 2024"
                     />
                   </ListItem>
                   <ListItem>
                     <ListItemText 
-                      primary="FRA Progress Review" 
+                      primary={<span data-translate>FRA Progress Review</span>}
                       secondary="12 Nov 2024"
                     />
                   </ListItem>
                   <ListItem>
                     <ListItemText 
-                      primary="New Guidelines for HABITAT" 
+                      primary={<span data-translate>New Guidelines for HABITAT</span>}
                       secondary="10 Nov 2024"
                     />
                   </ListItem>
@@ -262,17 +344,17 @@ const Dashboard: React.FC = () => {
             <Card>
               <CardContent>
                 <Typography variant="h6" sx={{ mb: 2, color: 'white', fontWeight: 600, bgcolor: '#1976d2', p: 1, mx: -2, mt: -2 }}>
-                  Important Documents
+                  <span data-translate>Important Documents</span>
                 </Typography>
                 <List dense>
                   <ListItem>
-                    <ListItemText primary="Guidelines 2023" />
+                    <ListItemText primary={<span data-translate>Guidelines 2023</span>} />
                   </ListItem>
                   <ListItem>
-                    <ListItemText primary="Formats" />
+                    <ListItemText primary={<span data-translate>Formats</span>} />
                   </ListItem>
                   <ListItem>
-                    <ListItemText primary="Standard Operating Procedures" />
+                    <ListItemText primary={<span data-translate>Standard Operating Procedures</span>} />
                   </ListItem>
                 </List>
               </CardContent>
@@ -285,21 +367,21 @@ const Dashboard: React.FC = () => {
           <CardContent>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant="h6" sx={{ color: '#1976d2', fontWeight: 600 }}>
-                State-wise FRA Implementation Status
+                <span data-translate>State-wise FRA Implementation Status</span>
               </Typography>
-              <Button variant="outlined" size="small">View All</Button>
+              <Button variant="outlined" size="small"><span data-translate>View All</span></Button>
             </Box>
             <TableContainer>
               <Table size="small">
                 <TableHead>
                   <TableRow sx={{ bgcolor: '#1976d2' }}>
-                    <TableCell sx={{ color: 'white', fontWeight: 600 }}>S.No</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 600 }}>State</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 600 }}>District</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 600 }}>Total Claims</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 600 }}>Approved</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 600 }}>Rejected</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 600 }}>Pending</TableCell>
+                    <TableCell sx={{ color: 'white', fontWeight: 600 }}><span data-translate>S.No</span></TableCell>
+                    <TableCell sx={{ color: 'white', fontWeight: 600 }}><span data-translate>State</span></TableCell>
+                    <TableCell sx={{ color: 'white', fontWeight: 600 }}><span data-translate>District</span></TableCell>
+                    <TableCell sx={{ color: 'white', fontWeight: 600 }}><span data-translate>Total Claims</span></TableCell>
+                    <TableCell sx={{ color: 'white', fontWeight: 600 }}><span data-translate>Approved</span></TableCell>
+                    <TableCell sx={{ color: 'white', fontWeight: 600 }}><span data-translate>Rejected</span></TableCell>
+                    <TableCell sx={{ color: 'white', fontWeight: 600 }}><span data-translate>Pending</span></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -318,13 +400,13 @@ const Dashboard: React.FC = () => {
               </Table>
             </TableContainer>
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-              <Button variant="text" size="small">Previous</Button>
+              <Button variant="text" size="small"><span data-translate>Previous</span></Button>
               <Button variant="contained" size="small" sx={{ mx: 1 }}>1</Button>
               <Button variant="text" size="small">2</Button>
               <Button variant="text" size="small">3</Button>
               <Button variant="text" size="small">4</Button>
               <Button variant="text" size="small">5</Button>
-              <Button variant="text" size="small">Next</Button>
+              <Button variant="text" size="small"><span data-translate>Next</span></Button>
             </Box>
           </CardContent>
         </Card>

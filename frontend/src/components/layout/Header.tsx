@@ -25,10 +25,11 @@ import {
   Language,
   TextIncrease,
   TextDecrease,
-  Contrast
+  Contrast,
+  AdminPanelSettings
 } from '@mui/icons-material';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import LanguageSwitcher from '../LanguageSwitcher';
 import { ThemeToggle } from '../ThemeToggle';
@@ -37,8 +38,14 @@ import { usePageTranslation } from '../../hooks/usePageTranslation';
 const Header: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
   usePageTranslation();
+
+  const isActive = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
+  };
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -69,142 +76,83 @@ const Header: React.FC = () => {
       <AppBar 
         position="fixed" 
         sx={{ 
-          zIndex: (theme) => theme.zIndex.drawer + 1,
+          zIndex: 1400,
           bgcolor: '#1976d2',
           color: 'white',
-          boxShadow: 'none',
-          borderBottom: (theme) => `1px solid ${theme.palette.divider}`
+          boxShadow: '0 2px 8px rgba(25, 118, 210, 0.2)'
         }}
       >
-        <Toolbar sx={{ minHeight: '48px !important', px: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+        <Toolbar sx={{ minHeight: '56px !important', px: 2, justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <img 
               src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K" 
               alt="Government Logo" 
-              style={{ width: 24, height: 24, marginRight: 8 }}
+              style={{ width: 28, height: 28, marginRight: 12 }}
             />
-            <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem', color: 'inherit' }} data-translate>
-              Forest Rights Act (FRA) Atlas
-            </Typography>
-            <Typography variant="caption" sx={{ ml: 1, opacity: 0.8, color: 'inherit' }} data-translate>
-              Ministry of Tribal Affairs, Government of India
-            </Typography>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem', color: 'inherit', lineHeight: 1.2 }} data-translate>
+                Forest Rights Act (FRA) Atlas
+              </Typography>
+              <Typography variant="caption" sx={{ opacity: 0.85, color: 'inherit', fontSize: '0.75rem' }} data-translate>
+                Ministry of Tribal Affairs, Government of India
+              </Typography>
+            </Box>
           </Box>
           
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <ThemeToggle size="small" variant="contained" />
             <LanguageSwitcher />
             
             {/* Notifications */}
-            <Tooltip 
-              title="Notifications" 
-              placement="bottom"
-              componentsProps={{
-                tooltip: {
-                  sx: {
-                    bgcolor: 'rgba(0,0,0,0.9)',
-                    color: '#ffffff',
-                    fontSize: '0.75rem',
-                    fontWeight: 500,
-                    borderRadius: '6px',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-                  }
-                }
-              }}
-            >
+            <Tooltip title="Notifications" placement="bottom">
               <IconButton 
                 onClick={() => navigate('/notifications')}
                 sx={{
                   color: '#ffffff',
-                  backgroundColor: alpha('#ffffff', 0.08),
-                  border: `1px solid ${alpha('#ffffff', 0.2)}`,
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
                   borderRadius: '8px',
-                  padding: '8px',
-                  minWidth: '40px',
-                  height: '40px',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  backdropFilter: 'blur(10px)',
+                  padding: '6px',
+                  minWidth: '36px',
+                  height: '36px',
+                  transition: 'all 0.2s ease',
                   '&:hover': {
-                    backgroundColor: alpha('#ffffff', 0.15),
-                    border: `1px solid ${alpha('#ffffff', 0.4)}`,
-                    transform: 'translateY(-1px)',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
-                  },
-                  '&:active': {
-                    transform: 'translateY(0px)'
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    transform: 'scale(1.05)'
                   }
                 }}
               >
-                <Badge 
-                  badgeContent={3} 
-                  color="error"
-                  sx={{
-                    '& .MuiBadge-badge': {
-                      fontSize: '0.7rem',
-                      minWidth: '18px',
-                      height: '18px',
-                      borderRadius: '9px',
-                      fontWeight: 600,
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                    }
-                  }}
-                >
-                  <Notifications sx={{ fontSize: 22 }} />
+                <Badge badgeContent={3} color="error">
+                  <Notifications sx={{ fontSize: 20 }} />
                 </Badge>
               </IconButton>
             </Tooltip>
             
             {/* Admin Profile */}
-            <Tooltip 
-              title={`${user?.username || 'Admin'} Profile`} 
-              placement="bottom"
-              componentsProps={{
-                tooltip: {
-                  sx: {
-                    bgcolor: 'rgba(0,0,0,0.9)',
-                    color: '#ffffff',
-                    fontSize: '0.75rem',
-                    fontWeight: 500,
-                    borderRadius: '6px',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-                  }
-                }
-              }}
-            >
+            <Tooltip title={`${user?.username || 'Admin'} Profile`} placement="bottom">
               <IconButton
                 onClick={handleMenu}
                 sx={{
                   color: '#ffffff',
-                  backgroundColor: alpha('#ffffff', 0.08),
-                  border: `1px solid ${alpha('#ffffff', 0.2)}`,
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
                   borderRadius: '8px',
                   padding: '6px',
-                  minWidth: '40px',
-                  height: '40px',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  backdropFilter: 'blur(10px)',
+                  minWidth: '36px',
+                  height: '36px',
+                  transition: 'all 0.2s ease',
                   '&:hover': {
-                    backgroundColor: alpha('#ffffff', 0.15),
-                    border: `1px solid ${alpha('#ffffff', 0.4)}`,
-                    transform: 'translateY(-1px)',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
-                  },
-                  '&:active': {
-                    transform: 'translateY(0px)'
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    transform: 'scale(1.05)'
                   }
                 }}
               >
                 <Avatar 
                   sx={{ 
-                    width: 28, 
-                    height: 28, 
-                    bgcolor: 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%)',
+                    width: 24, 
+                    height: 24, 
+                    bgcolor: '#ffffff',
                     color: '#1976d2',
                     fontSize: '0.8rem',
-                    fontWeight: 700,
-                    border: '2px solid rgba(255,255,255,0.3)',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                    transition: 'all 0.3s ease'
+                    fontWeight: 600
                   }}
                 >
                   {user?.username?.charAt(0)?.toUpperCase() || 'A'}
@@ -257,20 +205,31 @@ const Header: React.FC = () => {
       <AppBar 
         position="fixed" 
         sx={{ 
-          top: 48,
-          zIndex: (theme) => theme.zIndex.drawer,
+          top: 56,
+          zIndex: 1300,
           bgcolor: 'background.paper',
           color: 'text.primary',
-          boxShadow: (theme) => `0 2px 4px ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          borderBottom: '1px solid #e2e8f0'
         }}
       >
-        <Toolbar sx={{ minHeight: '40px !important', px: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+        <Toolbar sx={{ minHeight: '48px !important', px: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Button 
               sx={{ 
-                color: 'primary.main', 
+                color: isActive('/') ? 'white' : '#1976d2',
+                bgcolor: isActive('/') ? '#1976d2' : 'transparent',
                 fontWeight: 600,
-                '&:hover': { bgcolor: 'action.hover' }
+                fontSize: '0.9rem',
+                px: 2,
+                py: 1,
+                borderRadius: '6px',
+                textTransform: 'none',
+                '&:hover': { 
+                  bgcolor: '#1976d2',
+                  color: 'white'
+                },
+                transition: 'all 0.2s ease'
               }}
               onClick={() => navigate('/')}
               data-translate
@@ -279,8 +238,18 @@ const Header: React.FC = () => {
             </Button>
             <Button 
               sx={{ 
-                color: 'text.primary',
-                '&:hover': { bgcolor: 'action.hover' }
+                color: isActive('/atlas') ? 'white' : 'text.primary',
+                bgcolor: isActive('/atlas') ? '#1976d2' : 'transparent',
+                fontSize: '0.9rem',
+                px: 2,
+                py: 1,
+                borderRadius: '6px',
+                textTransform: 'none',
+                '&:hover': { 
+                  bgcolor: '#1976d2',
+                  color: 'white'
+                },
+                transition: 'all 0.2s ease'
               }}
               onClick={() => navigate('/atlas')}
               data-translate
@@ -289,8 +258,18 @@ const Header: React.FC = () => {
             </Button>
             <Button 
               sx={{ 
-                color: 'text.primary',
-                '&:hover': { bgcolor: 'action.hover' }
+                color: isActive('/gis-plot') ? 'white' : 'text.primary',
+                bgcolor: isActive('/gis-plot') ? '#1976d2' : 'transparent',
+                fontSize: '0.9rem',
+                px: 2,
+                py: 1,
+                borderRadius: '6px',
+                textTransform: 'none',
+                '&:hover': { 
+                  bgcolor: '#1976d2',
+                  color: 'white'
+                },
+                transition: 'all 0.2s ease'
               }}
               onClick={() => navigate('/gis-plot')}
               data-translate
@@ -299,8 +278,18 @@ const Header: React.FC = () => {
             </Button>
             <Button 
               sx={{ 
-                color: 'text.primary',
-                '&:hover': { bgcolor: 'action.hover' }
+                color: isActive('/data') ? 'white' : 'text.primary',
+                bgcolor: isActive('/data') ? '#1976d2' : 'transparent',
+                fontSize: '0.9rem',
+                px: 2,
+                py: 1,
+                borderRadius: '6px',
+                textTransform: 'none',
+                '&:hover': { 
+                  bgcolor: '#1976d2',
+                  color: 'white'
+                },
+                transition: 'all 0.2s ease'
               }}
               onClick={() => navigate('/data')}
               data-translate
@@ -309,8 +298,18 @@ const Header: React.FC = () => {
             </Button>
             <Button 
               sx={{ 
-                color: 'text.primary',
-                '&:hover': { bgcolor: 'action.hover' }
+                color: isActive('/decisions') ? 'white' : 'text.primary',
+                bgcolor: isActive('/decisions') ? '#1976d2' : 'transparent',
+                fontSize: '0.9rem',
+                px: 2,
+                py: 1,
+                borderRadius: '6px',
+                textTransform: 'none',
+                '&:hover': { 
+                  bgcolor: '#1976d2',
+                  color: 'white'
+                },
+                transition: 'all 0.2s ease'
               }}
               onClick={() => navigate('/decisions')}
               data-translate
@@ -319,8 +318,18 @@ const Header: React.FC = () => {
             </Button>
             <Button 
               sx={{ 
-                color: 'text.primary',
-                '&:hover': { bgcolor: 'action.hover' }
+                color: isActive('/reports') ? 'white' : 'text.primary',
+                bgcolor: isActive('/reports') ? '#1976d2' : 'transparent',
+                fontSize: '0.9rem',
+                px: 2,
+                py: 1,
+                borderRadius: '6px',
+                textTransform: 'none',
+                '&:hover': { 
+                  bgcolor: '#1976d2',
+                  color: 'white'
+                },
+                transition: 'all 0.2s ease'
               }}
               onClick={() => navigate('/reports')}
               data-translate
@@ -329,8 +338,18 @@ const Header: React.FC = () => {
             </Button>
             <Button 
               sx={{ 
-                color: 'text.primary',
-                '&:hover': { bgcolor: 'action.hover' }
+                color: isActive('/contact') ? 'white' : 'text.primary',
+                bgcolor: isActive('/contact') ? '#1976d2' : 'transparent',
+                fontSize: '0.9rem',
+                px: 2,
+                py: 1,
+                borderRadius: '6px',
+                textTransform: 'none',
+                '&:hover': { 
+                  bgcolor: '#1976d2',
+                  color: 'white'
+                },
+                transition: 'all 0.2s ease'
               }}
               onClick={() => navigate('/contact')}
               data-translate
@@ -338,8 +357,6 @@ const Header: React.FC = () => {
               Contact Us
             </Button>
           </Box>
-          
-
         </Toolbar>
       </AppBar>
     </>

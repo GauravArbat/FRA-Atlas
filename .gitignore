@@ -246,3 +246,5 @@ out/
 # Misc
 *.tgz
 *.tar.gz
+
+.config/
