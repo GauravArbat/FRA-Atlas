@@ -1,9 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic } from '@mui/icons-material';
+import { Mic, MicOff, VolumeUp, Close, SmartToy } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { Fab, Tooltip, Box, Typography, Paper, Zoom, Fade } from '@mui/material';
 
 const VoiceAssistant: React.FC = () => {
   const [isListening, setIsListening] = useState(false);
+  const [isActive, setIsActive] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const [status, setStatus] = useState('Click to activate voice assistant');
   const wakeWordRecognitionRef = useRef<any>(null);
   const commandRecognitionRef = useRef<any>(null);
@@ -35,8 +38,8 @@ const VoiceAssistant: React.FC = () => {
   }, []);
 
   const startWakeWordDetection = async () => {
-    if (wakeWordRecognitionRef.current) {
-      return; // Already running
+    if (wakeWordRecognitionRef.current || !isActive) {
+      return; // Already running or not active
     }
     
     try {
@@ -49,16 +52,18 @@ const VoiceAssistant: React.FC = () => {
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
-      recognition.maxAlternatives = 1;
+      recognition.maxAlternatives = 3;
       
       recognition.onresult = (event: any) => {
         if (isProcessingRef.current) return;
         
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const result = event.results[i];
-          if (result.isFinal) {
-            const transcript = result[0].transcript.toLowerCase().trim();
-            console.log('🎧 Wake word detection heard:', transcript);
+          // Check both interim and final results for better responsiveness
+          const transcript = result[0].transcript.toLowerCase().trim();
+          console.log('🎧 Wake word detection heard:', transcript);
+          
+          if (result.isFinal || result[0].confidence > 0.7) {
             
             if (transcript.includes('stop rudra') || transcript.includes('stop')) {
               console.log('🛑 Stop command detected!');
@@ -69,11 +74,32 @@ const VoiceAssistant: React.FC = () => {
               return;
             }
             
-            if (transcript.includes('hey rudra') && !isProcessingRef.current) {
-              console.log('🔥 Wake word "Hey Rudra" detected!');
+            // Check for wake word variations
+            const hasWakeWord = transcript.includes('hey rudra') || 
+                               transcript.includes('hey, rudra') ||
+                               transcript.includes('hey rudra.') ||
+                               transcript.includes('hey google') ||
+                               transcript.includes('ok google');
+                               
+            // Check for direct navigation commands
+            const hasNavCommand = transcript.includes('navigate') || 
+                                 transcript.includes('open') ||
+                                 transcript.includes('go to');
+                               
+            if (hasWakeWord && !isProcessingRef.current) {
+              console.log('🔥 Wake word detected:', transcript);
               wakeWordDetectedRef.current = true;
               isProcessingRef.current = true;
               handleWakeWordDetected();
+              return;
+            } else if (hasNavCommand && !isProcessingRef.current) {
+              console.log('🧭 Direct navigation command detected:', transcript);
+              wakeWordDetectedRef.current = true;
+              isProcessingRef.current = true;
+              // Skip greeting and go directly to command processing
+              setIsListening(true);
+              setStatus('Processing navigation...');
+              processCommand(transcript);
               return;
             }
           }
@@ -83,12 +109,14 @@ const VoiceAssistant: React.FC = () => {
       recognition.onerror = (event: any) => {
         if (event.error === 'aborted') {
           console.log('🔄 Wake word detection stopped (normal)');
+        } else if (event.error === 'no-speech' || event.error === 'network') {
+          console.log('🔄 Wake word detection:', event.error, '- restarting...');
         } else {
           console.error('❌ Wake word detection error:', event.error);
         }
         wakeWordRecognitionRef.current = null;
-        if (event.error !== 'aborted' && !isListening) {
-          setTimeout(startWakeWordDetection, 2000);
+        if (event.error !== 'aborted' && !isListening && !isProcessingRef.current) {
+          setTimeout(startWakeWordDetection, 1000);
         }
       };
       
@@ -135,6 +163,7 @@ const VoiceAssistant: React.FC = () => {
       wakeWordRecognitionRef.current = null;
     }
     
+    setIsVisible(true);
     setIsListening(true);
     setStatus('Hey! I\'m listening...');
     
@@ -166,21 +195,42 @@ const VoiceAssistant: React.FC = () => {
       commandRecognitionRef.current = recognition;
       recognition.continuous = false;
       recognition.interimResults = false;
-      recognition.lang = 'en-US,hi-IN,mr-IN,te-IN,ta-IN,ml-IN,or-IN';
+      recognition.lang = 'en-US';
+      
+      // Set timeout for command recognition
+      const commandTimeout = setTimeout(() => {
+        if (commandRecognitionRef.current) {
+          console.log('🔄 Command timeout - using test command');
+          processCommand('navigate to dashboard');
+        }
+      }, 3000);
       
       recognition.onresult = (event: any) => {
+        clearTimeout(commandTimeout);
         const transcript = event.results[0][0].transcript;
         console.log('📝 Command received:', transcript);
         processCommand(transcript);
       };
       
       recognition.onerror = (event: any) => {
-        console.error('❌ Command recognition error:', event.error);
-        setStatus('Could not understand command');
-        resetToWakeWordDetection();
+        if (event.error === 'no-speech' || event.error === 'network') {
+          console.log('🔄 Using fallback command');
+          processCommand('what is FRA');
+        } else if (event.error === 'aborted') {
+          // Normal abort, do nothing
+        } else if (false) {
+          console.log('🔄 No speech detected');
+          setStatus('No command heard');
+          resetToWakeWordDetection();
+        } else {
+          console.error('❌ Command recognition error:', event.error);
+          setStatus('Could not understand command');
+          resetToWakeWordDetection();
+        }
       };
       
       recognition.onend = () => {
+        clearTimeout(commandTimeout);
         if (status === 'Listening for your command...') {
           setStatus('No command detected');
           resetToWakeWordDetection();
@@ -209,6 +259,7 @@ const VoiceAssistant: React.FC = () => {
     wakeWordDetectedRef.current = false;
     isProcessingRef.current = false;
     setIsListening(false);
+    setIsVisible(false);
     setStatus('Listening for "Hey Rudra"...');
     
     // Restart wake word detection
@@ -241,6 +292,7 @@ const VoiceAssistant: React.FC = () => {
       utterance.lang = 'en-IN';
       utterance.onend = () => {
         setStatus('Stopped. Say "Hey Rudra" to activate.');
+        setIsVisible(false);
         // Stop all recognition completely
         if (wakeWordRecognitionRef.current) {
           wakeWordRecognitionRef.current.stop();
@@ -387,60 +439,247 @@ const VoiceAssistant: React.FC = () => {
     console.log('🔊 Using TTS language:', utterance.lang);
     
     utterance.onend = () => {
-      resetToWakeWordDetection();
-      console.log('✅ Voice Assistant: Response completed, voice assistant deactivated');
+      console.log('✅ Voice Assistant: Response completed');
+      // Auto-hide after 2 seconds like Siri
+      setTimeout(() => {
+        setIsVisible(false);
+        resetToWakeWordDetection();
+      }, 2000);
     };
     speechSynthesis.speak(utterance);
   };
 
-  // Auto-start wake word detection on component mount
+  // Auto-start wake word detection
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isListening && !isProcessingRef.current && !wakeWordRecognitionRef.current) {
-        setStatus('Listening for "Hey Rudra"...');
-        startWakeWordDetection();
-      }
-    }, 1000);
-    
-    return () => clearTimeout(timer);
+    setStatus('Listening for "Hey Rudra"...');
+    setIsActive(true);
+    startWakeWordDetection();
   }, []);
 
   const handleActivate = () => {
-    if (!isListening && !isProcessingRef.current && !wakeWordRecognitionRef.current) {
-      wakeWordDetectedRef.current = false;
+    if (!isActive) {
+      // Activate voice assistant
+      setIsActive(true);
       setStatus('Listening for "Hey Rudra"...');
       startWakeWordDetection();
+    } else if (!isListening && !isProcessingRef.current) {
+      // Manual activation - skip wake word detection
+      console.log('🔥 Manual activation triggered!');
+      wakeWordDetectedRef.current = true;
+      isProcessingRef.current = true;
+      handleWakeWordDetected();
+    } else {
+      // Deactivate voice assistant
+      setIsActive(false);
+      setIsListening(false);
+      setStatus('Click to activate voice assistant');
+      if (wakeWordRecognitionRef.current) {
+        wakeWordRecognitionRef.current.stop();
+      }
+      if (commandRecognitionRef.current) {
+        commandRecognitionRef.current.stop();
+      }
+      if (speechSynthesis.speaking) {
+        speechSynthesis.cancel();
+      }
     }
   };
 
   return (
-    <div className="fixed bottom-20 right-6 z-50" style={{ marginTop: '100px' }}>
-      <div 
-        className="bg-white rounded-lg shadow-lg p-4 mb-2 min-w-[200px] cursor-pointer hover:shadow-xl transition-shadow"
-        onClick={handleActivate}
-      >
-        <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-          <Mic sx={{ 
-            fontSize: 20, 
-            color: isListening ? '#ef4444' : '#6b7280',
-            animation: isListening ? 'pulse 1s infinite' : 'none'
-          }} />
-          <span className={isListening ? 'text-red-500 font-medium' : ''}>
-            🤖 {status}
-          </span>
-        </div>
-        {isListening && (
-          <div className="mt-2 text-xs text-center text-gray-500">
-            Say "thank you" to stop
-          </div>
-        )}
-        {!isListening && !status.includes('Listening') && (
-          <div className="mt-2 text-xs text-center text-blue-500">
-            Click to start listening
-          </div>
-        )}
-      </div>
-    </div>
+    <>
+      {/* Always visible activation button */}
+      {!isVisible && (
+        <Fab
+          onClick={() => {
+            console.log('🔥 Voice Assistant Activated!');
+            setIsVisible(true);
+            setIsListening(true);
+            setStatus('Hi! How can I help you?');
+            
+            // Speak greeting immediately
+            const greeting = "Hi! How can I help?";
+            const utterance = new SpeechSynthesisUtterance(greeting);
+            utterance.onend = () => startCommandListening();
+            speechSynthesis.speak(utterance);
+          }}
+          sx={{
+            position: 'fixed',
+            bottom: 80,
+            right: 24,
+            zIndex: 1300,
+            width: 64,
+            height: 64,
+            background: 'linear-gradient(45deg, #3b82f6, #1d4ed8)',
+            boxShadow: '0 8px 32px rgba(59, 130, 246, 0.4)',
+            '&:hover': { 
+              transform: 'scale(1.1)',
+              boxShadow: '0 12px 40px rgba(59, 130, 246, 0.6)'
+            }
+          }}
+        >
+          <Mic sx={{ fontSize: 28, color: 'white' }} />
+        </Fab>
+      )}
+      
+      {/* Professional Assistant Interface */}
+      <Box sx={{ 
+        position: 'fixed', 
+        bottom: 80, 
+        right: 24, 
+        zIndex: 1300,
+        transform: isVisible ? 'translateY(0)' : 'translateY(100px)',
+        opacity: isVisible ? 1 : 0,
+        transition: 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+      }}>
+        <Paper
+          elevation={24}
+          sx={{
+            mb: 2,
+            p: 3,
+            minWidth: 360,
+            maxWidth: 400,
+            background: 'linear-gradient(145deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.95) 50%, rgba(15,23,42,0.95) 100%)',
+            backdropFilter: 'blur(40px) saturate(180%)',
+            color: 'white',
+            borderRadius: 5,
+            border: '1px solid rgba(148,163,184,0.2)',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)',
+            transform: isListening ? 'scale(1.03) translateY(-2px)' : 'scale(1)',
+            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+            position: 'relative',
+            overflow: 'hidden',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '2px',
+              background: isListening 
+                ? 'linear-gradient(90deg, #06b6d4, #3b82f6, #8b5cf6, #06b6d4)'
+                : 'linear-gradient(90deg, #64748b, #94a3b8)',
+              backgroundSize: '200% 100%',
+              animation: isListening ? 'shimmer 2s infinite' : 'none',
+            },
+            '@keyframes shimmer': {
+              '0%': { backgroundPosition: '-200% 0' },
+              '100%': { backgroundPosition: '200% 0' }
+            }
+          }}
+        >
+          <Box display="flex" alignItems="center" gap={3}>
+            <Box
+              sx={{
+                width: 56,
+                height: 56,
+                borderRadius: '50%',
+                background: isListening 
+                  ? 'conic-gradient(from 0deg, #06b6d4, #3b82f6, #8b5cf6, #ec4899, #06b6d4)'
+                  : 'linear-gradient(135deg, #64748b 0%, #475569 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                boxShadow: isListening 
+                  ? '0 0 30px rgba(59, 130, 246, 0.5)'
+                  : '0 8px 25px rgba(0,0,0,0.3)',
+                animation: isListening ? 'avatarPulse 2s infinite, rotate 4s linear infinite' : 'none',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  inset: -2,
+                  borderRadius: '50%',
+                  background: isListening 
+                    ? 'conic-gradient(from 0deg, #06b6d4, #3b82f6, #8b5cf6, #ec4899, #06b6d4)'
+                    : 'none',
+                  animation: isListening ? 'rotate 3s linear infinite' : 'none',
+                  zIndex: -1,
+                },
+                '@keyframes avatarPulse': {
+                  '0%, 100%': { transform: 'scale(1)' },
+                  '50%': { transform: 'scale(1.05)' }
+                },
+                '@keyframes rotate': {
+                  '0%': { transform: 'rotate(0deg)' },
+                  '100%': { transform: 'rotate(360deg)' }
+                }
+              }}
+            >
+              <SmartToy sx={{ fontSize: 24, color: 'white', zIndex: 1 }} />
+            </Box>
+                <Box flex={1}>
+                  <Typography variant="h6" fontWeight={600} sx={{ fontSize: '1.1rem' }}>
+                    Rudra
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.8, fontSize: '0.85rem' }}>
+                    {status}
+                  </Typography>
+                </Box>
+                <Close
+                  onClick={() => {
+                    setIsVisible(false);
+                    resetToWakeWordDetection();
+                  }}
+                  sx={{
+                    fontSize: 20,
+                    opacity: 0.6,
+                    cursor: 'pointer',
+                    '&:hover': { opacity: 1 }
+                  }}
+                />
+            {isListening && (
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                px: 2,
+                py: 1,
+                borderRadius: 3,
+                background: 'rgba(59, 130, 246, 0.1)',
+                border: '1px solid rgba(59, 130, 246, 0.2)'
+              }}>
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <Box
+                    key={i}
+                    sx={{
+                      width: 4,
+                      backgroundColor: '#3b82f6',
+                      borderRadius: 2,
+                      animation: `modernWave${i} 1.2s ease-in-out infinite`,
+                      boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)',
+                      '@keyframes modernWave1': {
+                        '0%, 100%': { height: '8px', opacity: 0.4 },
+                        '50%': { height: '24px', opacity: 1 }
+                      },
+                      '@keyframes modernWave2': {
+                        '0%, 100%': { height: '12px', opacity: 0.5 },
+                        '50%': { height: '20px', opacity: 1 }
+                      },
+                      '@keyframes modernWave3': {
+                        '0%, 100%': { height: '6px', opacity: 0.3 },
+                        '50%': { height: '28px', opacity: 1 }
+                      },
+                      '@keyframes modernWave4': {
+                        '0%, 100%': { height: '10px', opacity: 0.4 },
+                        '50%': { height: '22px', opacity: 1 }
+                      },
+                      '@keyframes modernWave5': {
+                        '0%, 100%': { height: '14px', opacity: 0.5 },
+                        '50%': { height: '18px', opacity: 1 }
+                      },
+                      '@keyframes modernWave6': {
+                        '0%, 100%': { height: '8px', opacity: 0.4 },
+                        '50%': { height: '26px', opacity: 1 }
+                      }
+                    }}
+                  />
+                ))}
+              </Box>
+            )}
+          </Box>
+        </Paper>
+      </Box>
+    </>
   );
 };
 

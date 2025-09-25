@@ -9,6 +9,15 @@ const model = genAI.getGenerativeModel({ model: 'gemini-pro' }); // Using basic 
 // Track conversation sessions
 const conversationSessions = new Map();
 
+// Test endpoint
+router.get('/test', (req, res) => {
+  res.json({ 
+    status: 'Voice API is working!',
+    timestamp: new Date().toISOString(),
+    geminiAvailable: !!process.env.GEMINI_API_KEY
+  });
+});
+
 // Fallback responses when Gemini API is unavailable
 const getFallbackResponse = (question) => {
   const q = question.toLowerCase();
