@@ -370,8 +370,27 @@ const VoiceAssistant: React.FC = () => {
         response = "Opening Contact Us page.";
         navigationPath = '/contact';
         shouldNavigate = true;
+      } else if (text.includes('other') || text.includes('another') || text.includes('different') || text.includes('next')) {
+        // Handle "navigate other" - cycle through main sections
+        const currentPath = window.location.pathname;
+        const sections = [
+          { path: '/', name: 'Dashboard' },
+          { path: '/atlas', name: 'FRA Atlas' },
+          { path: '/gis-plot', name: 'Digital GIS Plot' },
+          { path: '/data', name: 'Data Management' },
+          { path: '/decisions', name: 'Decision Support' },
+          { path: '/reports', name: 'Reports & Analytics' }
+        ];
+        
+        const currentIndex = sections.findIndex(s => s.path === currentPath);
+        const nextIndex = (currentIndex + 1) % sections.length;
+        const nextSection = sections[nextIndex];
+        
+        response = `Navigating to ${nextSection.name}.`;
+        navigationPath = nextSection.path;
+        shouldNavigate = true;
       } else {
-        response = "I can navigate you to: Dashboard, FRA Atlas, Digital GIS Plot, Data Management, Decision Support, Reports, Profile, Settings, Notifications, or Contact Us. Please specify where you'd like to go.";
+        response = "I can navigate you to: Dashboard, FRA Atlas, Digital GIS Plot, Data Management, Decision Support, Reports, Profile, Settings, Notifications, or Contact Us. You can also say 'navigate other' to cycle through sections. Please specify where you'd like to go.";
       }
     }
     // For all other questions, use Gemini AI
