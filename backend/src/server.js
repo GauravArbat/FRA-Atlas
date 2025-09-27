@@ -6,7 +6,15 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
-const authRoutes = require('./routes/auth-mock'); // Using mock auth for testing
+const { testConnection, initializeTables } = require('./config/database');
+const { seedDatabase } = require('./scripts/seedData');
+
+const authRoutes = require('./routes/auth'); // Real auth with RBAC
+const rbacRoutes = require('./routes/rbac'); // Role-based access control
+const claimsRoutes = require('./routes/claims'); // FRA claims management
+const legacyRoutes = require('./routes/legacy'); // Legacy records processing
+const aiAnalysisRoutes = require('./routes/ai-analysis'); // AI satellite analysis
+const schemesRoutes = require('./routes/schemes'); // Scheme integration
 const fraRoutes = require('./routes/fra');
 const dataRoutes = require('./routes/data');
 const decisionRoutes = require('./routes/decisions');
@@ -63,6 +71,11 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/rbac', authenticateToken, rbacRoutes); // Role-based access control
+app.use('/api/claims', claimsRoutes); // FRA claims management
+app.use('/api/legacy', legacyRoutes); // Legacy records processing
+app.use('/api/ai-analysis', aiAnalysisRoutes); // AI satellite analysis
+app.use('/api/schemes', schemesRoutes); // Scheme integration
 app.use('/api/fra', fraRoutes); // FRA data (public for atlas)
 app.use('/api/data', authenticateToken, dataRoutes);
 app.use('/api/decisions', authenticateToken, decisionRoutes);
@@ -86,9 +99,39 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 FRA Atlas API Server running on port ${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+// Initialize database and start server
+const startServer = async () => {
+  try {
+    // Test database connection
+    const dbConnected = await testConnection();
+    if (!dbConnected) {
+      console.log('❌ Failed to connect to database. Server will start but database features may not work.');
+    } else {
+      // Initialize database tables
+      await initializeTables();
+      
+      // Seed database if empty (development only)
+      if (process.env.NODE_ENV !== 'production') {
+        try {
+          await seedDatabase();
+        } catch (error) {
+          console.log('⚠️ Database seeding failed (may already be seeded):', error.message);
+        }
+      }
+    }
+    
+    // Start server
+    app.listen(PORT, () => {
+      console.log(`🚀 FRA Atlas API Server running on port ${PORT}`);
+      console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🗄️ Database: ${dbConnected ? 'Connected' : 'Disconnected'}`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 module.exports = app;

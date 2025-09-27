@@ -8,8 +8,7 @@ import {
   ListItemText,
   Typography,
   Box,
-  Collapse,
-  Divider
+  Collapse
 } from '@mui/material';
 import {
   Dashboard,
@@ -25,15 +24,22 @@ import {
   Phone,
   Email,
   Update,
-  Visibility
+  Visibility,
+  CloudUpload,
+  Analytics,
+  Gavel,
+  TrackChanges,
+  Assignment
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { usePageTranslation } from '../../hooks/usePageTranslation';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>({
     'Core Modules': true,
     'Resources': true
@@ -49,26 +55,77 @@ const Sidebar: React.FC = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const menuItems = [
-    {
-      title: 'Core Modules',
-      items: [
-        { text: 'FRA Atlas', icon: <Map />, path: '/atlas' },
-        { text: 'Digital GIS Plot', icon: <LocationOn />, path: '/gis-plot' },
-        { text: 'Data Management', icon: <Storage />, path: '/data' },
-        { text: 'Decision Support', icon: <Assessment />, path: '/decisions' }
+  const getMenuItemsByRole = () => {
+    if (!user) return [];
+    
+    const roleMenus = {
+      admin: [
+        {
+          title: 'Admin Panel',
+          items: [
+            { text: 'Dashboard', icon: <Dashboard />, path: '/' },
+            { text: 'FRA Atlas', icon: <Map />, path: '/atlas' },
+            { text: 'Digital GIS Plot', icon: <LocationOn />, path: '/gis-plot' },
+            { text: 'Data Management', icon: <Storage />, path: '/data' },
+            { text: 'Decision Support', icon: <Assessment />, path: '/decisions' },
+            { text: 'Reports & Analytics', icon: <BarChart />, path: '/reports' },
+            { text: 'User Settings', icon: <Settings />, path: '/settings' }
+          ]
+        }
+      ],
+      mota_technical: [
+        {
+          title: 'AI Analysis',
+          items: [
+            { text: 'Dashboard', icon: <Dashboard />, path: '/' },
+            { text: 'Satellite Mapping', icon: <Map />, path: '/atlas' },
+            { text: 'AI Analysis', icon: <Analytics />, path: '/ai-analysis' },
+            { text: 'Model Results', icon: <Assessment />, path: '/model-results' },
+            { text: 'Reports', icon: <BarChart />, path: '/reports' }
+          ]
+        }
+      ],
+      state_authority: [
+        {
+          title: 'State Operations',
+          items: [
+            { text: 'Dashboard', icon: <Dashboard />, path: '/' },
+            { text: 'FRA Atlas', icon: <Map />, path: '/atlas' },
+            { text: 'Claims Review', icon: <Gavel />, path: '/claims-review' },
+            { text: 'GIS Validation', icon: <LocationOn />, path: '/gis-validation' },
+            { text: 'Reports', icon: <BarChart />, path: '/reports' }
+          ]
+        }
+      ],
+      district_tribal_welfare: [
+        {
+          title: 'District Operations',
+          items: [
+            { text: 'Dashboard', icon: <Dashboard />, path: '/' },
+            { text: 'Legacy Upload', icon: <CloudUpload />, path: '/legacy-upload' },
+            { text: 'Claims Processing', icon: <Assignment />, path: '/claims-processing' },
+            { text: 'OCR Review', icon: <Description />, path: '/ocr-review' },
+            { text: 'Reports', icon: <BarChart />, path: '/reports' }
+          ]
+        }
+      ],
+      beneficiary: [
+        {
+          title: 'My Claims',
+          items: [
+            { text: 'Dashboard', icon: <Dashboard />, path: '/' },
+            { text: 'Submit Claim', icon: <Assignment />, path: '/submit-claim' },
+            { text: 'Track Claims', icon: <TrackChanges />, path: '/track-claims' },
+            { text: 'My Profile', icon: <Settings />, path: '/profile' }
+          ]
+        }
       ]
-    },
-    {
-      title: 'Resources',
-      items: [
-        { text: 'FRA Rules 2008', icon: <Description />, path: '/rules' },
-        { text: 'Guidelines', icon: <Description />, path: '/guidelines' },
-        { text: 'Reports & Analytics', icon: <BarChart />, path: '/reports' },
-        { text: 'User Settings', icon: <Settings />, path: '/settings' }
-      ]
-    }
-  ];
+    };
+    
+    return roleMenus[user.role] || [];
+  };
+  
+  const menuItems = getMenuItemsByRole();
 
   return (
     <Drawer
@@ -79,8 +136,8 @@ const Sidebar: React.FC = () => {
         '& .MuiDrawer-paper': {
           width: 260,
           boxSizing: 'border-box',
-          top: '104px !important',
-          height: 'calc(100vh - 104px) !important',
+          top: '56px !important',
+          height: 'calc(100vh - 56px) !important',
           position: 'fixed !important',
           left: '0 !important',
           bgcolor: 'background.default',
@@ -117,7 +174,10 @@ const Sidebar: React.FC = () => {
           }
         }}>
           <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1rem', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }} data-translate>
-            Welcome
+            Welcome {user?.role?.replace('_', ' ').toUpperCase()}
+          </Typography>
+          <Typography variant="body2" sx={{ fontSize: '0.8rem', opacity: 0.9 }}>
+            {user?.state && `${user.state}${user.district ? ` - ${user.district}` : ''}`}
           </Typography>
         </Box>
 

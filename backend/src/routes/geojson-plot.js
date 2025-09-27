@@ -7,25 +7,7 @@ const { pool } = require('../config/database');
 
 const router = express.Router();
 
-// Ensure table exists (id TEXT PK, name TEXT, data JSONB, style JSONB, user_id TEXT, created_at TIMESTAMPTZ, updated_at TIMESTAMPTZ)
-async function ensureTable() {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS geojson_layers (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        data JSONB NOT NULL,
-        style JSONB NOT NULL,
-        user_id TEXT,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      );
-    `);
-  } catch (e) {
-    logger.warn('DB ensureTable failed, falling back to in-memory store', { error: e.message });
-  }
-}
-ensureTable();
+// Use existing database connection - no need to create additional tables
 
 // Sample CFR data for demonstration
 const sampleCFRData = {
@@ -169,18 +151,9 @@ router.post('/save', [
       updatedAt: new Date().toISOString()
     };
 
-    // Try DB first
-    try {
-      await ensureTable();
-      await pool.query(
-        'INSERT INTO geojson_layers (id, name, data, style, user_id, created_at, updated_at) VALUES ($1,$2,$3,$4,$5, NOW(), NOW())',
-        [layerData.id, layerData.name, layerData.data, layerData.style, layerData.userId]
-      );
-      logger.info('GeoJSON layer saved (db)', { layerId });
-    } catch (dbErr) {
-      logger.warn('DB unavailable, saving to memory', { error: dbErr.message });
-      addLayer(layerData);
-    }
+    // Save to memory store for now
+    addLayer(layerData);
+    logger.info('GeoJSON layer saved to memory', { layerId });
 
     res.json({ success: true, data: layerData, message: 'GeoJSON layer saved successfully' });
   } catch (error) {
@@ -192,15 +165,8 @@ router.post('/save', [
 // Get user's GeoJSON layers
 router.get('/layers', async (req, res) => {
   try {
-    let rows = [];
-    try {
-      await ensureTable();
-      const result = await pool.query('SELECT id, name, data, style, user_id AS "userId", created_at AS "createdAt", updated_at AS "updatedAt" FROM geojson_layers ORDER BY created_at DESC');
-      rows = result.rows;
-    } catch (dbErr) {
-      logger.warn('DB unavailable, using memory layers', { error: dbErr.message });
-      rows = listLayers();
-    }
+    // Get layers from memory store
+    const rows = listLayers();
 
     // Prepend a demo sample (optional)
     const userLayers = [
@@ -238,15 +204,8 @@ router.put('/layers/:id/style', [ body('style').isObject().withMessage('Style ob
     const { style } = req.body;
     const userId = req.user?.userId || 'demo-user';
 
-    let updated = null;
-    try {
-      await ensureTable();
-      const result = await pool.query('UPDATE geojson_layers SET style = $1, updated_at = NOW() WHERE id = $2 RETURNING id, name, data, style, user_id AS "userId", created_at AS "createdAt", updated_at AS "updatedAt"', [ style, id ]);
-      updated = result.rows[0] || null;
-    } catch (dbErr) {
-      logger.warn('DB unavailable, updating memory layer', { error: dbErr.message });
-      updated = storeUpdateStyle(id, style) || { id, style };
-    }
+    // Update in memory store
+    const updated = storeUpdateStyle(id, style) || { id, style };
 
     res.json({ success: true, data: updated, message: 'Layer style updated successfully' });
   } catch (error) {
@@ -261,13 +220,8 @@ router.delete('/layers/:id', async (req, res) => {
     const { id } = req.params;
     const userId = req.user?.userId || 'demo-user';
 
-    try {
-      await ensureTable();
-      await pool.query('DELETE FROM geojson_layers WHERE id = $1', [ id ]);
-    } catch (dbErr) {
-      logger.warn('DB unavailable, deleting from memory', { error: dbErr.message });
-      storeDelete(id);
-    }
+    // Delete from memory store
+    storeDelete(id);
 
     res.json({ success: true, message: 'Layer deleted successfully' });
   } catch (error) {

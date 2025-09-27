@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Box, 
-  Paper, 
   TextField, 
   Button, 
   Typography, 
   Alert, 
-  Link, 
   Divider,
   Container,
   Grid,
@@ -30,11 +28,9 @@ import {
   ArrowForward,
   Security
 } from '@mui/icons-material';
-import { useDispatch } from 'react-redux';
-import { loginStart, loginSuccess, loginFailure } from '../store/slices/authSlice';
-import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../contexts/AuthContext';
+// Remove old hook import
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('admin@fraatlas.gov.in');
@@ -42,11 +38,11 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const { isAuthenticated } = useAuth();
+  const { user, login } = useAuth();
+  const isAuthenticated = !!user;
 
   // If already authenticated, redirect to Dashboard
   useEffect(() => {
@@ -60,17 +56,11 @@ const Login: React.FC = () => {
     setError('');
     setLoading(true);
     
-    dispatch(loginStart());
-    
     try {
-      // Add small delay to prevent rate limiting
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const response = await api.post('/auth/login', { email, password });
-      dispatch(loginSuccess(response.data));
+      await login(email, password);
       navigate('/', { replace: true });
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Login failed';
-      dispatch(loginFailure(errorMessage));
+      const errorMessage = err.message || 'Login failed';
       setError(errorMessage);
     } finally {
       setLoading(false);

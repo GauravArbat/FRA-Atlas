@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const { pool } = require('../config/database');
 const { logger } = require('../utils/logger');
+const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -53,7 +54,7 @@ router.post('/register', [
     // Generate JWT token
     const token = jwt.sign(
       { userId: user.id, role: user.role },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production',
       { expiresIn: '24h' }
     );
 
@@ -112,7 +113,7 @@ router.post('/login', [
     // Generate JWT token
     const token = jwt.sign(
       { userId: userData.id, role: userData.role },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production',
       { expiresIn: '24h' }
     );
 
@@ -144,7 +145,7 @@ router.post('/login', [
 });
 
 // Get current user
-router.get('/me', async (req, res) => {
+router.get('/me', authenticateToken, async (req, res) => {
   try {
     const user = await pool.query(
       'SELECT id, username, email, role, state, district, block, created_at, last_login FROM users WHERE id = $1',

@@ -1,20 +1,11 @@
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../store';
-import { logout as logoutAction } from '../store/slices/authSlice';
-
+// This hook is deprecated - use AuthContext instead
 export const useAuth = () => {
-  const dispatch = useDispatch();
-  const { isAuthenticated, user, loading } = useSelector((state: RootState) => state.auth);
-  
-  const logout = () => {
-    dispatch(logoutAction());
-  };
-  
+  console.warn('useAuth hook is deprecated. Use AuthContext instead.');
   return {
-    isAuthenticated,
-    user,
-    loading,
-    logout,
+    isAuthenticated: false,
+    user: null,
+    loading: false,
+    logout: () => {},
   };
 };
 
