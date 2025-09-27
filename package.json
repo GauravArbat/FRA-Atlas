@@ -1,5 +1,32 @@
 {
+  "name": "fra-atlas",
+  "version": "1.0.0",
+  "description": "Forest Rights Act Atlas - Complete Digital Platform",
+  "main": "make-all-functions-work.js",
+  "scripts": {
+    "start": "node make-all-functions-work.js",
+    "setup": "node fix-all-functions.js",
+    "health": "node health-check.js",
+    "verify": "node verify-functions.js",
+    "dev": "node start-all-services.js"
+  },
   "dependencies": {
-    "axios": "^1.11.0"
-  }
+    "axios": "^1.12.2",
+    "form-data": "^4.0.0",
+    "uuid": "^9.0.1"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "forest-rights",
+    "fra",
+    "gis",
+    "mapping",
+    "digitization",
+    "government",
+    "india"
+  ],
+  "author": "FRA Atlas Team",
+  "license": "MIT"
 }

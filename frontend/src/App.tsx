@@ -15,8 +15,12 @@ import Notifications from './pages/Notifications';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Profile from './pages/Profile';
+import ContactUs from './pages/ContactUs';
 import { useAuth } from './hooks/useAuth';
 import ErrorBoundary from './components/ErrorBoundary';
+import { LanguageProvider } from './contexts/LanguageContext';
+import { CustomThemeProvider } from './contexts/ThemeContext';
+import VoiceAssistant from './components/VoiceAssistant';
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -68,7 +72,12 @@ function App() {
           e.message?.includes('Loading chunk') ||
           e.message?.includes('ChunkLoadError') ||
           e.message?.includes('Network Error') ||
-          e.message?.includes('ERR_CONNECTION_REFUSED')) {
+          e.message?.includes('ERR_CONNECTION_REFUSED') ||
+          e.message?.includes('message channel closed') ||
+          e.message?.includes('listener indicated an asynchronous response') ||
+          e.message?.includes('runtime.lastError') ||
+          e.message?.includes('removeChild') ||
+          e.message?.includes('node to be removed is not a child')) {
         e.stopImmediatePropagation();
         return false;
       }
@@ -81,7 +90,11 @@ function App() {
           e.reason?.message?.includes('ChunkLoadError') ||
           e.reason?.message?.includes('Style is not done loading') ||
           e.reason?.message?.includes('Network Error') ||
-          e.reason?.message?.includes('ERR_CONNECTION_REFUSED')) {
+          e.reason?.message?.includes('ERR_CONNECTION_REFUSED') ||
+          e.reason?.message?.includes('message channel closed') ||
+          e.reason?.message?.includes('listener indicated an asynchronous response') ||
+          e.reason?.message?.includes('runtime.lastError') ||
+          e.reason?.toString?.()?.includes('listener indicated an asynchronous response')) {
         e.preventDefault();
         return false;
       }
@@ -101,7 +114,16 @@ function App() {
           message.includes('container must be a String or HTMLElement') ||
           message.includes('Network Error') ||
           message.includes('ERR_CONNECTION_REFUSED') ||
-          message.includes('AxiosError')) {
+          message.includes('AxiosError') ||
+          message.includes('v7_startTransition') ||
+          message.includes('reactrouter.com') ||
+          message.includes('future flag') ||
+          message.includes('React DevTools') ||
+          message.includes('reactjs.org/link/react-devtools') ||
+          message.includes('better development experience') ||
+          message.includes('removeChild') ||
+          message.includes('node to be removed is not a child') ||
+          message.includes('NotFoundError')) {
         return; // Suppress these specific errors
       }
       originalConsoleError.apply(console, args);
@@ -112,7 +134,11 @@ function App() {
     console.warn = (...args) => {
       const message = args.join(' ');
       if (message.includes('Style not loaded yet') ||
-          message.includes('Map not ready')) {
+          message.includes('Map not ready') ||
+          message.includes('No routes matched location') ||
+          message.includes('React DevTools') ||
+          message.includes('reactjs.org/link/react-devtools') ||
+          message.includes('better development experience')) {
         return; // Suppress these specific warnings
       }
       originalConsoleWarn.apply(console, args);
@@ -130,39 +156,50 @@ function App() {
     };
   }, []);
 
-  if (!isAuthenticated) {
-    return (
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="*" element={<Login />} />
-      </Routes>
-    );
-  }
-
   return (
-    <ErrorBoundary>
-      <Box sx={{ display: 'flex' }}>
-        <Sidebar />
-        <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-          <Header />
-          <Box component="main" sx={{ flex: 1, overflow: 'auto', p: { xs: 2, md: 3 }, mt: { xs: '60px', md: '60px' } }}>
+    <CustomThemeProvider>
+      <LanguageProvider>
+        <ErrorBoundary>
+          {!isAuthenticated ? (
             <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/atlas" element={<FRAAtlas />} />
-              <Route path="/gis-plot" element={<DigitalGISPlot />} />
-              {/* <Route path="/data-plotting" element={<DataPlottingDemo />} /> */}
-              <Route path="/data" element={<DataManagement />} />
-              <Route path="/decisions" element={<DecisionSupport />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="*" element={<Login />} />
             </Routes>
-          </Box>
-        </Box>
-      </Box>
-    </ErrorBoundary>
+          ) : (
+            <Box sx={{ display: 'flex' }}>
+              <Sidebar />
+              <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                <Header />
+                <Box component="main" sx={{ flex: 1, overflow: 'auto', p: { xs: 2, md: 3 }, mt: { xs: '104px', md: '104px' }, bgcolor: 'background.default' }}>
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/atlas" element={<FRAAtlas />} />
+                    <Route path="/gis-plot" element={<DigitalGISPlot />} />
+                    <Route path="/data" element={<DataManagement />} />
+                    <Route path="/decisions" element={<DecisionSupport />} />
+                    <Route path="/reports" element={<Reports />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/notifications" element={<Notifications />} />
+                    <Route path="/contact" element={<ContactUs />} />
+                    <Route path="/training" element={<DataManagement />} />
+                    <Route path="/standardization" element={<DataManagement />} />
+                    <Route path="/digitization" element={<DataManagement />} />
+                    <Route path="/spatial" element={<FRAAtlas />} />
+                    <Route path="/visualization" element={<FRAAtlas />} />
+                    <Route path="/rules" element={<DecisionSupport />} />
+                    <Route path="/guidelines" element={<DecisionSupport />} />
+                    <Route path="/circulars" element={<Reports />} />
+                  </Routes>
+                </Box>
+              </Box>
+              <VoiceAssistant />
+            </Box>
+          )}
+        </ErrorBoundary>
+      </LanguageProvider>
+    </CustomThemeProvider>
   );
 }
 

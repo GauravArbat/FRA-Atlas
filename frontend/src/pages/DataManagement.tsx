@@ -40,6 +40,7 @@ import MyLocationIcon from '@mui/icons-material/MyLocation';
 import { api, pdfProcessorAPI, geojsonPlotAPI } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { loadOcrItems, addOcrItem, deleteOcrItem, updateOcrItem, type OcrItem } from '../utils/ocrStore';
+import { usePageTranslation } from '../hooks/usePageTranslation';
 
 interface ProcessedPDFData {
   id: string;
@@ -55,6 +56,7 @@ interface ProcessedPDFData {
 
 const DataManagement: React.FC = () => {
   const navigate = useNavigate();
+  usePageTranslation();
   // Original states
   const [uploadInfo, setUploadInfo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -311,7 +313,7 @@ const DataManagement: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
-        PDF Data Processing & Digitization
+        <span data-translate>PDF Data Processing & Digitization</span>
       </Typography>
 
       <Stack spacing={3}>
@@ -322,10 +324,10 @@ const DataManagement: React.FC = () => {
         <Paper sx={{ p: 3 }}>
           <Typography variant="h6" gutterBottom>
             <PictureAsPdfIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-            PDF Processing & Data Extraction
+            <span data-translate>PDF Processing & Data Extraction</span>
           </Typography>
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            Upload FRA claim PDFs to automatically extract personal information and coordinates, then convert to GeoJSON for mapping.
+            <span data-translate>Upload FRA claim PDFs to automatically extract personal information and coordinates, then convert to GeoJSON for mapping.</span>
           </Typography>
           
           <Stack spacing={2} sx={{ mt: 2 }}>
@@ -336,7 +338,7 @@ const DataManagement: React.FC = () => {
                 startIcon={<CloudUploadIcon />}
                 disabled={isProcessing}
               > 
-                {pdfFile ? 'Change PDF File' : 'Select PDF File'}
+                <span data-translate>{pdfFile ? 'Change PDF File' : 'Select PDF File'}</span>
                 <input 
                   hidden 
                   type="file" 
@@ -359,7 +361,7 @@ const DataManagement: React.FC = () => {
                 disabled={isProcessing}
                 startIcon={<PictureAsPdfIcon />}
               >
-                {isProcessing ? 'Processing PDF...' : 'Process PDF & Extract Data'}
+                <span data-translate>{isProcessing ? 'Processing PDF...' : 'Process PDF & Extract Data'}</span>
               </Button>
             )}
 
@@ -367,7 +369,7 @@ const DataManagement: React.FC = () => {
               <Box>
                 <LinearProgress />
                 <Typography variant="body2" sx={{ mt: 1 }}>
-                  Extracting text, personal information, and coordinates from PDF...
+                  <span data-translate>Extracting text, personal information, and coordinates from PDF...</span>
                 </Typography>
               </Box>
             )}
@@ -379,7 +381,7 @@ const DataManagement: React.FC = () => {
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               <CheckCircleIcon sx={{ mr: 1, verticalAlign: 'middle', color: 'success.main' }} />
-              Extracted Data Preview
+              <span data-translate>Extracted Data Preview</span>
             </Typography>
             
             <Grid container spacing={2}>
@@ -388,7 +390,7 @@ const DataManagement: React.FC = () => {
                   <CardContent>
                     <Typography variant="subtitle1" gutterBottom>
                       <PersonIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                      Personal Information
+                      <span data-translate>Personal Information</span>
                     </Typography>
                     <List dense>
                       {Object.entries(processedData?.personalInfo || {}).map(([key, value]) => (
@@ -409,7 +411,7 @@ const DataManagement: React.FC = () => {
                   <CardContent>
                     <Typography variant="subtitle1" gutterBottom>
                       <LocationOnIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                      Geographic Data
+                      <span data-translate>Geographic Data</span>
                     </Typography>
                     <Typography variant="body2" gutterBottom>
                       Coordinates Found: {processedData?.coordinates?.length || 0}
@@ -441,7 +443,7 @@ const DataManagement: React.FC = () => {
                 startIcon={<MapIcon />}
                 onClick={() => saveToMapLayers(processedData)}
               >
-                Save to Map Layers
+                <span data-translate>Save to Map Layers</span>
               </Button>
               <Button 
                 variant="outlined" 
@@ -461,7 +463,7 @@ const DataManagement: React.FC = () => {
                   viewOnMap(tempPDF);
                 }}
               >
-                Preview on Map
+                <span data-translate>Preview on Map</span>
               </Button>
             </CardActions>
           </Paper>
@@ -471,7 +473,7 @@ const DataManagement: React.FC = () => {
         {processedPDFs.length > 0 && (
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Processed PDF Records ({processedPDFs.length})
+              <span data-translate>Processed PDF Records ({processedPDFs.length})</span>
             </Typography>
             <div style={{ width: '100%', height: 400 }}>
               <DataGrid 
@@ -487,24 +489,24 @@ const DataManagement: React.FC = () => {
 
         {/* Original OCR & NER Section */}
         <Paper sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>OCR & NER (Hindi/English/Marathi)</Typography>
+          <Typography variant="h6" gutterBottom><span data-translate>OCR & NER (Hindi/English/Marathi)</span></Typography>
           <Stack spacing={2}>
-            <TextField label="Text / OCR output" multiline minRows={4} value={ocrText} onChange={(e) => setOcrText(e.target.value)} />
+            <TextField label={<span data-translate>Text / OCR output</span>} multiline minRows={4} value={ocrText} onChange={(e) => setOcrText(e.target.value)} />
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <Button variant="contained" onClick={runOcr}>Run OCR (mock)</Button>
-              <Button variant="outlined" onClick={runNer}>Run NER</Button>
+              <Button variant="contained" onClick={runOcr}><span data-translate>Run OCR (mock)</span></Button>
+              <Button variant="outlined" onClick={runNer}><span data-translate>Run NER</span></Button>
             </Stack>
             {info && <Alert severity="info">{info}</Alert>}
             {nerEntities.length > 0 && (
               <Box>
-                <Typography variant="subtitle2" gutterBottom>Extracted Entities</Typography>
+                <Typography variant="subtitle2" gutterBottom><span data-translate>Extracted Entities</span></Typography>
                 {nerEntities.map((ent, idx) => (
                   <Typography key={idx} variant="body2">{ent.label}: {ent.value}</Typography>
                 ))}
               </Box>
             )}
             <Divider sx={{ my: 2 }} />
-            <Typography variant="subtitle2" gutterBottom>History</Typography>
+            <Typography variant="subtitle2" gutterBottom><span data-translate>History</span></Typography>
             <div style={{ width: '100%', height: 320 }}>
               <DataGrid rows={history} columns={columns} getRowId={(r) => r.id} pageSizeOptions={[5,10]} initialState={{ pagination: { paginationModel: { pageSize: 5 } } }} />
             </div>
@@ -513,9 +515,9 @@ const DataManagement: React.FC = () => {
 
         {/* Legacy Features */}
         <Paper sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>Legacy Document Processing</Typography>
+          <Typography variant="h6" gutterBottom><span data-translate>Legacy Document Processing</span></Typography>
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            Upload FRA claims, verification reports, or pattas for digitization.
+            <span data-translate>Upload FRA claims, verification reports, or pattas for digitization.</span>
           </Typography>
           <Button variant="contained" component="label" startIcon={<CloudUploadIcon />}> 
             Select files
@@ -524,7 +526,7 @@ const DataManagement: React.FC = () => {
         </Paper>
 
         <Paper sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>Create Machine-readable Archive</Typography>
+          <Typography variant="h6" gutterBottom><span data-translate>Create Machine-readable Archive</span></Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
             <TextField label="Archive type" size="small" value={archiveType} onChange={(e) => setArchiveType(e.target.value)} />
             <TextField label="Format" size="small" value={archiveFormat} onChange={(e) => setArchiveFormat(e.target.value)} />
@@ -533,11 +535,11 @@ const DataManagement: React.FC = () => {
         </Paper>
 
         <Paper sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>Generate Shapefile</Typography>
+          <Typography variant="h6" gutterBottom><span data-translate>Generate Shapefile</span></Typography>
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            Generate geospatial shapefiles of FRA patta lands.
+            <span data-translate>Generate geospatial shapefiles of FRA patta lands.</span>
           </Typography>
-          <Button variant="outlined" startIcon={<MapIcon />} onClick={handleGenerateShapefile}>Generate</Button>
+          <Button variant="outlined" startIcon={<MapIcon />} onClick={handleGenerateShapefile}><span data-translate>Generate</span></Button>
         </Paper>
       </Stack>
 

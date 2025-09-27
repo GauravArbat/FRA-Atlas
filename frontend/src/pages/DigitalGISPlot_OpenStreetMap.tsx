@@ -103,7 +103,7 @@ const DigitalGISPlot: React.FC = () => {
   const [areaPlots, setAreaPlots] = useState<AreaPlot[]>([]);
 
   // Dynamic dimensions based on sidebar state
-  const mainSidebarWidth = isMobile ? 0 : (sidebarCollapsed ? 72 : 300);
+  const mainSidebarWidth = 240;
   const controlsWidth = showSidebar ? 400 : 0;
   const totalLeftOffset = mainSidebarWidth + controlsWidth;
 
@@ -349,9 +349,9 @@ const DigitalGISPlot: React.FC = () => {
               width: controlsWidth,
               boxSizing: 'border-box',
               position: 'fixed',
-              height: { xs: 'calc(100vh - 64px)', md: 'calc(100vh - 80px)' },
-              top: { xs: 64, md: 80 },
-              left: mainSidebarWidth,
+              height: { xs: 'calc(100vh - 64px)', md: 'calc(100vh - 28px)' },
+              top: { xs: 64, md: 88 },
+              left: 240,
               zIndex: 1300,
               backgroundColor: 'background.paper',
               borderRight: '1px solid rgba(0,0,0,0.08)',
@@ -360,58 +360,87 @@ const DigitalGISPlot: React.FC = () => {
             }
           }}
         >
-          <Box sx={{ p: 2, height: '100%', overflow: 'auto' }}>
-            <Typography variant="h6" gutterBottom>
+          <Box sx={{ display: 'flex', flexDirection: 'column', p: 1.5, height: '100%', overflow: 'auto', marginRight: 'auto' }}>
+            <Typography variant="h6" sx={{ mb: 2, color: 'rgb(77, 119, 179)', fontWeight: 600 }}>
               GIS Plot Controls
             </Typography>
             
             {/* Map Configuration */}
             <Card sx={{ mb: 2 }}>
-              <CardContent>
-                <Typography variant="subtitle2" gutterBottom>
-                  Map
+              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                <Typography variant="subtitle2" sx={{ mb: 1.5, color: 'primary.main' }}>
+                  Map Configuration
                 </Typography>
-                <Divider sx={{ mb: 2 }} />
-                <Stack spacing={2}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={useOpenStreetMap}
-                        onChange={(e) => setUseOpenStreetMap(e.target.checked)}
-                      />
-                    }
-                    label="Use satellite imagery with labels"
-                  />
-                  {!useOpenStreetMap && (
-                    <TextField
-                      label="Mapbox Token"
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={useOpenStreetMap}
+                      onChange={(e) => setUseOpenStreetMap(e.target.checked)}
                       size="small"
-                      fullWidth
-                      helperText="Required for drawing/validation and Mapbox basemap"
-                      disabled
                     />
-                  )}
+                  }
+                  label="Satellite imagery with labels"
+                  sx={{ mb: 1 }}
+                />
+                {!useOpenStreetMap && (
+                  <TextField
+                    label="Mapbox Token"
+                    size="small"
+                    fullWidth
+                    helperText="Required for advanced features"
+                    disabled
+                  />
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Drawing Tools */}
+            <Card sx={{ mb: 2 }}>
+              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                <Typography variant="subtitle2" sx={{ mb: 1.5, color: 'primary.main' }}>
+                  Drawing Tools
+                </Typography>
+                <Stack direction="row" spacing={1}>
+                  <Button
+                    variant={drawingMode === 'polygon' ? 'contained' : 'outlined'}
+                    size="small"
+                    startIcon={<CropFree />}
+                    onClick={() => toggleDrawingMode('polygon')}
+                  >
+                    Polygon
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Cancel />}
+                    onClick={() => toggleDrawingMode(null)}
+                  >
+                    Clear
+                  </Button>
                 </Stack>
               </CardContent>
             </Card>
 
             {/* System Status */}
             <Card sx={{ mb: 2 }}>
-              <CardContent>
-                <Typography variant="subtitle2" gutterBottom>
+              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                <Typography variant="subtitle2" sx={{ mb: 1.5, color: 'primary.main' }}>
                   System Status
                 </Typography>
-                <Grid container spacing={1}>
-                  <Grid item xs={12} sm={6}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Chip 
-                        label={`${areaPlots.length} Area Plots`}
-                        color="primary"
-                        size="small"
-                      />
-                    </Box>
-                  </Grid>
-                </Grid>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                  <Chip
+                    label={`${areaPlots.length} Area Plots`}
+                    color="primary"
+                    size="small"
+                    variant="filled"
+                  />
+                  <Chip
+                    label="Ready"
+                    color="success"
+                    size="small"
+                    variant="outlined"
+                  />
+                </Box>
               </CardContent>
             </Card>
           </Box>
@@ -422,9 +451,9 @@ const DigitalGISPlot: React.FC = () => {
       <Box
         sx={{
           position: 'fixed',
-          top: { xs: 64, md: 80 },
-          left: isMobile ? (sidebarOpen ? 0 : 0) : `${totalLeftOffset}px`,
-          right: 0,
+          top: { xs: 64, md: 88 },
+          left: showSidebar ? `${240 + controlsWidth + 16}px` : '250px',
+          right: 16,
           bottom: 0,
           transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           overflow: 'hidden'

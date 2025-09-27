@@ -45,6 +45,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
 import { api } from '../services/api';
 import { setUser } from '../store/slices/authSlice';
+import { usePageTranslation } from '../hooks/usePageTranslation';
 
 interface UserProfile {
   id: string;
@@ -61,6 +62,7 @@ interface UserProfile {
 const Profile: React.FC = () => {
   const { user, token } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
+  usePageTranslation();
   
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -260,7 +262,7 @@ const Profile: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
-        User Profile
+        <span data-translate>User Profile</span>
       </Typography>
       
       {error && (
@@ -322,7 +324,7 @@ const Profile: React.FC = () => {
                     startIcon={<Edit />}
                     onClick={handleEdit}
                   >
-                    Edit Profile
+                    <span data-translate>Edit Profile</span>
                   </Button>
                 ) : (
                   <Box display="flex" gap={1}>
@@ -332,7 +334,7 @@ const Profile: React.FC = () => {
                       onClick={handleSave}
                       disabled={saving}
                     >
-                      {saving ? 'Saving...' : 'Save'}
+                      <span data-translate>{saving ? 'Saving...' : 'Save'}</span>
                     </Button>
                     <Button
                       variant="outlined"
@@ -340,7 +342,7 @@ const Profile: React.FC = () => {
                       onClick={handleCancel}
                       disabled={saving}
                     >
-                      Cancel
+                      <span data-translate>Cancel</span>
                     </Button>
                   </Box>
                 )}
@@ -353,14 +355,14 @@ const Profile: React.FC = () => {
         <Grid item xs={12} md={8}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Profile Information
+              <span data-translate>Profile Information</span>
             </Typography>
             
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Username"
+                  label={<span data-translate>Username</span>}
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                   disabled={!editing}
@@ -372,7 +374,7 @@ const Profile: React.FC = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Email"
+                  label={<span data-translate>Email</span>}
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -384,7 +386,7 @@ const Profile: React.FC = () => {
               </Grid>
               <Grid item xs={12} sm={4}>
                 <FormControl fullWidth disabled={!editing}>
-                  <InputLabel>State</InputLabel>
+                  <InputLabel><span data-translate>State</span></InputLabel>
                   <Select
                     value={formData.state}
                     label="State"
@@ -402,7 +404,7 @@ const Profile: React.FC = () => {
               <Grid item xs={12} sm={4}>
                 <TextField
                   fullWidth
-                  label="District"
+                  label={<span data-translate>District</span>}
                   value={formData.district}
                   onChange={(e) => setFormData({ ...formData, district: e.target.value })}
                   disabled={!editing}
@@ -411,7 +413,7 @@ const Profile: React.FC = () => {
               <Grid item xs={12} sm={4}>
                 <TextField
                   fullWidth
-                  label="Block"
+                  label={<span data-translate>Block</span>}
                   value={formData.block}
                   onChange={(e) => setFormData({ ...formData, block: e.target.value })}
                   disabled={!editing}
@@ -425,7 +427,7 @@ const Profile: React.FC = () => {
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Account Information
+              <span data-translate>Account Information</span>
             </Typography>
             
             <List>
@@ -434,7 +436,7 @@ const Profile: React.FC = () => {
                   <CalendarToday color="primary" />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Member Since"
+                  primary={<span data-translate>Member Since</span>}
                   secondary={formatDate(profile.created_at)}
                 />
               </ListItem>
@@ -445,7 +447,7 @@ const Profile: React.FC = () => {
                     <CheckCircle color="success" />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Last Login"
+                    primary={<span data-translate>Last Login</span>}
                     secondary={formatDate(profile.last_login)}
                   />
                 </ListItem>
@@ -456,7 +458,7 @@ const Profile: React.FC = () => {
                   <Security color="primary" />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Password"
+                  primary={<span data-translate>Password</span>}
                   secondary="••••••••"
                 />
                 <ListItemSecondaryAction>
@@ -464,7 +466,7 @@ const Profile: React.FC = () => {
                     size="small"
                     onClick={() => setChangePasswordOpen(true)}
                   >
-                    Change
+                    <span data-translate>Change</span>
                   </Button>
                 </ListItemSecondaryAction>
               </ListItem>
@@ -475,12 +477,12 @@ const Profile: React.FC = () => {
 
       {/* Change Password Dialog */}
       <Dialog open={changePasswordOpen} onClose={() => setChangePasswordOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Change Password</DialogTitle>
+        <DialogTitle><span data-translate>Change Password</span></DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 1 }}>
             <TextField
               fullWidth
-              label="Current Password"
+              label={<span data-translate>Current Password</span>}
               type="password"
               value={passwordData.currentPassword}
               onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
@@ -488,16 +490,16 @@ const Profile: React.FC = () => {
             />
             <TextField
               fullWidth
-              label="New Password"
+              label={<span data-translate>New Password</span>}
               type="password"
               value={passwordData.newPassword}
               onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
               margin="normal"
-              helperText="Minimum 6 characters"
+              helperText={<span data-translate>Minimum 6 characters</span>}
             />
             <TextField
               fullWidth
-              label="Confirm New Password"
+              label={<span data-translate>Confirm New Password</span>}
               type="password"
               value={passwordData.confirmPassword}
               onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
@@ -506,13 +508,13 @@ const Profile: React.FC = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setChangePasswordOpen(false)}>Cancel</Button>
+          <Button onClick={() => setChangePasswordOpen(false)}><span data-translate>Cancel</span></Button>
           <Button
             onClick={handlePasswordChange}
             variant="contained"
             disabled={saving}
           >
-            {saving ? 'Changing...' : 'Change Password'}
+            <span data-translate>{saving ? 'Changing...' : 'Change Password'}</span>
           </Button>
         </DialogActions>
       </Dialog>

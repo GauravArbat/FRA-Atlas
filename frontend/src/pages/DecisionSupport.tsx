@@ -27,40 +27,40 @@ const DecisionSupport: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>Decision Support System</Typography>
+      <Typography variant="h4" gutterBottom><span data-translate>Decision Support System</span></Typography>
 
       <Paper sx={{ p: 2, mb: 2 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
           <FormControl size="small" sx={{ minWidth: 160 }}>
-            <InputLabel>Scheme</InputLabel>
+            <InputLabel><span data-translate>Scheme</span></InputLabel>
             <Select label="Scheme" value={scheme} onChange={(e) => setScheme(e.target.value)}>
-              <MenuItem value="PMKSY">PMKSY (Irrigation)</MenuItem>
-              <MenuItem value="PMKISAN">PM-KISAN</MenuItem>
-              <MenuItem value="MGNREGA">MGNREGA</MenuItem>
+              <MenuItem value="PMKSY"><span data-translate>PMKSY (Irrigation)</span></MenuItem>
+              <MenuItem value="PMKISAN"><span data-translate>PM-KISAN</span></MenuItem>
+              <MenuItem value="MGNREGA"><span data-translate>MGNREGA</span></MenuItem>
             </Select>
           </FormControl>
           <FormControl size="small" sx={{ minWidth: 160 }}>
-            <InputLabel>State</InputLabel>
+            <InputLabel><span data-translate>State</span></InputLabel>
             <Select label="State" value={state} onChange={(e) => setState(e.target.value)}>
-              <MenuItem value="Maharashtra">Maharashtra</MenuItem>
-              <MenuItem value="Chhattisgarh">Chhattisgarh</MenuItem>
+              <MenuItem value="Maharashtra"><span data-translate>Maharashtra</span></MenuItem>
+              <MenuItem value="Chhattisgarh"><span data-translate>Chhattisgarh</span></MenuItem>
             </Select>
           </FormControl>
           <FormControl size="small" sx={{ minWidth: 160 }}>
-            <InputLabel>District</InputLabel>
+            <InputLabel><span data-translate>District</span></InputLabel>
             <Select label="District" value={district} onChange={(e) => setDistrict(e.target.value)}>
-              <MenuItem value="Pune">Pune</MenuItem>
-              <MenuItem value="Gadchiroli">Gadchiroli</MenuItem>
+              <MenuItem value="Pune"><span data-translate>Pune</span></MenuItem>
+              <MenuItem value="Gadchiroli"><span data-translate>Gadchiroli</span></MenuItem>
             </Select>
           </FormControl>
-          <Button variant="contained" onClick={runEligibility}>Evaluate Eligibility</Button>
-          <Button variant="outlined" onClick={runPrioritize}>Prioritize Borewells</Button>
+          <Button variant="contained" onClick={runEligibility}><span data-translate>Evaluate Eligibility</span></Button>
+          <Button variant="outlined" onClick={runPrioritize}><span data-translate>Prioritize Borewells</span></Button>
         </Stack>
       </Paper>
 
       {eligibility && (
         <Paper sx={{ p: 2, mb: 2 }}>
-          <Typography variant="h6" gutterBottom>Eligibility Results – {eligibility.scheme}</Typography>
+          <Typography variant="h6" gutterBottom><span data-translate>Eligibility Results – {eligibility.scheme}</span></Typography>
           <Divider sx={{ mb: 1 }} />
           <Stack direction="row" spacing={1} flexWrap="wrap">
             {eligibility.beneficiaries.map((b: any) => (
@@ -72,7 +72,7 @@ const DecisionSupport: React.FC = () => {
 
       {priorities && (
         <Paper sx={{ p: 2, mb: 2 }}>
-          <Typography variant="h6" gutterBottom>Intervention Priorities – {priorities.intervention}</Typography>
+          <Typography variant="h6" gutterBottom><span data-translate>Intervention Priorities – {priorities.intervention}</span></Typography>
           <Divider sx={{ mb: 1 }} />
           <Stack direction="row" spacing={1} flexWrap="wrap">
             {priorities.recommendations.map((r: any, i: number) => (
@@ -84,7 +84,7 @@ const DecisionSupport: React.FC = () => {
 
       {metrics && (
         <Paper sx={{ p: 2 }}>
-          <Typography variant="h6" gutterBottom>Policy Dashboard</Typography>
+          <Typography variant="h6" gutterBottom><span data-translate>Policy Dashboard</span></Typography>
           <Divider sx={{ mb: 1 }} />
           <Typography variant="body2">National: {metrics.national.beneficiaries.toLocaleString()} beneficiaries • {metrics.national.coveragePct}% coverage • {metrics.national.fundedProjects.toLocaleString()} projects</Typography>
           <Divider sx={{ my: 1 }} />

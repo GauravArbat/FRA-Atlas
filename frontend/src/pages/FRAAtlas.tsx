@@ -76,6 +76,7 @@ import '../styles/mapPopup.css';
 import { geojsonPlotAPI } from '../services/api';
 import BhunakshaSearch from '../components/BhunakshaSearch';
 import { LandRecord, getAllLandRecords } from '../services/bhunakshaService';
+import { usePageTranslation } from '../hooks/usePageTranslation';
 
 // Fix Leaflet default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -99,6 +100,7 @@ interface FRAData {
 }
 
 const FRAAtlas: React.FC = () => {
+  usePageTranslation();
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const drawControlRef = useRef<L.Control.Draw | null>(null);
@@ -124,10 +126,14 @@ const FRAAtlas: React.FC = () => {
     fraGranted: true,
     fraPotential: true,
     boundaries: false,
-    roads: false,
-    waterBodies: false,
     forests: true
   });
+
+  // Layer references
+  const fraGrantedLayerRef = useRef<L.LayerGroup | null>(null);
+  const fraPotentialLayerRef = useRef<L.LayerGroup | null>(null);
+  const boundariesLayerRef = useRef<L.LayerGroup | null>(null);
+  const forestsLayerRef = useRef<L.LayerGroup | null>(null);
 
   // OCR and NER states
   const [showOCRDialog, setShowOCRDialog] = useState(false);
@@ -153,8 +159,12 @@ const FRAAtlas: React.FC = () => {
       const map = L.map(containerRef.current, {
         center: [21.5, 82.5], // Central India coordinates
         zoom: 6,
+        minZoom: 4,
+        maxZoom: 18,
         zoomControl: false,
-        attributionControl: true
+        attributionControl: true,
+        maxBounds: [[6.0, 68.0], [37.0, 97.0]], // India bounds
+        maxBoundsViscosity: 1.0
       });
 
       // Add satellite imagery layer
@@ -341,9 +351,19 @@ const FRAAtlas: React.FC = () => {
       setFraData(mockData);
       setFilteredData(mockData);
       
+      // Initialize layer groups
+      fraGrantedLayerRef.current = L.layerGroup().addTo(mapRef.current);
+      fraPotentialLayerRef.current = L.layerGroup().addTo(mapRef.current);
+      boundariesLayerRef.current = L.layerGroup();
+      forestsLayerRef.current = L.layerGroup().addTo(mapRef.current);
+
       // Add FRA layers to map
       const addFRALayersToMap = (data: FRAData[]) => {
-        if (!mapRef.current) return;
+        if (!mapRef.current || !fraGrantedLayerRef.current || !fraPotentialLayerRef.current) return;
+
+        // Clear existing layers
+        fraGrantedLayerRef.current.clearLayers();
+        fraPotentialLayerRef.current.clearLayers();
 
         data.forEach(item => {
           const coordinates = item.coordinates.map(coord => [coord[0], coord[1]] as [number, number]);
@@ -375,8 +395,17 @@ const FRAAtlas: React.FC = () => {
             } catch {}
           });
 
-          polygon.addTo(mapRef.current!);
+          // Add to appropriate layer group
+          if (item.status === 'granted') {
+            polygon.addTo(fraGrantedLayerRef.current!);
+          } else {
+            polygon.addTo(fraPotentialLayerRef.current!);
+          }
         });
+
+        // Add sample boundaries and forest areas
+        addBoundariesLayer();
+        addForestsLayer();
       };
       
       addFRALayersToMap(mockData);
@@ -387,6 +416,118 @@ const FRAAtlas: React.FC = () => {
       console.error('Error loading FRA data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Add boundaries layer
+  const addBoundariesLayer = () => {
+    if (!mapRef.current || !boundariesLayerRef.current) return;
+
+    boundariesLayerRef.current.clearLayers();
+
+    // Sample administrative boundaries
+    const boundaries = [
+      {
+        name: 'Madhya Pradesh',
+        coordinates: [[21.0, 80.0], [21.0, 82.0], [23.0, 82.0], [23.0, 80.0]]
+      },
+      {
+        name: 'Odisha',
+        coordinates: [[20.0, 85.0], [20.0, 87.0], [22.0, 87.0], [22.0, 85.0]]
+      }
+    ];
+
+    boundaries.forEach(boundary => {
+      const coordinates = boundary.coordinates.map(coord => [coord[0], coord[1]] as [number, number]);
+      const polygon = L.polygon(coordinates, {
+        color: '#1976d2',
+        fillColor: '#2196f3',
+        fillOpacity: 0.1,
+        weight: 2,
+        dashArray: '5,5'
+      });
+
+      polygon.bindPopup(`<h4>${boundary.name}</h4><p>Administrative Boundary</p>`);
+      polygon.addTo(boundariesLayerRef.current!);
+    });
+  };
+
+  // Add forests layer
+  const addForestsLayer = () => {
+    if (!mapRef.current || !forestsLayerRef.current) return;
+
+    forestsLayerRef.current.clearLayers();
+
+    // Sample forest areas
+    const forests = [
+      {
+        name: 'Kanha National Park',
+        coordinates: [[22.2, 80.6], [22.2, 80.8], [22.4, 80.8], [22.4, 80.6]]
+      },
+      {
+        name: 'Simlipal Forest',
+        coordinates: [[21.8, 86.1], [21.8, 86.3], [22.0, 86.3], [22.0, 86.1]]
+      }
+    ];
+
+    forests.forEach(forest => {
+      const coordinates = forest.coordinates.map(coord => [coord[0], coord[1]] as [number, number]);
+      const polygon = L.polygon(coordinates, {
+        color: '#2e7d32',
+        fillColor: '#4caf50',
+        fillOpacity: 0.3,
+        weight: 2
+      });
+
+      polygon.bindPopup(`<h4>${forest.name}</h4><p>Forest Area</p>`);
+      polygon.addTo(forestsLayerRef.current!);
+    });
+  };
+
+  // Toggle layer visibility
+  const toggleLayerVisibility = (layerName: keyof typeof layerVisibility) => {
+    const newVisibility = !layerVisibility[layerName];
+    setLayerVisibility(prev => ({ ...prev, [layerName]: newVisibility }));
+
+    if (!mapRef.current) return;
+
+    switch (layerName) {
+      case 'fraGranted':
+        if (fraGrantedLayerRef.current) {
+          if (newVisibility) {
+            fraGrantedLayerRef.current.addTo(mapRef.current);
+          } else {
+            fraGrantedLayerRef.current.remove();
+          }
+        }
+        break;
+      case 'fraPotential':
+        if (fraPotentialLayerRef.current) {
+          if (newVisibility) {
+            fraPotentialLayerRef.current.addTo(mapRef.current);
+          } else {
+            fraPotentialLayerRef.current.remove();
+          }
+        }
+        break;
+      case 'boundaries':
+        if (boundariesLayerRef.current) {
+          if (newVisibility) {
+            boundariesLayerRef.current.addTo(mapRef.current);
+          } else {
+            boundariesLayerRef.current.remove();
+          }
+        }
+        break;
+      case 'forests':
+        if (forestsLayerRef.current) {
+          if (newVisibility) {
+            forestsLayerRef.current.addTo(mapRef.current);
+          } else {
+            forestsLayerRef.current.remove();
+          }
+        }
+        break;
     }
   };
 
@@ -991,17 +1132,17 @@ const FRAAtlas: React.FC = () => {
             <Satellite color="primary" sx={{ fontSize: 32 }} />
             <Box>
               <Typography variant="h5" fontWeight="bold" color="primary">
-                FRA Atlas - Free Mapping
+                <span data-translate>FRA Atlas - Free Mapping</span>
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Professional satellite mapping with Leaflet & Esri imagery
+                <span data-translate>Professional satellite mapping with Leaflet & Esri imagery</span>
               </Typography>
             </Box>
           </Box>
           
           <Stack direction="row" spacing={1}>
             <Chip 
-              label={`${filteredData.length} Claims`} 
+              label={<span data-translate>{`${filteredData.length} Claims`}</span>} 
               color="primary" 
               variant="outlined" 
             />
@@ -1015,7 +1156,7 @@ const FRAAtlas: React.FC = () => {
 
         {error && (
           <Alert severity="error" sx={{ mt: 2 }} onClose={() => setError(null)}>
-            <AlertTitle>Error</AlertTitle>
+            <AlertTitle><span data-translate>Error</span></AlertTitle>
             {error}
           </Alert>
         )}
@@ -1046,7 +1187,7 @@ const FRAAtlas: React.FC = () => {
         >
           <Box sx={{ p: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-              <Typography variant="h6" fontWeight="bold">Map Controls</Typography>
+              <Typography variant="h6" fontWeight="bold"><span data-translate>Map Controls</span></Typography>
               <IconButton onClick={() => setShowControls(false)} size="small">
                 <Close />
               </IconButton>
@@ -1055,7 +1196,7 @@ const FRAAtlas: React.FC = () => {
             {/* Map Style Selection */}
             <Card sx={{ mb: 2 }}>
               <CardContent>
-                <Typography variant="subtitle2" gutterBottom>Map Style</Typography>
+                <Typography variant="subtitle2" gutterBottom><span data-translate>Map Style</span></Typography>
                 <Stack spacing={1}>
                   <Button
                     variant={currentMapStyle === 'satellite' ? 'contained' : 'outlined'}
@@ -1063,7 +1204,7 @@ const FRAAtlas: React.FC = () => {
                     onClick={() => changeMapStyle('satellite')}
                     fullWidth
                   >
-                    Satellite
+                    <span data-translate>Satellite</span>
                   </Button>
                   <Button
                     variant={currentMapStyle === 'terrain' ? 'contained' : 'outlined'}
@@ -1071,7 +1212,7 @@ const FRAAtlas: React.FC = () => {
                     onClick={() => changeMapStyle('terrain')}
                     fullWidth
                   >
-                    Terrain
+                    <span data-translate>Terrain</span>
                   </Button>
                   <Button
                     variant={currentMapStyle === 'osm' ? 'contained' : 'outlined'}
@@ -1079,7 +1220,7 @@ const FRAAtlas: React.FC = () => {
                     onClick={() => changeMapStyle('osm')}
                     fullWidth
                   >
-                    OpenStreetMap
+                    <span data-translate>OpenStreetMap</span>
                   </Button>
                 </Stack>
               </CardContent>
@@ -1088,43 +1229,43 @@ const FRAAtlas: React.FC = () => {
             {/* Layer Controls */}
             <Card sx={{ mb: 2 }}>
               <CardContent>
-                <Typography variant="subtitle2" gutterBottom>Layers</Typography>
+                <Typography variant="subtitle2" gutterBottom><span data-translate>Layers</span></Typography>
                 <Stack spacing={1}>
                   <FormControlLabel
                     control={
                       <Switch
                         checked={layerVisibility.fraGranted}
-                        onChange={(e) => setLayerVisibility(prev => ({ ...prev, fraGranted: e.target.checked }))}
+                        onChange={() => toggleLayerVisibility('fraGranted')}
                       />
                     }
-                    label="FRA Granted"
+                    label={<span data-translate>FRA Granted</span>}
                   />
                   <FormControlLabel
                     control={
                       <Switch
                         checked={layerVisibility.fraPotential}
-                        onChange={(e) => setLayerVisibility(prev => ({ ...prev, fraPotential: e.target.checked }))}
+                        onChange={() => toggleLayerVisibility('fraPotential')}
                       />
                     }
-                    label="FRA Potential"
+                    label={<span data-translate>FRA Potential</span>}
                   />
                   <FormControlLabel
                     control={
                       <Switch
                         checked={layerVisibility.boundaries}
-                        onChange={(e) => setLayerVisibility(prev => ({ ...prev, boundaries: e.target.checked }))}
+                        onChange={() => toggleLayerVisibility('boundaries')}
                       />
                     }
-                    label="Boundaries"
+                    label={<span data-translate>Boundaries</span>}
                   />
                   <FormControlLabel
                     control={
                       <Switch
                         checked={layerVisibility.forests}
-                        onChange={(e) => setLayerVisibility(prev => ({ ...prev, forests: e.target.checked }))}
+                        onChange={() => toggleLayerVisibility('forests')}
                       />
                     }
-                    label="Forest Areas"
+                    label={<span data-translate>Forest Areas</span>}
                   />
                   <FormControlLabel
                     control={
@@ -1133,7 +1274,7 @@ const FRAAtlas: React.FC = () => {
                         onChange={toggleAllPlotsLayer}
                       />
                     }
-                    label="All Land Plots"
+                    label={<span data-translate>All Land Plots</span>}
                   />
                 </Stack>
               </CardContent>
@@ -1142,23 +1283,23 @@ const FRAAtlas: React.FC = () => {
             {/* Filters */}
             <Card>
               <CardContent>
-                <Typography variant="subtitle2" gutterBottom>Filters</Typography>
+                <Typography variant="subtitle2" gutterBottom><span data-translate>Filters</span></Typography>
                 <Stack spacing={2}>
                   <FormControl fullWidth size="small">
-                    <InputLabel>Status</InputLabel>
+                    <InputLabel><span data-translate>Status</span></InputLabel>
                     <Select
                       value={selectedFilters.status}
                       label="Status"
                       onChange={(e) => setSelectedFilters(prev => ({ ...prev, status: e.target.value }))}
                     >
-                      <MenuItem value="all">All Status</MenuItem>
-                      <MenuItem value="granted">Granted</MenuItem>
-                      <MenuItem value="potential">Potential</MenuItem>
+                      <MenuItem value="all"><span data-translate>All Status</span></MenuItem>
+                      <MenuItem value="granted"><span data-translate>Granted</span></MenuItem>
+                      <MenuItem value="potential"><span data-translate>Potential</span></MenuItem>
                     </Select>
                   </FormControl>
                   
                   <FormControl fullWidth size="small">
-                    <InputLabel>District</InputLabel>
+                    <InputLabel><span data-translate>District</span></InputLabel>
                     <Select
                       value={selectedFilters.district}
                       label="District"

@@ -19,6 +19,8 @@ const gisPlotRoutes = require('./routes/gis-plot');
 const geojsonPlotRoutes = require('./routes/geojson-plot');
 const pdfProcessorRoutes = require('./routes/pdf-processor');
 const bhunakshaRoutes = require('./routes/bhunaksha');
+const translateRoutes = require('./routes/translate');
+const voiceRoutes = require('./routes/voice');
 
 const { errorHandler } = require('./middleware/errorHandler');
 const { authenticateToken, authorize } = require('./middleware/auth');
@@ -36,7 +38,7 @@ app.use(cors({
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 1000, // increased limit
   message: 'Too many requests from this IP, please try again later.',
 });
 app.use('/api/', limiter);
@@ -73,6 +75,8 @@ app.use('/api/gis-plot', gisPlotRoutes); // Digital GIS Plot functionality
 app.use('/api/geojson-plot', geojsonPlotRoutes); // GeoJSON plotting functionality
 app.use('/api/pdf-processor', pdfProcessorRoutes); // PDF processing and data extraction
 app.use('/api/bhunaksha', bhunakshaRoutes); // Bhunaksha-style land records
+app.use('/api/translate', translateRoutes); // Google Translate API
+app.use('/api/voice', voiceRoutes); // Voice Assistant API
 
 // Error handling middleware
 app.use(errorHandler);

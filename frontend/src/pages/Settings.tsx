@@ -16,28 +16,28 @@ const Settings: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>Settings</Typography>
+      <Typography variant="h4" gutterBottom><span data-translate>Settings</span></Typography>
       {info && <Alert severity="success" sx={{ mb: 2 }}>{info}</Alert>}
 
       <Paper sx={{ p: 2, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>API</Typography>
+        <Typography variant="h6" gutterBottom><span data-translate>API</span></Typography>
         <Divider sx={{ mb: 2 }} />
         <Stack spacing={2}>
-          <TextField label="Backend API URL" value={apiUrl} onChange={(e) => setApiUrl(e.target.value)} helperText="Used by the frontend to call the backend" />
+          <TextField label={<span data-translate>Backend API URL</span>} value={apiUrl} onChange={(e) => setApiUrl(e.target.value)} helperText={<span data-translate>Used by the frontend to call the backend</span>} />
         </Stack>
       </Paper>
 
       <Paper sx={{ p: 2, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>Map</Typography>
+        <Typography variant="h6" gutterBottom><span data-translate>Map</span></Typography>
         <Divider sx={{ mb: 2 }} />
         <Stack spacing={2}>
           <Alert severity="info">
-            This application now uses free Leaflet maps with Esri satellite imagery. No tokens or API keys are required for mapping functionality.
+            <span data-translate>This application now uses free Leaflet maps with Esri satellite imagery. No tokens or API keys are required for mapping functionality.</span>
           </Alert>
         </Stack>
       </Paper>
 
-      <Button variant="contained" onClick={save}>Save Settings</Button>
+      <Button variant="contained" onClick={save}><span data-translate>Save Settings</span></Button>
     </Box>
   );
 };

@@ -63,6 +63,8 @@ const Login: React.FC = () => {
     dispatch(loginStart());
     
     try {
+      // Add small delay to prevent rate limiting
+      await new Promise(resolve => setTimeout(resolve, 500));
       const response = await api.post('/auth/login', { email, password });
       dispatch(loginSuccess(response.data));
       navigate('/', { replace: true });

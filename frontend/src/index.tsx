@@ -7,7 +7,7 @@ import { store } from './store';
 import './index.css';
 import { hydrate, setUser, clearAuth } from './store/slices/authSlice';
 import { api } from './services/api';
-import { CustomThemeProvider } from './contexts/ThemeContext';
+
 import { addSampleNotifications } from './store/slices/addSampleNotifications';
 
 // Leaflet CSS (already imported in components that use it)
@@ -42,11 +42,10 @@ root.render(
       <BrowserRouter
         future={{
           v7_relativeSplatPath: true,
+          v7_startTransition: true,
         }}
       >
-        <CustomThemeProvider>
-          <App />
-        </CustomThemeProvider>
+        <App />
       </BrowserRouter>
     </Provider>
   </React.StrictMode>
