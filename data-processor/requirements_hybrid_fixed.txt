@@ -1,0 +1,11 @@
+fastapi==0.104.1
+uvicorn==0.24.0
+earthengine-api
+scikit-learn
+pandas
+numpy
+pydantic==2.5.0
+joblib
+tensorflow
+python-multipart==0.0.6
+requests==2.31.0

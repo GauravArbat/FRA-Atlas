@@ -361,7 +361,7 @@ const DigitalGISPlot: React.FC = () => {
             </Typography>
             
             {/* Map Configuration */}
-            <Card sx={{ mb: 2, bgcolor: 'background.paper' }}>
+            {/* <Card sx={{ mb: 2, bgcolor: 'background.paper' }}>
               <CardContent>
                 <Typography variant="subtitle2" gutterBottom color="text.primary">
                   <span data-translate>Map Configuration</span>
@@ -379,7 +379,7 @@ const DigitalGISPlot: React.FC = () => {
                   />
                 </Stack>
               </CardContent>
-            </Card>
+            </Card> */}
 
             {/* Drawing Tools */}
             <Card sx={{ mb: 2, bgcolor: 'background.paper' }}>

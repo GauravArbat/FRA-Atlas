@@ -336,8 +336,8 @@ const DigitalGISPlot: React.FC = () => {
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden', position: 'relative' }}>
-      {/* Sidebar */}
-      {showSidebar && (
+      {/* Sidebar - COMMENTED OUT */}
+      {/* {showSidebar && (
         <Drawer
           variant="persistent"
           anchor="left"
@@ -366,7 +366,7 @@ const DigitalGISPlot: React.FC = () => {
             </Typography>
             
             {/* Map Configuration */}
-            <Card sx={{ mb: 2 }}>
+            {/* <Card sx={{ mb: 2 }}>
               <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                 <Typography variant="subtitle2" sx={{ mb: 1.5, color: 'primary.main' }}>
                   Map Configuration
@@ -392,10 +392,10 @@ const DigitalGISPlot: React.FC = () => {
                   />
                 )}
               </CardContent>
-            </Card>
+            </Card> */}
 
             {/* Drawing Tools */}
-            <Card sx={{ mb: 2 }}>
+            {/* <Card sx={{ mb: 2 }}>
               <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                 <Typography variant="subtitle2" sx={{ mb: 1.5, color: 'primary.main' }}>
                   Drawing Tools
@@ -419,10 +419,10 @@ const DigitalGISPlot: React.FC = () => {
                   </Button>
                 </Stack>
               </CardContent>
-            </Card>
+            </Card> */}
 
             {/* System Status */}
-            <Card sx={{ mb: 2 }}>
+            {/* <Card sx={{ mb: 2 }}>
               <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                 <Typography variant="subtitle2" sx={{ mb: 1.5, color: 'primary.main' }}>
                   System Status
@@ -442,17 +442,17 @@ const DigitalGISPlot: React.FC = () => {
                   />
                 </Box>
               </CardContent>
-            </Card>
-          </Box>
+            </Card> */}
+          {/* </Box>
         </Drawer>
-      )}
+      )} */}
 
       {/* Main Content */}
       <Box
         sx={{
           position: 'fixed',
           top: { xs: 64, md: 88 },
-          left: showSidebar ? `${240 + controlsWidth + 16}px` : '250px',
+          left: '250px', // Fixed position since sidebar is commented out
           right: 16,
           bottom: 0,
           transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',

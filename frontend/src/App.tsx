@@ -10,6 +10,11 @@ import DataManagement from './pages/DataManagement';
 import DecisionSupport from './pages/DecisionSupport';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import SatelliteMapping from './pages/SatelliteMapping';
+import SatelliteAssetMapping from './pages/SatelliteAssetMapping';
+import AdvancedSatelliteMapping from './pages/AdvancedSatelliteMapping';
+import RealTimeSatelliteMapping from './pages/RealTimeSatelliteMapping';
+import AIAnalysis from './pages/AIAnalysis';
 import Notifications from './pages/Notifications';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -17,6 +22,8 @@ import Profile from './pages/Profile';
 import ContactUs from './pages/ContactUs';
 import SubmitClaim from './pages/SubmitClaim';
 import TrackClaims from './pages/TrackClaims';
+import LegacyDataDigitization from './pages/LegacyDataDigitization';
+import DummyDataGenerator from './pages/DummyDataGenerator';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -53,12 +60,18 @@ const AppContent: React.FC = () => {
             <Route path="/gis-plot" element={<RoleBasedRoute allowedRoles={['admin']}><DigitalGISPlot /></RoleBasedRoute>} />
             <Route path="/data" element={<RoleBasedRoute allowedRoles={['admin']}><DataManagement /></RoleBasedRoute>} />
             <Route path="/decisions" element={<RoleBasedRoute allowedRoles={['admin']}><DecisionSupport /></RoleBasedRoute>} />
+            <Route path="/satellite-mapping" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><SatelliteAssetMapping /></RoleBasedRoute>} />
+            <Route path="/advanced-mapping" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><AdvancedSatelliteMapping /></RoleBasedRoute>} />
+            <Route path="/realtime-satellite" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><RealTimeSatelliteMapping /></RoleBasedRoute>} />
+            <Route path="/dss-analysis" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><SatelliteMapping /></RoleBasedRoute>} />
+            <Route path="/ai-analysis" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><AIAnalysis /></RoleBasedRoute>} />
             <Route path="/settings" element={<RoleBasedRoute allowedRoles={['admin']}><Settings /></RoleBasedRoute>} />
-            <Route path="/ai-analysis" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><DataManagement /></RoleBasedRoute>} />
             <Route path="/model-results" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><Reports /></RoleBasedRoute>} />
             <Route path="/claims-review" element={<RoleBasedRoute allowedRoles={['admin', 'state_authority']}><DataManagement /></RoleBasedRoute>} />
             <Route path="/gis-validation" element={<RoleBasedRoute allowedRoles={['admin', 'state_authority']}><DigitalGISPlot /></RoleBasedRoute>} />
             <Route path="/legacy-upload" element={<RoleBasedRoute allowedRoles={['admin', 'district_tribal_welfare']}><DataManagement /></RoleBasedRoute>} />
+            <Route path="/legacy-digitization" element={<RoleBasedRoute allowedRoles={['admin', 'district_tribal_welfare']}><LegacyDataDigitization /></RoleBasedRoute>} />
+            <Route path="/dummy-data" element={<RoleBasedRoute allowedRoles={['admin']}><DummyDataGenerator /></RoleBasedRoute>} />
             <Route path="/claims-processing" element={<RoleBasedRoute allowedRoles={['admin', 'district_tribal_welfare']}><DataManagement /></RoleBasedRoute>} />
             <Route path="/ocr-review" element={<RoleBasedRoute allowedRoles={['admin', 'district_tribal_welfare']}><Reports /></RoleBasedRoute>} />
             <Route path="/submit-claim" element={<RoleBasedRoute allowedRoles={['admin', 'beneficiary']}><SubmitClaim /></RoleBasedRoute>} />

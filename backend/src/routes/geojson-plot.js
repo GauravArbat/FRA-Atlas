@@ -245,4 +245,36 @@ router.get('/layers/:id/export/:format', async (req, res) => {
   }
 });
 
+// Internal function to save layer (used by other modules)
+const saveLayerInternal = async (name, data, style = {}) => {
+  try {
+    const layerId = `layer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    const layerData = {
+      id: layerId,
+      name,
+      data,
+      style: {
+        fillColor: style.fillColor || '#2196f3',
+        strokeColor: style.strokeColor || '#1976d2',
+        strokeWidth: style.strokeWidth || 2,
+        fillOpacity: style.fillOpacity || 0.6,
+        strokeOpacity: style.strokeOpacity || 1.0,
+        visible: style.visible !== false
+      },
+      userId: 'system',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    addLayer(layerData);
+    logger.info('Layer saved internally', { layerId, name });
+    return layerData;
+  } catch (error) {
+    logger.error('Error saving layer internally:', error);
+    throw error;
+  }
+};
+
 module.exports = router;
+module.exports.saveLayerInternal = saveLayerInternal;

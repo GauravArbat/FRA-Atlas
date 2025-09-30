@@ -13,8 +13,11 @@ const authRoutes = require('./routes/auth'); // Real auth with RBAC
 const rbacRoutes = require('./routes/rbac'); // Role-based access control
 const claimsRoutes = require('./routes/claims'); // FRA claims management
 const legacyRoutes = require('./routes/legacy'); // Legacy records processing
+const legacyDigitizationRoutes = require('./routes/legacy-digitization'); // Legacy digitization
 const aiAnalysisRoutes = require('./routes/ai-analysis'); // AI satellite analysis
 const schemesRoutes = require('./routes/schemes'); // Scheme integration
+const dssRoutes = require('./routes/dss'); // DSS Engine integration
+const satelliteRoutes = require('./routes/satellite'); // Satellite Asset Mapping
 const fraRoutes = require('./routes/fra');
 const dataRoutes = require('./routes/data');
 const decisionRoutes = require('./routes/decisions');
@@ -29,6 +32,7 @@ const pdfProcessorRoutes = require('./routes/pdf-processor');
 const bhunakshaRoutes = require('./routes/bhunaksha');
 const translateRoutes = require('./routes/translate');
 const voiceRoutes = require('./routes/voice');
+const pattaHoldersRoutes = require('./routes/patta-holders');
 
 const { errorHandler } = require('./middleware/errorHandler');
 const { authenticateToken, authorize } = require('./middleware/auth');
@@ -74,8 +78,14 @@ app.use('/api/auth', authRoutes);
 app.use('/api/rbac', authenticateToken, rbacRoutes); // Role-based access control
 app.use('/api/claims', claimsRoutes); // FRA claims management
 app.use('/api/legacy', legacyRoutes); // Legacy records processing
+app.use('/api/legacy-digitization', legacyDigitizationRoutes); // Legacy digitization
 app.use('/api/ai-analysis', aiAnalysisRoutes); // AI satellite analysis
 app.use('/api/schemes', schemesRoutes); // Scheme integration
+app.use('/api/dss', dssRoutes); // DSS Engine integration
+app.use('/api/satellite', satelliteRoutes); // Satellite Asset Mapping
+
+// Environment variable for advanced satellite engine
+process.env.ADVANCED_SATELLITE_ENGINE_URL = process.env.ADVANCED_SATELLITE_ENGINE_URL || 'http://localhost:8003';
 app.use('/api/fra', fraRoutes); // FRA data (public for atlas)
 app.use('/api/data', authenticateToken, dataRoutes);
 app.use('/api/decisions', authenticateToken, decisionRoutes);
@@ -90,6 +100,7 @@ app.use('/api/pdf-processor', pdfProcessorRoutes); // PDF processing and data ex
 app.use('/api/bhunaksha', bhunakshaRoutes); // Bhunaksha-style land records
 app.use('/api/translate', translateRoutes); // Google Translate API
 app.use('/api/voice', voiceRoutes); // Voice Assistant API
+app.use('/api/patta-holders', pattaHoldersRoutes); // Patta holders management
 
 // Error handling middleware
 app.use(errorHandler);

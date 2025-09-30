@@ -38,6 +38,7 @@ import ErrorIcon from '@mui/icons-material/Error';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import { api, pdfProcessorAPI, geojsonPlotAPI } from '../services/api';
+import { pattaHoldersAPI } from '../services/pattaHoldersAPI';
 import { useNavigate } from 'react-router-dom';
 import { loadOcrItems, addOcrItem, deleteOcrItem, updateOcrItem, type OcrItem } from '../utils/ocrStore';
 import { usePageTranslation } from '../hooks/usePageTranslation';
@@ -72,6 +73,7 @@ const DataManagement: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedData, setProcessedData] = useState<any>(null);
   const [processedPDFs, setProcessedPDFs] = useState<ProcessedPDFData[]>([]);
+  const [pattaHolders, setPattaHolders] = useState<any[]>([]);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [selectedPDF, setSelectedPDF] = useState<ProcessedPDFData | null>(null);
 
@@ -262,6 +264,7 @@ const DataManagement: React.FC = () => {
   useEffect(() => { 
     setHistory(loadOcrItems());
     loadProcessedPDFs();
+    loadPattaHolders();
   }, []);
 
   const loadProcessedPDFs = async () => {
@@ -270,6 +273,17 @@ const DataManagement: React.FC = () => {
       setProcessedPDFs(response.data.data || []);
     } catch (err) {
       console.log('No processed PDFs found or error loading');
+    }
+  };
+
+  const loadPattaHolders = async () => {
+    try {
+      const response = await pattaHoldersAPI.getAll();
+      if (response.success) {
+        setPattaHolders(response.data || []);
+      }
+    } catch (err) {
+      console.log('No patta holders found or error loading');
     }
   };
 
@@ -470,14 +484,62 @@ const DataManagement: React.FC = () => {
         )}
 
         {/* Processed PDFs List */}
-        {processedPDFs.length > 0 && (
+        {(processedPDFs.length > 0 || pattaHolders.length > 0) && (
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              <span data-translate>Processed PDF Records ({processedPDFs.length})</span>
+              <span data-translate>Processed PDF Records ({processedPDFs.length + pattaHolders.length})</span>
             </Typography>
+            
+            {/* Combined Data Grid */}
             <div style={{ width: '100%', height: 400 }}>
               <DataGrid 
-                rows={processedPDFs} 
+                rows={[
+                  ...processedPDFs,
+                  ...pattaHolders.map(holder => ({
+                    id: holder.id,
+                    name: holder.ownerName,
+                    village: holder.address.village,
+                    district: holder.address.district,
+                    area: `${holder.landDetails.area.hectares} hectares`,
+                    applicationDate: new Date(holder.created).toLocaleDateString(),
+                    processedAt: holder.lastModified,
+                    geoJSON: {
+                      type: 'FeatureCollection',
+                      features: [{
+                        type: 'Feature',
+                        properties: {
+                          ownerName: holder.ownerName,
+                          fatherName: holder.fatherName,
+                          village: holder.address.village,
+                          district: holder.address.district,
+                          area: holder.landDetails.area.hectares,
+                          surveyNo: holder.landDetails.surveyNo,
+                          khasra: holder.landDetails.khasra,
+                          fraStatus: holder.landDetails.fraStatus
+                        },
+                        geometry: holder.geometry || {
+                          type: 'Point',
+                          coordinates: holder.coordinates && holder.coordinates.length > 0 
+                            ? [holder.coordinates[0][0], holder.coordinates[0][1]]
+                            : [0, 0]
+                        }
+                      }]
+                    },
+                    personalInfo: {
+                      name: holder.ownerName,
+                      fatherName: holder.fatherName,
+                      village: holder.address.village,
+                      district: holder.address.district,
+                      state: holder.address.state,
+                      area: `${holder.landDetails.area.hectares} hectares`,
+                      surveyNo: holder.landDetails.surveyNo,
+                      khasra: holder.landDetails.khasra,
+                      classification: holder.landDetails.classification,
+                      fraStatus: holder.landDetails.fraStatus,
+                      type: 'Patta Holder (Dummy Data)'
+                    }
+                  }))
+                ]} 
                 columns={pdfColumns} 
                 getRowId={(r) => r.id} 
                 pageSizeOptions={[5, 10]} 

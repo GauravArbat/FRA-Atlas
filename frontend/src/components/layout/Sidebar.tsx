@@ -29,7 +29,9 @@ import {
   Analytics,
   Gavel,
   TrackChanges,
-  Assignment
+  Assignment,
+  Psychology,
+  Satellite
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
@@ -66,8 +68,14 @@ const Sidebar: React.FC = () => {
             { text: 'Dashboard', icon: <Dashboard />, path: '/' },
             { text: 'FRA Atlas', icon: <Map />, path: '/atlas' },
             { text: 'Digital GIS Plot', icon: <LocationOn />, path: '/gis-plot' },
+            { text: 'Dummy Data Generator', icon: <Assignment />, path: '/dummy-data' },
             { text: 'Data Management', icon: <Storage />, path: '/data' },
             { text: 'Decision Support', icon: <Assessment />, path: '/decisions' },
+            { text: 'Satellite Asset Mapping', icon: <Map />, path: '/satellite-mapping' },
+            { text: 'Advanced ML Mapping', icon: <Psychology />, path: '/advanced-mapping' },
+            { text: 'Real-time Satellite', icon: <Satellite />, path: '/realtime-satellite' },
+            { text: 'AI Analysis', icon: <Analytics />, path: '/ai-analysis' },
+            { text: 'Decision Support', icon: <Assessment />, path: '/dss-analysis' },
             { text: 'Reports & Analytics', icon: <BarChart />, path: '/reports' },
             { text: 'User Settings', icon: <Settings />, path: '/settings' }
           ]
@@ -78,7 +86,7 @@ const Sidebar: React.FC = () => {
           title: 'AI Analysis',
           items: [
             { text: 'Dashboard', icon: <Dashboard />, path: '/' },
-            { text: 'Satellite Mapping', icon: <Map />, path: '/atlas' },
+            { text: 'Satellite Asset Mapping', icon: <Map />, path: '/satellite-mapping' },
             { text: 'AI Analysis', icon: <Analytics />, path: '/ai-analysis' },
             { text: 'Model Results', icon: <Assessment />, path: '/model-results' },
             { text: 'Reports', icon: <BarChart />, path: '/reports' }
@@ -103,6 +111,7 @@ const Sidebar: React.FC = () => {
           items: [
             { text: 'Dashboard', icon: <Dashboard />, path: '/' },
             { text: 'Legacy Upload', icon: <CloudUpload />, path: '/legacy-upload' },
+            { text: 'Legacy Digitization', icon: <Assignment />, path: '/legacy-digitization' },
             { text: 'Claims Processing', icon: <Assignment />, path: '/claims-processing' },
             { text: 'OCR Review', icon: <Description />, path: '/ocr-review' },
             { text: 'Reports', icon: <BarChart />, path: '/reports' }

@@ -121,7 +121,7 @@ const BhunakshaSearch: React.FC<BhunakshaSearchProps> = ({ onPlotSelect }) => {
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <MapIcon color="primary" />
-          Bhunaksha FRA - Land Records Search
+          FRA - Land Records Search
         </Typography>
         
         <Grid container spacing={2} sx={{ mb: 2 }}>

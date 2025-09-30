@@ -135,13 +135,44 @@ CREATE TRIGGER audit_fra_claims AFTER INSERT OR UPDATE OR DELETE ON fra_claims
 -- Sample data insertion
 INSERT INTO users (username, email, password_hash, role, state) VALUES
 ('admin', 'admin@fraatlas.gov.in', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/HS.iGm', 'admin', 'All India'),
-('state_admin', 'state@fraatlas.gov.in', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/HS.iGm', 'state_admin', 'Maharashtra');
+('state_admin', 'state@fraatlas.gov.in', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/HS.iGm', 'state_admin', 'Madhya Pradesh');
+
+-- Patta Holders table
+CREATE TABLE patta_holders (
+    id VARCHAR(100) PRIMARY KEY,
+    owner_name VARCHAR(255) NOT NULL,
+    father_name VARCHAR(255),
+    village VARCHAR(100) NOT NULL,
+    block VARCHAR(100),
+    district VARCHAR(100) NOT NULL,
+    state VARCHAR(100) NOT NULL,
+    pincode INTEGER,
+    full_address TEXT,
+    survey_no VARCHAR(50),
+    khasra VARCHAR(50),
+    area_hectares DECIMAL(10,4),
+    area_acres DECIMAL(10,4),
+    area_square_meters DECIMAL(12,2),
+    classification VARCHAR(100),
+    fra_status VARCHAR(50),
+    coordinates JSONB,
+    geometry GEOMETRY(POLYGON, 4326),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
+    status VARCHAR(20) DEFAULT 'active'
+);
+
+-- Create spatial index for patta holders
+CREATE INDEX idx_patta_holders_geometry ON patta_holders USING GIST (geometry);
+CREATE INDEX idx_patta_holders_location ON patta_holders (state, district, village);
+CREATE INDEX idx_patta_holders_fra_status ON patta_holders (fra_status);
 
 -- Sample FRA claims
 INSERT INTO fra_claims (claim_number, claim_type, status, applicant_name, village, block, district, state, area_hectares, coordinates, submitted_date) VALUES
-('FRA/2024/001', 'IFR', 'approved', 'Rajesh Kumar', 'Village A', 'Block A', 'District A', 'Maharashtra', 2.5, ST_SetSRID(ST_MakePoint(73.8567, 19.0760), 4326), '2024-01-15'),
-('FRA/2024/002', 'CR', 'pending', 'Sita Devi', 'Village B', 'Block B', 'District B', 'Maharashtra', 1.8, ST_SetSRID(ST_MakePoint(73.8567, 19.0760), 4326), '2024-01-20'),
-('FRA/2024/003', 'CFR', 'under_review', 'Community Group', 'Village C', 'Block C', 'District C', 'Maharashtra', 5.2, ST_SetSRID(ST_MakePoint(73.8567, 19.0760), 4326), '2024-01-25');
+('FRA/2024/001', 'IFR', 'approved', 'Rajesh Kumar', 'Khairlanji', 'Bhopal Block', 'Bhopal', 'Madhya Pradesh', 2.5, ST_SetSRID(ST_MakePoint(77.4126, 23.2599), 4326), '2024-01-15'),
+('FRA/2024/002', 'CR', 'pending', 'Sita Devi', 'Gandacherra', 'West Tripura Block', 'West Tripura', 'Tripura', 1.8, ST_SetSRID(ST_MakePoint(91.2868, 23.8315), 4326), '2024-01-20'),
+('FRA/2024/003', 'CFR', 'under_review', 'Community Group', 'Baripada', 'Cuttack Block', 'Cuttack', 'Odisha', 5.2, ST_SetSRID(ST_MakePoint(85.8781, 20.4625), 4326), '2024-01-25');
 
 
 

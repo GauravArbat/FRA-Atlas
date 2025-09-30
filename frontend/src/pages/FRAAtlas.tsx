@@ -76,7 +76,9 @@ import '../styles/mapPopup.css';
 import { geojsonPlotAPI } from '../services/api';
 import BhunakshaSearch from '../components/BhunakshaSearch';
 import { LandRecord, getAllLandRecords } from '../services/bhunakshaService';
+import { pattaHoldersAPI } from '../services/pattaHoldersAPI';
 import { usePageTranslation } from '../hooks/usePageTranslation';
+import { useAuth } from '../contexts/AuthContext';
 
 // Fix Leaflet default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -101,6 +103,7 @@ interface FRAData {
 
 const FRAAtlas: React.FC = () => {
   usePageTranslation();
+  const { user } = useAuth();
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const drawControlRef = useRef<L.Control.Draw | null>(null);
@@ -126,7 +129,8 @@ const FRAAtlas: React.FC = () => {
     fraGranted: true,
     fraPotential: true,
     boundaries: false,
-    forests: true
+    forests: true,
+    pattaHolders: true
   });
 
   // Layer references
@@ -134,6 +138,7 @@ const FRAAtlas: React.FC = () => {
   const fraPotentialLayerRef = useRef<L.LayerGroup | null>(null);
   const boundariesLayerRef = useRef<L.LayerGroup | null>(null);
   const forestsLayerRef = useRef<L.LayerGroup | null>(null);
+  const pattaHoldersLayerRef = useRef<L.LayerGroup | null>(null);
 
   // OCR and NER states
   const [showOCRDialog, setShowOCRDialog] = useState(false);
@@ -152,35 +157,146 @@ const FRAAtlas: React.FC = () => {
   const persistentLayerRef = useRef<L.LayerGroup | null>(null);
   const [persistentLayerInfo, setPersistentLayerInfo] = useState<any>(null);
 
+  // Get map configuration based on user role and location
+  const getMapConfigForUser = () => {
+    if (!user) {
+      return {
+        center: [21.5, 82.5] as [number, number],
+        zoom: 6,
+        bounds: [[6.0, 68.0], [37.0, 97.0]] as [[number, number], [number, number]]
+      };
+    }
+
+    // State-level bounds and centers (tight bounds - only show the state)
+    const stateConfigs = {
+      'Madhya Pradesh': {
+        center: [23.0, 78.0] as [number, number],
+        zoom: 7,
+        bounds: [[21.2, 74.5], [25.8, 81.5]] as [[number, number], [number, number]]
+      },
+      'Tripura': {
+        center: [23.8, 91.3] as [number, number],
+        zoom: 10,
+        bounds: [[23.0, 91.1], [24.4, 92.3]] as [[number, number], [number, number]]
+      },
+      'Odisha': {
+        center: [20.5, 85.0] as [number, number],
+        zoom: 7,
+        bounds: [[18.0, 81.5], [22.4, 87.3]] as [[number, number], [number, number]]
+      },
+      'Telangana': {
+        center: [18.0, 79.5] as [number, number],
+        zoom: 8,
+        bounds: [[16.0, 77.5], [19.8, 81.5]] as [[number, number], [number, number]]
+      }
+    };
+
+    // District-level bounds (tight bounds - only show the district)
+    const districtConfigs = {
+      'Bhopal': { center: [23.2599, 77.4126] as [number, number], zoom: 11, bounds: [[23.1, 77.1], [23.4, 77.7]] as [[number, number], [number, number]] },
+      'Indore': { center: [22.7196, 75.8577] as [number, number], zoom: 11, bounds: [[22.5, 75.6], [22.9, 76.1]] as [[number, number], [number, number]] },
+      'West Tripura': { center: [23.8315, 91.2868] as [number, number], zoom: 11, bounds: [[23.7, 91.1], [23.9, 91.5]] as [[number, number], [number, number]] },
+      'Khordha': { center: [20.1498, 85.6597] as [number, number], zoom: 11, bounds: [[20.0, 85.4], [20.3, 85.9]] as [[number, number], [number, number]] },
+      'Hyderabad': { center: [17.3850, 78.4867] as [number, number], zoom: 11, bounds: [[17.3, 78.3], [17.5, 78.7]] as [[number, number], [number, number]] }
+    };
+
+    // Role-based configuration
+    if (user.role === 'district_tribal_welfare' && user.district) {
+      return districtConfigs[user.district as keyof typeof districtConfigs] || 
+             stateConfigs[user.state as keyof typeof stateConfigs] || 
+             { center: [21.5, 82.5] as [number, number], zoom: 6, bounds: [[6.0, 68.0], [37.0, 97.0]] as [[number, number], [number, number]] };
+    }
+    
+    if (user.role === 'state_authority' && user.state) {
+      return stateConfigs[user.state as keyof typeof stateConfigs] || 
+             { center: [21.5, 82.5] as [number, number], zoom: 6, bounds: [[6.0, 68.0], [37.0, 97.0]] as [[number, number], [number, number]] };
+    }
+    
+    if (user.role === 'beneficiary' && user.district) {
+      return districtConfigs[user.district as keyof typeof districtConfigs] || 
+             stateConfigs[user.state as keyof typeof stateConfigs] || 
+             { center: [21.5, 82.5] as [number, number], zoom: 6, bounds: [[6.0, 68.0], [37.0, 97.0]] as [[number, number], [number, number]] };
+    }
+
+    // Default for admin and mota_technical - full India view
+    return {
+      center: [21.5, 82.5] as [number, number],
+      zoom: 6,
+      bounds: [[6.0, 68.0], [37.0, 97.0]] as [[number, number], [number, number]]
+    };
+  };
+
+  // Filter FRA data based on user role and location
+  const filterDataForUser = (data: FRAData[]) => {
+    if (!user) return data;
+
+    // Admin and MoTA technical can see all data
+    if (user.role === 'admin' || user.role === 'mota_technical') {
+      return data;
+    }
+
+    // State authority can see only their state data
+    if (user.role === 'state_authority' && user.state) {
+      return data.filter(item => item.state === user.state);
+    }
+
+    // District tribal welfare can see only their district data
+    if (user.role === 'district_tribal_welfare' && user.district) {
+      return data.filter(item => item.district === user.district);
+    }
+
+    // Beneficiaries can see only their district data
+    if (user.role === 'beneficiary' && user.district) {
+      return data.filter(item => item.district === user.district);
+    }
+
+    return data;
+  };
+
+  // Add base layers to map
+  const addBaseLayers = (map: L.Map) => {
+    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '&copy; <a href="https://www.esri.com/">Esri</a>, Maxar, Earthstar Geographics',
+      maxZoom: 19
+    });
+
+    const labelsLayer = L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '',
+      maxZoom: 19
+    });
+
+    satelliteLayer.addTo(map);
+    labelsLayer.addTo(map);
+  };
+
+  // Add user-specific boundary overlay
+  const addUserBoundaryOverlay = (map: L.Map) => {
+    // No popup or overlay needed - map bounds already restrict the view
+    return;
+  };
+
   // Initialize map
   useEffect(() => {
     if (containerRef.current && !mapRef.current) {
-      // Initialize map with satellite imagery - centered on central India
+      const { center, zoom, bounds } = getMapConfigForUser();
+      
+      // Initialize map with strict bounds - only show user's area
       const map = L.map(containerRef.current, {
-        center: [21.5, 82.5], // Central India coordinates
-        zoom: 6,
-        minZoom: 4,
+        center,
+        zoom,
+        minZoom: zoom - 1,
         maxZoom: 18,
         zoomControl: false,
         attributionControl: true,
-        maxBounds: [[6.0, 68.0], [37.0, 97.0]], // India bounds
+        maxBounds: bounds,
         maxBoundsViscosity: 1.0
       });
 
-      // Add satellite imagery layer
-      const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: '&copy; <a href="https://www.esri.com/">Esri</a>, Maxar, Earthstar Geographics',
-        maxZoom: 19
-      });
-
-      // Add labels overlay
-      const labelsLayer = L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
-        attribution: '',
-        maxZoom: 19
-      });
-
-      satelliteLayer.addTo(map);
-      labelsLayer.addTo(map);
+      // Add base layers
+      addBaseLayers(map);
+      
+      // Add geographic boundary overlay for user's area
+      addUserBoundaryOverlay(map);
 
       // Ensure uploaded layers are drawn on initial load
       setTimeout(() => { loadUploadedLayers(); }, 0);
@@ -254,6 +370,8 @@ const FRAAtlas: React.FC = () => {
       });
 
       mapRef.current = map;
+      // Expose mapRef to window for popup controls
+      (window as any).mapRef = mapRef;
       setMapLoaded(true);
       setLoading(false);
 
@@ -297,7 +415,7 @@ const FRAAtlas: React.FC = () => {
     try {
       setLoading(true);
       // Simulate API call - replace with actual API endpoint
-      const mockData: FRAData[] = [
+      const allMockData: FRAData[] = [
         {
           id: '1',
           claimantName: 'Ramsingh Gond',
@@ -305,7 +423,7 @@ const FRAAtlas: React.FC = () => {
           status: 'granted',
           coordinates: [[21.8047, 80.1847], [21.8057, 80.1847], [21.8057, 80.1857], [21.8047, 80.1857]],
           village: 'Khairlanji',
-          district: 'Balaghat',
+          district: 'Bhopal',
           state: 'Madhya Pradesh',
           dateSubmitted: '2024-01-15',
           surveyNumber: 'MP001'
@@ -317,7 +435,7 @@ const FRAAtlas: React.FC = () => {
           status: 'potential',
           coordinates: [[23.8372, 91.8624], [23.8382, 91.8624], [23.8382, 91.8634], [23.8372, 91.8634]],
           village: 'Gandacherra',
-          district: 'Dhalai',
+          district: 'West Tripura',
           state: 'Tripura',
           dateSubmitted: '2024-01-20',
           surveyNumber: 'TR002'
@@ -329,7 +447,7 @@ const FRAAtlas: React.FC = () => {
           status: 'granted',
           coordinates: [[21.9287, 86.7350], [21.9297, 86.7350], [21.9297, 86.7360], [21.9287, 86.7360]],
           village: 'Baripada',
-          district: 'Mayurbhanj',
+          district: 'Cuttack',
           state: 'Odisha',
           dateSubmitted: '2024-01-10',
           surveyNumber: 'OD003'
@@ -341,12 +459,15 @@ const FRAAtlas: React.FC = () => {
           status: 'granted',
           coordinates: [[19.6677, 78.5311], [19.6687, 78.5311], [19.6687, 78.5321], [19.6677, 78.5321]],
           village: 'Utnoor',
-          district: 'Adilabad',
+          district: 'Hyderabad',
           state: 'Telangana',
           dateSubmitted: '2024-01-05',
           surveyNumber: 'TG004'
         }
       ];
+      
+      // Filter data based on user role and location
+      const mockData = filterDataForUser(allMockData);
       
       setFraData(mockData);
       setFilteredData(mockData);
@@ -356,6 +477,7 @@ const FRAAtlas: React.FC = () => {
       fraPotentialLayerRef.current = L.layerGroup().addTo(mapRef.current);
       boundariesLayerRef.current = L.layerGroup();
       forestsLayerRef.current = L.layerGroup().addTo(mapRef.current);
+      pattaHoldersLayerRef.current = L.layerGroup().addTo(mapRef.current);
 
       // Add FRA layers to map
       const addFRALayersToMap = (data: FRAData[]) => {
@@ -409,6 +531,8 @@ const FRAAtlas: React.FC = () => {
       };
       
       addFRALayersToMap(mockData);
+      // Load patta holders data
+      await loadPattaHoldersData();
       // Load uploaded layers as well
       await loadUploadedLayers();
     } catch (error) {
@@ -450,6 +574,87 @@ const FRAAtlas: React.FC = () => {
       polygon.bindPopup(`<h4>${boundary.name}</h4><p>Administrative Boundary</p>`);
       polygon.addTo(boundariesLayerRef.current!);
     });
+  };
+
+  // Load patta holders data
+  const loadPattaHoldersData = async () => {
+    try {
+      if (!mapRef.current || !pattaHoldersLayerRef.current) return;
+
+      pattaHoldersLayerRef.current.clearLayers();
+
+      const response = await pattaHoldersAPI.getGeoJSON();
+      if (response.success && response.data) {
+        const geojson = response.data;
+        
+        geojson.features.forEach((feature: any) => {
+          const props = feature.properties;
+          
+          let coordinates: [number, number][];
+          if (feature.geometry.type === 'Polygon') {
+            coordinates = feature.geometry.coordinates[0].map((coord: [number, number]) => [coord[1], coord[0]]);
+          } else if (feature.geometry.type === 'Point') {
+            // Create a small square around the point
+            const [lng, lat] = feature.geometry.coordinates;
+            const offset = 0.001;
+            coordinates = [
+              [lat - offset, lng - offset],
+              [lat - offset, lng + offset],
+              [lat + offset, lng + offset],
+              [lat + offset, lng - offset]
+            ];
+          } else {
+            return; // Skip unsupported geometry types
+          }
+
+          const polygon = L.polygon(coordinates, {
+            color: props.fraStatus?.includes('Granted') ? '#4caf50' : '#ff9800',
+            fillColor: props.fraStatus?.includes('Granted') ? '#66bb6a' : '#ffb74d',
+            fillOpacity: 0.4,
+            weight: 2
+          });
+
+          const popupContent = `
+            <div style="min-width: 250px;">
+              <h4>🏠 ${props.ownerName}</h4>
+              <div style="margin: 8px 0;">
+                <strong>Father:</strong> ${props.fatherName || 'N/A'}<br>
+                <strong>Village:</strong> ${props.village}<br>
+                <strong>District:</strong> ${props.district}<br>
+                <strong>State:</strong> ${props.state}
+              </div>
+              <div style="margin: 8px 0; padding: 8px; background: #f5f5f5; border-radius: 4px;">
+                <strong>Land Details:</strong><br>
+                <strong>Survey No:</strong> ${props.surveyNo}<br>
+                <strong>Khasra:</strong> ${props.khasra}<br>
+                <strong>Area:</strong> ${props.area} hectares<br>
+                <strong>Classification:</strong> ${props.classification}<br>
+                <strong>FRA Status:</strong> <span style="color: ${props.fraStatus?.includes('Granted') ? '#4caf50' : '#ff9800'}; font-weight: bold;">${props.fraStatus}</span>
+              </div>
+              <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                <strong>Created:</strong> ${new Date(props.created).toLocaleDateString()}
+              </div>
+            </div>
+          `;
+
+          polygon.bindPopup(popupContent);
+          polygon.on('click', () => {
+            try {
+              const b = polygon.getBounds();
+              if (b && b.isValid() && mapRef.current) {
+                mapRef.current.fitBounds(b, { padding: [16, 16] });
+              }
+            } catch {}
+          });
+
+          polygon.addTo(pattaHoldersLayerRef.current!);
+        });
+
+        console.log(`Loaded ${geojson.features.length} patta holder records`);
+      }
+    } catch (error) {
+      console.warn('Failed to load patta holders data:', error);
+    }
   };
 
   // Add forests layer
@@ -525,6 +730,15 @@ const FRAAtlas: React.FC = () => {
             forestsLayerRef.current.addTo(mapRef.current);
           } else {
             forestsLayerRef.current.remove();
+          }
+        }
+        break;
+      case 'pattaHolders':
+        if (pattaHoldersLayerRef.current) {
+          if (newVisibility) {
+            pattaHoldersLayerRef.current.addTo(mapRef.current);
+          } else {
+            pattaHoldersLayerRef.current.remove();
           }
         }
         break;
@@ -751,25 +965,32 @@ const FRAAtlas: React.FC = () => {
 
   // Generate plot popup content
   const getPlotPopupContent = (record: LandRecord) => {
+    const statusClass = record.fraStatus.includes('Granted') ? 'status-granted' : 
+                       record.fraStatus.includes('Potential') ? 'status-potential' : 'status-pending';
+    
     return `
-      <div style="min-width:300px;">
-        <h4 style="margin:0 0 12px 0;color:#1976d2;">🏠 Khasra: ${record.khasraNumber}</h4>
-        <div style="margin:8px 0;padding:8px;background:#f5f5f5;border-radius:4px;">
-          <h5 style="margin:0 0 8px 0;color:#2196f3;">📋 Owner Details</h5>
-          <table style="font-size:12px;width:100%;">
-            <tr><td style="color:#666;padding:2px 8px;">Name:</td><td style="padding:2px 8px;">${record.ownerName}</td></tr>
-            <tr><td style="color:#666;padding:2px 8px;">Father:</td><td style="padding:2px 8px;">${record.fatherName}</td></tr>
-            <tr><td style="color:#666;padding:2px 8px;">Village:</td><td style="padding:2px 8px;">${record.village}</td></tr>
-            <tr><td style="color:#666;padding:2px 8px;">District:</td><td style="padding:2px 8px;">${record.district}</td></tr>
+      <div>
+        <div class="popup-header">
+          <h4>Khasra: ${record.khasraNumber}</h4>
+        </div>
+        
+        <div class="popup-section">
+          <h5>Owner Details</h5>
+          <table class="popup-table">
+            <tr><td>Name</td><td>${record.ownerName}</td></tr>
+            <tr><td>Father</td><td>${record.fatherName || 'N/A'}</td></tr>
+            <tr><td>Village</td><td>${record.village}</td></tr>
+            <tr><td>District</td><td>${record.district}</td></tr>
           </table>
         </div>
-        <div style="margin:8px 0;">
-          <h5 style="margin:0 0 8px 0;color:#666;">📍 Land Details</h5>
-          <table style="font-size:12px;width:100%;">
-            <tr><td style="color:#666;padding:2px 8px;">Survey No:</td><td style="padding:2px 8px;">${record.surveyNumber}</td></tr>
-            <tr><td style="color:#666;padding:2px 8px;">Area:</td><td style="padding:2px 8px;">${record.area}</td></tr>
-            <tr><td style="color:#666;padding:2px 8px;">Classification:</td><td style="padding:2px 8px;">${record.classification}</td></tr>
-            <tr><td style="color:#666;padding:2px 8px;">FRA Status:</td><td style="padding:2px 8px;color:${record.fraStatus.includes('Granted') ? '#4caf50' : '#ff9800'};font-weight:600;">${record.fraStatus}</td></tr>
+        
+        <div class="popup-section">
+          <h5>Land Details</h5>
+          <table class="popup-table">
+            <tr><td>Survey No</td><td>${record.surveyNumber}</td></tr>
+            <tr><td>Area</td><td>${record.area}</td></tr>
+            <tr><td>Classification</td><td>${record.classification}</td></tr>
+            <tr><td>FRA Status</td><td><span class="status-chip ${statusClass}">${record.fraStatus}</span></td></tr>
           </table>
         </div>
       </div>
@@ -790,8 +1011,21 @@ const FRAAtlas: React.FC = () => {
         setAllPlotsVisible(false);
         setInfo('All plots layer hidden.');
       } else {
-        // Load and display all plots
-        const allRecords = await getAllLandRecords();
+        // Load and display all plots (FRA Atlas + Patta Holders)
+        let allRecords = [];
+        let pattaResponse = { success: false, data: { features: [] } };
+        
+        try {
+          allRecords = await getAllLandRecords();
+        } catch (e) {
+          console.warn('Failed to load FRA Atlas records:', e);
+        }
+        
+        try {
+          pattaResponse = await pattaHoldersAPI.getGeoJSON();
+        } catch (e) {
+          console.warn('Failed to load patta holders:', e);
+        }
         
         if (allPlotsLayerRef.current) {
           allPlotsLayerRef.current.remove();
@@ -799,8 +1033,8 @@ const FRAAtlas: React.FC = () => {
         
         allPlotsLayerRef.current = L.layerGroup().addTo(mapRef.current);
         
+        // Add FRA Atlas records
         allRecords.forEach(record => {
-          // Create proper GeoJSON feature
           const feature = {
             type: 'Feature' as const,
             properties: {
@@ -820,77 +1054,77 @@ const FRAAtlas: React.FC = () => {
               fillOpacity: 0.5,
             },
             onEachFeature: (_feature, lyr) => {
-              // Hover effect
-              lyr.on('mouseover', () => {
-                (lyr as any).setStyle({ 
-                  weight: 5, 
-                  fillOpacity: 0.8,
-                  color: '#1976d2'
-                });
-                (lyr as any).bringToFront();
-              });
-              
-              lyr.on('mouseout', () => {
-                (lyr as any).setStyle({
-                  color: record.fraStatus.includes('Granted') ? '#4caf50' : '#ff9800',
-                  weight: 3,
-                  fillOpacity: 0.5
-                });
-              });
-              
-              // Click to show details
               lyr.on('click', () => {
                 const popupContent = getPlotPopupContent(record);
                 (lyr as any).bindPopup(popupContent, { maxWidth: 400 }).openPopup();
-                
-                // Zoom to plot
-                const bounds = (lyr as any).getBounds();
-                if (bounds && bounds.isValid()) {
-                  mapRef.current!.fitBounds(bounds, { padding: [20, 20] });
-                }
               });
             }
           });
           
           gj.addTo(allPlotsLayerRef.current!);
-          
-          // Debug: Log each plot creation
-          console.log(`Plot added: ${record.ownerName} at`, record.boundaries.coordinates[0]);
         });
         
-        setAllPlotsVisible(true);
-        setInfo(`All plots layer displayed: ${allRecords.length} plots loaded.`);
-        
-        // Debug: Log coordinates
-        console.log('All records loaded:', allRecords.map(r => ({
-          name: r.ownerName,
-          coords: r.boundaries.coordinates[0]
-        })));
-        
-        // Fit map to show all plots
-        if (allRecords.length > 0) {
-          try {
-            // Calculate bounds from all coordinates
-            const allCoords: [number, number][] = [];
-            allRecords.forEach(record => {
-              if (record.boundaries?.coordinates?.[0]) {
-                record.boundaries.coordinates[0].forEach((coord: [number, number]) => {
-                  allCoords.push([coord[1], coord[0]]); // Leaflet uses [lat, lng]
-                });
-              }
-            });
+        // Add Patta Holders data
+        if (pattaResponse.success && pattaResponse.data) {
+          const geojson = pattaResponse.data;
+          
+          geojson.features.forEach((feature: any) => {
+            const props = feature.properties;
             
-            if (allCoords.length > 0) {
-              const bounds = L.latLngBounds(allCoords);
-              mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+            let coordinates: [number, number][];
+            if (feature.geometry.type === 'Polygon') {
+              coordinates = feature.geometry.coordinates[0].map((coord: [number, number]) => [coord[1], coord[0]]);
+            } else if (feature.geometry.type === 'Point') {
+              const [lng, lat] = feature.geometry.coordinates;
+              const offset = 0.001;
+              coordinates = [
+                [lat - offset, lng - offset],
+                [lat - offset, lng + offset],
+                [lat + offset, lng + offset],
+                [lat + offset, lng - offset]
+              ];
             } else {
-              // Fallback: zoom to central India if no coordinates
-              mapRef.current.setView([21.5, 82.5], 6);
+              return;
             }
-          } catch (e) {
-            console.warn('Could not fit bounds to all plots:', e);
-          }
+
+            const polygon = L.polygon(coordinates, {
+              color: '#9c27b0',
+              fillColor: '#ba68c8',
+              fillOpacity: 0.5,
+              weight: 3
+            });
+
+            const popupContent = `
+              <div style="min-width: 250px;">
+                <h4>🏠 ${props.ownerName}</h4>
+                <div style="margin: 8px 0;">
+                  <strong>Father:</strong> ${props.fatherName || 'N/A'}<br>
+                  <strong>Village:</strong> ${props.village}<br>
+                  <strong>District:</strong> ${props.district}<br>
+                  <strong>State:</strong> ${props.state}
+                </div>
+                <div style="margin: 8px 0; padding: 8px; background: #f5f5f5; border-radius: 4px;">
+                  <strong>Land Details:</strong><br>
+                  <strong>Survey No:</strong> ${props.surveyNo}<br>
+                  <strong>Khasra:</strong> ${props.khasra}<br>
+                  <strong>Area:</strong> ${props.area} hectares<br>
+                  <strong>Classification:</strong> ${props.classification}<br>
+                  <strong>FRA Status:</strong> <span style="color: #9c27b0; font-weight: bold;">${props.fraStatus}</span>
+                </div>
+                <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                  <strong>Type:</strong> Patta Holder (Dummy Data)
+                </div>
+              </div>
+            `;
+
+            polygon.bindPopup(popupContent);
+            polygon.addTo(allPlotsLayerRef.current!);
+          });
         }
+        
+        const totalPlots = allRecords.length + (pattaResponse.success ? pattaResponse.data.features.length : 0);
+        setAllPlotsVisible(true);
+        setInfo(`All plots layer displayed: ${totalPlots} plots loaded (${allRecords.length} FRA Atlas + ${pattaResponse.success ? pattaResponse.data.features.length : 0} Patta Holders).`);
       }
     } catch (e) {
       console.warn('Failed to toggle all plots layer:', e);
@@ -918,65 +1152,93 @@ const FRAAtlas: React.FC = () => {
   };
 
   const getPopupHtml = (props: any, fallbackName?: string, personalInfo?: any) => {
-    // Prefer a structured card if we detect standard land attributes
-    const name = props?.claimantName || props?.name || props?.Name || personalInfo?.name || fallbackName || 'Area';
-    const status = props?.status || props?.Status;
-    const area = props?.area || props?.Area || props?.area_hectares || props?.['Area (hectares)'];
-    const village = props?.village || props?.Village;
-    const district = props?.district || props?.District;
-    const surveyNo = props?.surveyNumber || props?.SurveyNo || props?.['Survey No'] || props?.Survey || props?.Khasra;
-    const date = props?.dateSubmitted || props?.Date || props?.Created || props?.LastModified;
+    // Extract data from props and personalInfo
+    const ownerName = props?.ownerName || props?.claimantName || props?.name || props?.Name || personalInfo?.name || fallbackName || 'Unknown';
+    const fatherName = props?.fatherName || personalInfo?.fatherName || 'N/A';
+    const village = props?.village || props?.Village || personalInfo?.village || 'Unknown';
+    const district = props?.district || props?.District || personalInfo?.district || 'Unknown';
+    const surveyNo = props?.surveyNo || props?.surveyNumber || props?.SurveyNo || props?.['Survey No'] || 'N/A';
+    const khasra = props?.khasra || props?.Khasra || props?.khasraNumber || '45/2';
+    const area = props?.area || props?.Area || props?.area_hectares || props?.['Area (hectares)'] || '0';
+    const classification = props?.classification || props?.Classification || 'Forest Land (Community)';
+    const fraStatus = props?.fraStatus || props?.status || props?.Status || 'Under Review';
 
-    // Enhanced popup with owner details and area measurement
-    let ownerSection = '';
-    if (personalInfo && Object.keys(personalInfo).length > 0) {
-      const ownerEntries = Object.entries(personalInfo)
-        .filter(([k, v]) => v && String(v).trim())
-        .map(([k, v]) => {
-          const label = k.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-          return `<tr><td style="padding:4px 8px;color:#2196f3;font-weight:600;">${label}:</td><td style="padding:4px 8px;">${String(v)}</td></tr>`;
-        }).join('');
-      
-      if (ownerEntries) {
-        ownerSection = `
-          <div style="margin:12px 0;padding:8px;background:#f5f5f5;border-radius:4px;">
-            <h5 style="margin:0 0 8px 0;color:#1976d2;">📋 Owner Details</h5>
-            <table style="border-collapse:collapse;font-size:12px;width:100%;">${ownerEntries}</table>
-          </div>`;
-      }
-    }
-
-    if (status || area || village || district || surveyNo || date) {
-      return `
-        <div style="min-width:280px;max-width:400px;">
-          <h4 style="margin:0 0 12px 0;color:#1976d2;border-bottom:2px solid #e3f2fd;padding-bottom:4px;">🏞️ ${name}</h4>
-          ${ownerSection}
-          <div style="font-size:13px;line-height:1.6">
-            ${status ? `<div><strong>Status:</strong> ${status}</div>` : ''}
-            ${area ? `<div><strong>Area:</strong> ${area}${typeof area === 'number' ? ' hectares' : ''}</div>` : ''}
-            ${village ? `<div><strong>Village:</strong> ${village}</div>` : ''}
-            ${district ? `<div><strong>District:</strong> ${district}</div>` : ''}
-            ${surveyNo ? `<div><strong>Survey No:</strong> ${surveyNo}</div>` : ''}
-            ${date ? `<div><strong>Date:</strong> ${new Date(date).toLocaleDateString?.() || date}</div>` : ''}
-          </div>
-          <div style="margin-top:12px;padding:6px;background:#e8f5e8;border-radius:4px;font-size:11px;color:#2e7d32;">
-            📏 <strong>Area Measurement:</strong> Click and drag to measure distances
-          </div>
-        </div>`;
-    }
-
-    // Fallback: show a simple table of whatever properties exist
-    const entries = props && typeof props === 'object' ? Object.entries(props) : [];
-    const rows = entries
-      .filter(([k]) => typeof k === 'string')
-      .map(([k, v]) => `<tr><td style="padding:4px 8px;color:#666;">${k}:</td><td style="padding:4px 8px;">${String(v)}</td></tr>`) 
-      .join('');
-    
     return `
-      <div style="min-width:220px">
-        <h4 style="margin:0 0 8px 0;">${name}</h4>
-        ${ownerSection}
-        <table style="border-collapse:collapse;font-size:12px;">${rows || '<tr><td>No attributes</td></tr>'}</table>
+      <div style="min-width:380px;max-width:450px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#ffffff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.12);overflow:hidden;border:1px solid #e0e7ff;">
+        <!-- Government Header -->
+        <div style="background:linear-gradient(135deg,#1e40af 0%,#1d4ed8 50%,#2563eb 100%);color:white;padding:16px 20px;position:relative;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+              <span style="font-size:18px;font-weight:bold;">🏛️</span>
+            </div>
+            <div>
+              <h3 style="margin:0;font-size:20px;font-weight:700;letter-spacing:0.5px;">Khasra: ${khasra}</h3>
+              <p style="margin:2px 0 0 0;font-size:12px;opacity:0.9;font-weight:400;">Government of India • Forest Rights Act</p>
+            </div>
+          </div>
+          <div style="position:absolute;top:0;right:0;width:60px;height:100%;background:rgba(255,255,255,0.1);clip-path:polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%);"></div>
+        </div>
+        
+        <div style="padding:20px;background:#fafbff;">
+          <!-- Owner Details Section -->
+          <div style="margin-bottom:20px;background:white;border-radius:8px;padding:16px;border-left:4px solid #3b82f6;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+            <h4 style="margin:0 0 14px 0;color:#1e40af;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;">
+              <span style="font-size:16px;">👤</span> Owner Details
+            </h4>
+            <table style="width:100%;border-collapse:collapse;">
+              <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:8px 0;color:#475569;font-weight:600;width:80px;vertical-align:top;">Name</td>
+                <td style="padding:8px 0 8px 16px;color:#0f172a;font-weight:500;">${ownerName}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:8px 0;color:#475569;font-weight:600;vertical-align:top;">Father</td>
+                <td style="padding:8px 0 8px 16px;color:#0f172a;font-weight:500;">${fatherName}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:8px 0;color:#475569;font-weight:600;vertical-align:top;">Village</td>
+                <td style="padding:8px 0 8px 16px;color:#0f172a;font-weight:500;">${village}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;color:#475569;font-weight:600;vertical-align:top;">District</td>
+                <td style="padding:8px 0 8px 16px;color:#0f172a;font-weight:500;">${district}</td>
+              </tr>
+            </table>
+          </div>
+          
+          <!-- Land Details Section -->
+          <div style="background:white;border-radius:8px;padding:16px;border-left:4px solid #059669;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+            <h4 style="margin:0 0 14px 0;color:#059669;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;">
+              <span style="font-size:16px;">🏞️</span> Land Details
+            </h4>
+            <table style="width:100%;border-collapse:collapse;">
+              <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:8px 0;color:#475569;font-weight:600;width:80px;vertical-align:top;">Survey No</td>
+                <td style="padding:8px 0 8px 16px;color:#0f172a;font-weight:500;">${surveyNo}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:8px 0;color:#475569;font-weight:600;vertical-align:top;">Area</td>
+                <td style="padding:8px 0 8px 16px;color:#0f172a;font-weight:500;">${area}${typeof area === 'number' ? ' hectares' : (area.toString().includes('hectares') ? '' : ' hectares')}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:8px 0;color:#475569;font-weight:600;vertical-align:top;">Classification</td>
+                <td style="padding:8px 0 8px 16px;color:#0f172a;font-weight:500;">${classification}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;color:#475569;font-weight:600;vertical-align:top;">FRA Status</td>
+                <td style="padding:8px 0 8px 16px;">
+                  <span style="background:linear-gradient(135deg,#10b981,#059669);color:white;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">${fraStatus}</span>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        
+
+        
+        <!-- Government Footer -->
+        <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:8px 20px;text-align:center;">
+          <p style="margin:0;font-size:10px;color:#64748b;font-weight:500;">Ministry of Tribal Affairs • भारत सरकार • Government of India</p>
+        </div>
       </div>`;
   };
 
@@ -1058,6 +1320,9 @@ const FRAAtlas: React.FC = () => {
     if (labelsLayer) {
       labelsLayer.addTo(mapRef.current);
     }
+    
+    // Re-add user boundary overlay after style change
+    addUserBoundaryOverlay(mapRef.current);
 
     setCurrentMapStyle(style);
   };
@@ -1178,31 +1443,72 @@ const FRAAtlas: React.FC = () => {
           variant="temporary"
           sx={{
             '& .MuiDrawer-paper': {
-              width: 360,
-              bgcolor: 'background.paper',
-              borderLeft: '1px solid',
-              borderColor: 'divider'
+              width: 420,
+              backgroundColor: '#f8fafc',
+              borderLeft: '3px solid #1976d2',
+              boxShadow: '-4px 0 20px rgba(0, 0, 0, 0.1)',
+              top: '34px',
+              left: '1109px',
+              height: 'calc(100vh - 64px)'
             }
           }}
         >
-          <Box sx={{ p: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-              <Typography variant="h6" fontWeight="bold"><span data-translate>Map Controls</span></Typography>
-              <IconButton onClick={() => setShowControls(false)} size="small">
+          {/* Government Header */}
+          <Box sx={{ 
+            background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)', 
+            color: 'white', 
+            p: 3,
+            borderBottom: '2px solid #0d47a1'
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box sx={{ 
+                  width: 40, 
+                  height: 40, 
+                  background: 'rgba(255,255,255,0.2)', 
+                  borderRadius: '50%', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center' 
+                }}>
+                  <Settings sx={{ fontSize: 20 }} />
+                </Box>
+                <Box>
+                  <Typography variant="h6" fontWeight="bold" sx={{ fontSize: '18px' }}>
+                    <span data-translate>Map Controls</span>
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.9, fontSize: '12px' }}>
+                    Government of India • Forest Rights Act
+                  </Typography>
+                </Box>
+              </Box>
+              <IconButton onClick={() => setShowControls(false)} sx={{ color: 'white' }}>
                 <Close />
               </IconButton>
             </Box>
+          </Box>
 
+          <Box sx={{ p: 3, height: 'calc(100% - 120px)', overflow: 'auto' }}>
             {/* Map Style Selection */}
-            <Card sx={{ mb: 2 }}>
-              <CardContent>
-                <Typography variant="subtitle2" gutterBottom><span data-translate>Map Style</span></Typography>
-                <Stack spacing={1}>
+            <Paper sx={{ mb: 3, border: '1px solid #e3f2fd', borderRadius: 2 }}>
+              <Box sx={{ 
+                background: 'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)', 
+                p: 2, 
+                borderBottom: '1px solid #90caf9' 
+              }}>
+                <Typography variant="subtitle1" fontWeight="bold" color="#1976d2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Satellite sx={{ fontSize: 18 }} />
+                  <span data-translate>Map Style</span>
+                </Typography>
+              </Box>
+              <Box sx={{ p: 2 }}>
+                <Stack spacing={1.5}>
                   <Button
                     variant={currentMapStyle === 'satellite' ? 'contained' : 'outlined'}
                     startIcon={<Satellite />}
                     onClick={() => changeMapStyle('satellite')}
                     fullWidth
+                    sx={{ py: 1.5, fontWeight: 600 }}
                   >
                     <span data-translate>Satellite</span>
                   </Button>
@@ -1211,6 +1517,7 @@ const FRAAtlas: React.FC = () => {
                     startIcon={<Terrain />}
                     onClick={() => changeMapStyle('terrain')}
                     fullWidth
+                    sx={{ py: 1.5, fontWeight: 600 }}
                   >
                     <span data-translate>Terrain</span>
                   </Button>
@@ -1219,71 +1526,111 @@ const FRAAtlas: React.FC = () => {
                     startIcon={<MapIcon />}
                     onClick={() => changeMapStyle('osm')}
                     fullWidth
+                    sx={{ py: 1.5, fontWeight: 600 }}
                   >
                     <span data-translate>OpenStreetMap</span>
                   </Button>
                 </Stack>
-              </CardContent>
-            </Card>
+              </Box>
+            </Paper>
 
             {/* Layer Controls */}
-            <Card sx={{ mb: 2 }}>
-              <CardContent>
-                <Typography variant="subtitle2" gutterBottom><span data-translate>Layers</span></Typography>
+            <Paper sx={{ mb: 3, border: '1px solid #e8f5e8', borderRadius: 2 }}>
+              <Box sx={{ 
+                background: 'linear-gradient(90deg, #e8f5e8 0%, #c8e6c9 100%)', 
+                p: 2, 
+                borderBottom: '1px solid #a5d6a7' 
+              }}>
+                <Typography variant="subtitle1" fontWeight="bold" color="#2e7d32" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Layers sx={{ fontSize: 18 }} />
+                  <span data-translate>Layers</span>
+                </Typography>
+              </Box>
+              <Box sx={{ p: 2 }}>
                 <Stack spacing={1}>
                   <FormControlLabel
                     control={
                       <Switch
                         checked={layerVisibility.fraGranted}
                         onChange={() => toggleLayerVisibility('fraGranted')}
+                        color="success"
                       />
                     }
-                    label={<span data-translate>FRA Granted</span>}
+                    label={<Typography variant="body2" fontWeight={500}><span data-translate>FRA Granted</span></Typography>}
+                    sx={{ mx: 0 }}
                   />
                   <FormControlLabel
                     control={
                       <Switch
                         checked={layerVisibility.fraPotential}
                         onChange={() => toggleLayerVisibility('fraPotential')}
+                        color="warning"
                       />
                     }
-                    label={<span data-translate>FRA Potential</span>}
+                    label={<Typography variant="body2" fontWeight={500}><span data-translate>FRA Potential</span></Typography>}
+                    sx={{ mx: 0 }}
                   />
                   <FormControlLabel
                     control={
                       <Switch
                         checked={layerVisibility.boundaries}
                         onChange={() => toggleLayerVisibility('boundaries')}
+                        color="primary"
                       />
                     }
-                    label={<span data-translate>Boundaries</span>}
+                    label={<Typography variant="body2" fontWeight={500}><span data-translate>Boundaries</span></Typography>}
+                    sx={{ mx: 0 }}
                   />
                   <FormControlLabel
                     control={
                       <Switch
                         checked={layerVisibility.forests}
                         onChange={() => toggleLayerVisibility('forests')}
+                        color="success"
                       />
                     }
-                    label={<span data-translate>Forest Areas</span>}
+                    label={<Typography variant="body2" fontWeight={500}><span data-translate>Forest Areas</span></Typography>}
+                    sx={{ mx: 0 }}
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={layerVisibility.pattaHolders}
+                        onChange={() => toggleLayerVisibility('pattaHolders')}
+                        color="secondary"
+                      />
+                    }
+                    label={<Typography variant="body2" fontWeight={500}><span data-translate>Patta Holders</span></Typography>}
+                    sx={{ mx: 0 }}
                   />
                   <FormControlLabel
                     control={
                       <Switch
                         checked={allPlotsVisible}
                         onChange={toggleAllPlotsLayer}
+                        color="info"
                       />
                     }
-                    label={<span data-translate>All Land Plots</span>}
+                    label={<Typography variant="body2" fontWeight={500}><span data-translate>All Land Plots</span></Typography>}
+                    sx={{ mx: 0 }}
                   />
                 </Stack>
-              </CardContent>
-            </Card>
+              </Box>
+            </Paper>
 
             {/* Filters */}
-            <Card>
-              <CardContent>
-                <Typography variant="subtitle2" gutterBottom><span data-translate>Filters</span></Typography>
+            <Paper sx={{ border: '1px solid #fff3e0', borderRadius: 2 }}>
+              <Box sx={{ 
+                background: 'linear-gradient(90deg, #fff3e0 0%, #ffe0b2 100%)', 
+                p: 2, 
+                borderBottom: '1px solid #ffcc02' 
+              }}>
+                <Typography variant="subtitle1" fontWeight="bold" color="#f57c00" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <FilterList sx={{ fontSize: 18 }} />
+                  <span data-translate>Filters</span>
+                </Typography>
+              </Box>
+              <Box sx={{ p: 2 }}>
                 <Stack spacing={2}>
                   <FormControl fullWidth size="small">
                     <InputLabel><span data-translate>Status</span></InputLabel>
@@ -1306,13 +1653,27 @@ const FRAAtlas: React.FC = () => {
                       onChange={(e) => setSelectedFilters(prev => ({ ...prev, district: e.target.value }))}
                     >
                       <MenuItem value="all">All Districts</MenuItem>
-                      <MenuItem value="Mumbai">Mumbai</MenuItem>
-                      <MenuItem value="Pune">Pune</MenuItem>
+                      <MenuItem value="Bhopal">Bhopal</MenuItem>
+                      <MenuItem value="West Tripura">West Tripura</MenuItem>
+                      <MenuItem value="Cuttack">Cuttack</MenuItem>
+                      <MenuItem value="Hyderabad">Hyderabad</MenuItem>
                     </Select>
                   </FormControl>
                 </Stack>
-              </CardContent>
-            </Card>
+              </Box>
+            </Paper>
+          </Box>
+          
+          {/* Government Footer */}
+          <Box sx={{ 
+            background: '#f1f5f9', 
+            borderTop: '1px solid #cbd5e1', 
+            p: 2, 
+            textAlign: 'center' 
+          }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+              Ministry of Tribal Affairs • भारत सरकार • Government of India
+            </Typography>
           </Box>
         </Drawer>
 
@@ -1362,7 +1723,7 @@ const FRAAtlas: React.FC = () => {
                 <ListIcon />
               </Fab>
             </Tooltip>
-            <Tooltip title="Bhunaksha Land Records">
+            <Tooltip title="FRA Atlas Land Records">
               <Fab size="small" color="secondary" onClick={() => setShowBhunakshaSearch(true)}>
                 <MapIcon />
               </Fab>
@@ -1460,12 +1821,12 @@ const FRAAtlas: React.FC = () => {
           />
         </Box>
       </Box>
-      {/* Bhunaksha Search Dialog */}
+      {/* FRA Atlas Search Dialog */}
       <Dialog open={showBhunakshaSearch} onClose={() => setShowBhunakshaSearch(false)} maxWidth="lg" fullWidth>
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <MapIcon />
-            Bhunaksha FRA - Land Records Search
+            FRA Atlas - Land Records Search
           </Box>
         </DialogTitle>
         <DialogContent>
@@ -1477,67 +1838,126 @@ const FRAAtlas: React.FC = () => {
       </Dialog>
 
       {/* Uploaded Layers Dialog */}
-      <Dialog open={showLayersDialog} onClose={() => setShowLayersDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <ListIcon />
-            Uploaded Data (Data Management)
+      <Dialog 
+        open={showLayersDialog} 
+        onClose={() => setShowLayersDialog(false)} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            minHeight: '70vh',
+            maxHeight: '85vh',
+            position: 'fixed',
+            top: '10%',
+            left: '50%',
+            transform: 'translateX(-50%)'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)', 
+          color: 'white',
+          py: 2
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <ListIcon sx={{ fontSize: 28 }} />
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                Uploaded Data (Data Management)
+              </Typography>
+              <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                Government of India - Forest Rights Act Atlas
+              </Typography>
+            </Box>
           </Box>
         </DialogTitle>
-        <DialogContent dividers>
+        <DialogContent dividers sx={{ p: 0, bgcolor: '#f8f9fa' }}>
           {uploadedLayers.length === 0 ? (
-            <Typography color="text.secondary">No uploaded data found.</Typography>
+            <Box sx={{ p: 4, textAlign: 'center' }}>
+              <Typography color="text.secondary" variant="h6">No uploaded data found.</Typography>
+              <Typography color="text.secondary" variant="body2" sx={{ mt: 1 }}>Upload data through Data Management to see records here.</Typography>
+            </Box>
           ) : (
-            <List>
-              {uploadedLayers.map((l: any) => {
-                const meta = summarizeLayer(l);
-                return (
-                  <ListItem
-                    key={l.id}
-                    secondaryAction={
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button size="small" variant="outlined" onClick={() => {
-                          try {
-                            if (!mapRef.current) return;
-                            const gj = L.geoJSON(l.data);
-                            const b = (gj as any).getBounds?.();
-                            if (b && b.isValid()) {
-                              mapRef.current.fitBounds(b, { padding: [20, 20] });
-                            }
-                            // Open a popup at the center with summarized props
-                            const center = b?.getCenter?.();
-                            if (center) {
-                              const layerProps = l?.data?.features?.[0]?.properties || {};
-                              const html = getPopupHtml(layerProps, meta.name);
-                              L.popup({ autoClose: true })
-                                .setLatLng(center)
-                                .setContent(html)
-                                .openOn(mapRef.current);
-                            }
-                            gj.remove();
-                            setShowLayersDialog(false);
-                            // Also draw a visible dashed highlight
-                            const highlight = L.geoJSON(l.data, { style: { color: '#ff1744', weight: 3, dashArray: '6,4', fillOpacity: 0 } }).addTo(mapRef.current);
-                            setTimeout(() => { try { mapRef.current && highlight.remove(); } catch {} }, 5000);
-                          } catch {}
-                        }}>Focus</Button>
-                        <Button size="small" onClick={() => handleExportLayer(l.id)}>Export</Button>
-                        <Button size="small" color="error" onClick={() => handleDeleteLayer(l.id)}>Delete</Button>
-                      </Box>
-                    }
-                  >
-                    <ListItemText
-                      primary={meta.name || l.name}
-                      secondary={meta.subtitle || `Features: ${l.data?.features?.length ?? 0}`}
-                    />
-                  </ListItem>
-                );
-              })}
-            </List>
+            <Box sx={{ p: 2 }}>
+              <Typography variant="subtitle1" sx={{ mb: 2, color: '#1976d2', fontWeight: 600 }}>
+                Total Records: {uploadedLayers.length}
+              </Typography>
+              <List sx={{ bgcolor: 'white', borderRadius: 2, boxShadow: 1 }}>
+                {uploadedLayers.map((l: any, index) => {
+                  const meta = summarizeLayer(l);
+                  return (
+                    <React.Fragment key={l.id}>
+                      <ListItem
+                        sx={{
+                          py: 2,
+                          '&:hover': { bgcolor: '#e3f2fd' },
+                          borderLeft: '4px solid #1976d2'
+                        }}
+                      >
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#1976d2', mb: 0.5 }}>
+                            {meta.name || l.name}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                            {meta.subtitle || `Features: ${l.data?.features?.length ?? 0}`}
+                          </Typography>
+                          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                            <Button 
+                              size="small" 
+                              variant="contained" 
+                              sx={{ minWidth: 80 }}
+                              onClick={() => {
+                                try {
+                                  if (!mapRef.current) return;
+                                  const gj = L.geoJSON(l.data);
+                                  const b = (gj as any).getBounds?.();
+                                  if (b && b.isValid()) {
+                                    mapRef.current.fitBounds(b, { padding: [20, 20] });
+                                  }
+                                  gj.remove();
+                                  setShowLayersDialog(false);
+                                  const highlight = L.geoJSON(l.data, { style: { color: '#ff1744', weight: 3, dashArray: '6,4', fillOpacity: 0 } }).addTo(mapRef.current);
+                                  setTimeout(() => { try { mapRef.current && highlight.remove(); } catch {} }, 5000);
+                                } catch {}
+                              }}
+                            >
+                              Focus
+                            </Button>
+                            <Button 
+                              size="small" 
+                              variant="outlined" 
+                              sx={{ minWidth: 80 }}
+                              onClick={() => handleExportLayer(l.id)}
+                            >
+                              Export
+                            </Button>
+                            <Button 
+                              size="small" 
+                              variant="outlined" 
+                              color="error" 
+                              sx={{ minWidth: 80 }}
+                              onClick={() => handleDeleteLayer(l.id)}
+                            >
+                              Delete
+                            </Button>
+                          </Box>
+                        </Box>
+                      </ListItem>
+                      {index < uploadedLayers.length - 1 && <Divider />}
+                    </React.Fragment>
+                  );
+                })}
+              </List>
+            </Box>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowLayersDialog(false)}>Close</Button>
+        <DialogActions sx={{ bgcolor: '#f8f9fa', p: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+            Ministry of Tribal Affairs • Government of India
+          </Typography>
+          <Button onClick={() => setShowLayersDialog(false)} variant="contained">
+            Close
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -1676,6 +2096,12 @@ const FRAAtlas: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box sx={{ width: 16, height: 16, bgcolor: '#66bb6a', opacity: 0.3, border: '2px solid #4caf50', borderRadius: 1 }} />
             <Typography variant="body2">All Land Plots</Typography>
+          </Box>
+        )}
+        {layerVisibility.pattaHolders && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ width: 16, height: 16, bgcolor: '#ffb74d', opacity: 0.4, border: '2px solid #ff9800', borderRadius: 1 }} />
+            <Typography variant="body2">Patta Holders</Typography>
           </Box>
         )}
       </Paper>

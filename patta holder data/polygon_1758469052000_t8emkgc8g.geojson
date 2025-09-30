@@ -1,0 +1,80 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "polygon_1758469052000_t8emkgc8g",
+        "ownerName": "Tirkey Gond",
+        "address": {
+          "village": "Mandla",
+          "block": "Mayurbhanj",
+          "district": "Kandhamal",
+          "state": "Tripura",
+          "pincode": 186567,
+          "fullAddress": "Mandla, Mayurbhanj, Kandhamal, Tripura - 816206"
+        },
+        "area": {
+          "hectares": 0.129,
+          "acres": 0.3188,
+          "squareMeters": 1290
+        },
+        "coordinates": [
+          [
+            [
+              84.051628,
+              20.030949
+            ],
+            [
+              84.052078,
+              20.030914
+            ],
+            [
+              84.052191,
+              20.030763
+            ],
+            [
+              84.051864,
+              20.030591
+            ],
+            [
+              84.051628,
+              20.030949
+            ]
+          ]
+        ],
+        "created": "2025-09-21T15:37:32.001Z",
+        "lastModified": "2025-09-21T15:37:32.001Z",
+        "status": "active",
+        "type": "polygon_plot"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              84.051628,
+              20.030949
+            ],
+            [
+              84.052078,
+              20.030914
+            ],
+            [
+              84.052191,
+              20.030763
+            ],
+            [
+              84.051864,
+              20.030591
+            ],
+            [
+              84.051628,
+              20.030949
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
