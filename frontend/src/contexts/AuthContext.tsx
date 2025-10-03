@@ -4,10 +4,11 @@ interface User {
   id: string;
   username: string;
   email: string;
-  role: 'admin' | 'mota_technical' | 'state_authority' | 'district_tribal_welfare' | 'beneficiary';
+  role: 'admin' | 'state_admin' | 'district_admin' | 'block_admin' | 'user';
   state?: string;
   district?: string;
   block?: string;
+  last_login?: string;
 }
 
 interface AuthContextType {
@@ -15,6 +16,7 @@ interface AuthContextType {
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   hasPermission: (resource: string, action: string) => boolean;
   isLoading: boolean;
 }
@@ -41,10 +43,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Role-based permissions
   const rolePermissions = {
     admin: ['all'],
-    mota_technical: ['ai_analysis', 'satellite_mapping', 'cross_validation'],
-    state_authority: ['state_claims', 'gis_validation', 'compliance_review'],
-    district_tribal_welfare: ['district_claims', 'legacy_upload', 'ocr_processing'],
-    beneficiary: ['own_claims', 'claim_tracking']
+    state_admin: ['state_claims', 'gis_validation', 'compliance_review'],
+    district_admin: ['district_claims', 'legacy_upload', 'ocr_processing'],
+    block_admin: ['block_claims', 'data_entry'],
+    user: ['own_claims', 'claim_tracking']
   };
 
   useEffect(() => {
@@ -104,6 +106,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('user');
   };
 
+  const refreshUser = async () => {
+    if (!token) return;
+    
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000/api'}/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
+    } catch (error) {
+      console.error('Failed to refresh user data:', error);
+    }
+  };
+
   const hasPermission = (resource: string, action: string): boolean => {
     if (!user) return false;
     
@@ -121,6 +143,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     token,
     login,
     logout,
+    refreshUser,
     hasPermission,
     isLoading,
   };

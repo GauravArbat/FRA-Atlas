@@ -1,10 +1,47 @@
 const express = require('express');
 const router = express.Router();
+const fs = require('fs');
+const path = require('path');
 const { authenticateToken, optionalAuth } = require('../middleware/auth-mock');
 const { logger } = require('../utils/logger');
 
-// In-memory storage for patta holders (in production, use database)
-let pattaHolders = [];
+// File path for persistent storage
+const DATA_FILE = path.join(__dirname, '../../data/patta-holders.json');
+
+// Ensure data directory exists
+const ensureDataDir = () => {
+  const dataDir = path.dirname(DATA_FILE);
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+};
+
+// Load data from file
+const loadData = () => {
+  try {
+    ensureDataDir();
+    if (fs.existsSync(DATA_FILE)) {
+      const data = fs.readFileSync(DATA_FILE, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    logger.error('Error loading patta holders data:', error);
+  }
+  return [];
+};
+
+// Save data to file
+const saveData = (data) => {
+  try {
+    ensureDataDir();
+    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+  } catch (error) {
+    logger.error('Error saving patta holders data:', error);
+  }
+};
+
+// Load existing data on startup
+let pattaHolders = loadData();
 
 // Fix existing data with correct districts
 const fixExistingData = () => {
@@ -109,6 +146,7 @@ router.post('/', authenticateToken, async (req, res) => {
     };
 
     pattaHolders.push(newPattaHolder);
+    saveData(pattaHolders);
     
     // Also save to geojson-plot layers for "Uploaded Data" list
     try {
@@ -219,6 +257,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
       ...updateData,
       lastModified: new Date().toISOString()
     };
+    saveData(pattaHolders);
 
     logger.info(`Updated patta holder: ${id}`);
     
@@ -251,6 +290,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     }
 
     const deletedPatta = pattaHolders.splice(pattaIndex, 1)[0];
+    saveData(pattaHolders);
     
     logger.info(`Deleted patta holder: ${id} - ${deletedPatta.ownerName}`);
     
@@ -411,6 +451,7 @@ router.post('/bulk', authenticateToken, async (req, res) => {
       createdHolders.push(newPattaHolder);
     }
 
+    saveData(pattaHolders);
     logger.info(`Bulk created ${createdHolders.length} patta holders`);
     
     res.status(201).json({

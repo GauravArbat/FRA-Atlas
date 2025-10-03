@@ -8,7 +8,7 @@ export interface TranslationResponse {
 // Rate limiting
 const translationQueue: Array<() => Promise<any>> = [];
 let isProcessing = false;
-const RATE_LIMIT_DELAY = 100; // 100ms between requests
+const RATE_LIMIT_DELAY = 1; // 1ms between requests for faster translation
 
 const processQueue = async () => {
   if (isProcessing || translationQueue.length === 0) return;
@@ -33,34 +33,49 @@ export const translateText = async (
   targetLanguage: string,
   sourceLanguage?: string
 ): Promise<TranslationResponse> => {
-  // Check cache first
+  // Instant cache lookup
   const cacheKey = `${text}_${targetLanguage}_${sourceLanguage || 'auto'}`;
   const cached = localStorage.getItem(`translate_${cacheKey}`);
   if (cached) {
     return JSON.parse(cached);
   }
 
-  return new Promise((resolve, reject) => {
+  // Skip translation if target is same as source or for very short text
+  if (targetLanguage === 'en' || text.length < 3) {
+    return { translatedText: text, detectedSourceLanguage: sourceLanguage };
+  }
+
+  // Check if translation is disabled
+  const isTranslationDisabled = localStorage.getItem('translationDisabled') === 'true';
+  if (isTranslationDisabled) {
+    return { translatedText: text, detectedSourceLanguage: sourceLanguage };
+  }
+
+  return new Promise((resolve) => {
     const request = async () => {
       try {
         const response = await api.post('/translate/translate', {
           text,
           target: targetLanguage,
           source: sourceLanguage
+        }, {
+          timeout: 3000 // Increased timeout
         });
         
         // Cache the result
         localStorage.setItem(`translate_${cacheKey}`, JSON.stringify(response.data));
         resolve(response.data);
       } catch (error: any) {
-        if (error.response?.status === 429) {
-          // Rate limit exceeded - return original text
-          console.warn('Translation rate limit exceeded, using original text');
-          resolve({ translatedText: text, detectedSourceLanguage: sourceLanguage });
-        } else {
-          console.error('Translation error:', error);
-          resolve({ translatedText: text, detectedSourceLanguage: sourceLanguage });
+        // Always fallback to original text on any error
+        console.warn('Translation failed, using original text:', error.message);
+        
+        // Disable translation temporarily if server errors persist
+        if (error.response?.status >= 500) {
+          localStorage.setItem('translationDisabled', 'true');
+          setTimeout(() => localStorage.removeItem('translationDisabled'), 300000); // Re-enable after 5 minutes
         }
+        
+        resolve({ translatedText: text, detectedSourceLanguage: sourceLanguage });
       }
     };
     

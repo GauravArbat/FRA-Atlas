@@ -1,0 +1,1856 @@
+[
+  {
+    "id": "polygon_1759478568532_92njp0jvp",
+    "ownerName": "Sita Modi",
+    "fatherName": "Ganesh Shah",
+    "address": {
+      "village": "Gopalpur",
+      "block": "Jabalpur Block",
+      "district": "Jabalpur",
+      "state": "Madhya Pradesh",
+      "pincode": 251323,
+      "fullAddress": "Gopalpur, Jabalpur Block, Jabalpur, Madhya Pradesh - 251323"
+    },
+    "landDetails": {
+      "surveyNo": "MP-AGR-260",
+      "khasra": "53/2",
+      "area": {
+        "hectares": 2153.2982563808605,
+        "acres": 5320.799991517107,
+        "squareMeters": 21532982.563808605
+      },
+      "classification": "Homestead Land",
+      "fraStatus": "Under Review"
+    },
+    "coordinates": [
+      [
+        77.424107,
+        23.139097
+      ],
+      [
+        77.428914,
+        23.107839
+      ],
+      [
+        77.449518,
+        23.104681
+      ],
+      [
+        77.481798,
+        23.122995
+      ],
+      [
+        77.465658,
+        23.149515
+      ],
+      [
+        77.424107,
+        23.139097
+      ]
+    ],
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            77.424107,
+            23.139097
+          ],
+          [
+            77.428914,
+            23.107839
+          ],
+          [
+            77.449518,
+            23.104681
+          ],
+          [
+            77.481798,
+            23.122995
+          ],
+          [
+            77.465658,
+            23.149515
+          ],
+          [
+            77.424107,
+            23.139097
+          ]
+        ]
+      ]
+    },
+    "created": "2025-10-03T08:02:48.532Z",
+    "lastModified": "2025-10-03T08:02:48.532Z",
+    "createdBy": "c59bf674-a4e6-4f72-9480-c39c9d8c279a",
+    "status": "active"
+  },
+  {
+    "id": "polygon_1759478578408_z1ccuuc10",
+    "ownerName": "Sanjay Singh",
+    "fatherName": "Manoj Mishra",
+    "address": {
+      "village": "Khairlanji",
+      "block": "Bhopal Block",
+      "district": "Bhopal",
+      "state": "Madhya Pradesh",
+      "pincode": 365291,
+      "fullAddress": "Khairlanji, Bhopal Block, Ujjain, Madhya Pradesh - 365291"
+    },
+    "landDetails": {
+      "surveyNo": "TR-CUT-935",
+      "khasra": "117/2",
+      "area": {
+        "hectares": 2547.1633955219377,
+        "acres": 6294.040750334708,
+        "squareMeters": 25471633.955219377
+      },
+      "classification": "Grazing Land",
+      "fraStatus": "IFR Granted"
+    },
+    "coordinates": [
+      [
+        77.423076,
+        23.139413
+      ],
+      [
+        77.37603,
+        23.134362
+      ],
+      [
+        77.367788,
+        23.086364
+      ],
+      [
+        77.427197,
+        23.109102
+      ],
+      [
+        77.423076,
+        23.139413
+      ]
+    ],
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            77.423076,
+            23.139413
+          ],
+          [
+            77.37603,
+            23.134362
+          ],
+          [
+            77.367788,
+            23.086364
+          ],
+          [
+            77.427197,
+            23.109102
+          ],
+          [
+            77.423076,
+            23.139413
+          ]
+        ]
+      ]
+    },
+    "created": "2025-10-03T08:02:58.408Z",
+    "lastModified": "2025-10-03T08:03:01.814Z",
+    "createdBy": "c59bf674-a4e6-4f72-9480-c39c9d8c279a",
+    "status": "active"
+  },
+  {
+    "id": "polygon_1759478596529_7sawxw4jp",
+    "ownerName": "Sunil Tiwari",
+    "fatherName": "Suresh Thakur",
+    "address": {
+      "village": "Shivnagar",
+      "block": "Berasia Block",
+      "district": "Bhopal",
+      "state": "Madhya Pradesh",
+      "pincode": 959869,
+      "fullAddress": "Shivnagar, Berasia Block, Satna, Madhya Pradesh - 959869"
+    },
+    "landDetails": {
+      "surveyNo": "TG-BHO-203",
+      "khasra": "187/9",
+      "area": {
+        "hectares": 6617.560401340639,
+        "acres": 16351.99175171272,
+        "squareMeters": 66175604.01340639
+      },
+      "classification": "Forest Land (Community)",
+      "fraStatus": "Under Review"
+    },
+    "coordinates": [
+      [
+        77.367788,
+        23.084785
+      ],
+      [
+        77.411057,
+        23.049723
+      ],
+      [
+        77.50515,
+        23.076257
+      ],
+      [
+        77.482485,
+        23.123627
+      ],
+      [
+        77.448831,
+        23.104997
+      ],
+      [
+        77.428227,
+        23.109102
+      ],
+      [
+        77.367788,
+        23.084785
+      ]
+    ],
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            77.367788,
+            23.084785
+          ],
+          [
+            77.411057,
+            23.049723
+          ],
+          [
+            77.50515,
+            23.076257
+          ],
+          [
+            77.482485,
+            23.123627
+          ],
+          [
+            77.448831,
+            23.104997
+          ],
+          [
+            77.428227,
+            23.109102
+          ],
+          [
+            77.367788,
+            23.084785
+          ]
+        ]
+      ]
+    },
+    "created": "2025-10-03T08:03:16.529Z",
+    "lastModified": "2025-10-03T08:03:20.305Z",
+    "createdBy": "c59bf674-a4e6-4f72-9480-c39c9d8c279a",
+    "status": "active"
+  },
+  {
+    "id": "polygon_1759478610985_rhsu5a9sk",
+    "ownerName": "Sunil Agarwal",
+    "fatherName": "Umesh Thakur",
+    "address": {
+      "village": "Haripur",
+      "block": "Gwalior Block",
+      "district": "Gwalior",
+      "state": "Madhya Pradesh",
+      "pincode": 295134,
+      "fullAddress": "Haripur, Gwalior Block, Gwalior, Madhya Pradesh - 295134"
+    },
+    "landDetails": {
+      "surveyNo": "OD-HYD-886",
+      "khasra": "168/6",
+      "area": {
+        "hectares": 6919.033986147015,
+        "acres": 17096.932979769274,
+        "squareMeters": 69190339.86147015
+      },
+      "classification": "Agricultural Land",
+      "fraStatus": "IFR Granted"
+    },
+    "coordinates": [
+      [
+        77.364011,
+        23.197805
+      ],
+      [
+        77.374657,
+        23.133414
+      ],
+      [
+        77.422733,
+        23.139729
+      ],
+      [
+        77.464971,
+        23.150462
+      ],
+      [
+        77.445741,
+        23.208218
+      ],
+      [
+        77.364011,
+        23.197805
+      ]
+    ],
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            77.364011,
+            23.197805
+          ],
+          [
+            77.374657,
+            23.133414
+          ],
+          [
+            77.422733,
+            23.139729
+          ],
+          [
+            77.464971,
+            23.150462
+          ],
+          [
+            77.445741,
+            23.208218
+          ],
+          [
+            77.364011,
+            23.197805
+          ]
+        ]
+      ]
+    },
+    "created": "2025-10-03T08:03:30.985Z",
+    "lastModified": "2025-10-03T08:03:30.985Z",
+    "createdBy": "c59bf674-a4e6-4f72-9480-c39c9d8c279a",
+    "status": "active"
+  },
+  {
+    "id": "polygon_1759478624779_8pqmnu5w4",
+    "ownerName": "Radha Yadav",
+    "fatherName": "Dinesh Chauhan",
+    "address": {
+      "village": "Laxmipur",
+      "block": "Indore Block",
+      "district": "Indore",
+      "state": "Madhya Pradesh",
+      "pincode": 315016,
+      "fullAddress": "Laxmipur, Indore Block, Indore, Madhya Pradesh - 315016"
+    },
+    "landDetails": {
+      "surveyNo": "MP-BHO-688",
+      "khasra": "83/9",
+      "area": {
+        "hectares": 7223.056089522424,
+        "acres": 17848.171597209912,
+        "squareMeters": 72230560.89522424
+      },
+      "classification": "Grazing Land",
+      "fraStatus": "IFR Granted"
+    },
+    "coordinates": [
+      [
+        77.362637,
+        23.198436
+      ],
+      [
+        77.314218,
+        23.183604
+      ],
+      [
+        77.320399,
+        23.073731
+      ],
+      [
+        77.366758,
+        23.086364
+      ],
+      [
+        77.37397,
+        23.132467
+      ],
+      [
+        77.362637,
+        23.198436
+      ]
+    ],
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            77.362637,
+            23.198436
+          ],
+          [
+            77.314218,
+            23.183604
+          ],
+          [
+            77.320399,
+            23.073731
+          ],
+          [
+            77.366758,
+            23.086364
+          ],
+          [
+            77.37397,
+            23.132467
+          ],
+          [
+            77.362637,
+            23.198436
+          ]
+        ]
+      ]
+    },
+    "created": "2025-10-03T08:03:44.779Z",
+    "lastModified": "2025-10-03T08:03:44.779Z",
+    "createdBy": "c59bf674-a4e6-4f72-9480-c39c9d8c279a",
+    "status": "active"
+  },
+  {
+    "id": "polygon_1759478640508_o1n0mvz9s",
+    "ownerName": "Sanjay Tiwari",
+    "fatherName": "Shanti Thakur",
+    "address": {
+      "village": "Khairlanji",
+      "block": "Berasia Block",
+      "district": "Bhopal",
+      "state": "Madhya Pradesh",
+      "pincode": 852088,
+      "fullAddress": "Khairlanji, Berasia Block, Dewas, Madhya Pradesh - 852088"
+    },
+    "landDetails": {
+      "surveyNo": "TR-HYD-788",
+      "khasra": "55/6",
+      "area": {
+        "hectares": 25082.263884356602,
+        "acres": 61978.274058245166,
+        "squareMeters": 250822638.84356603
+      },
+      "classification": "Forest Land (Community)",
+      "fraStatus": "IFR Granted"
+    },
+    "coordinates": [
+      [
+        77.316316,
+        23.072151
+      ],
+      [
+        77.368513,
+        22.952071
+      ],
+      [
+        77.586917,
+        23.006436
+      ],
+      [
+        77.507248,
+        23.075942
+      ],
+      [
+        77.4056,
+        23.051935
+      ],
+      [
+        77.367139,
+        23.083522
+      ],
+      [
+        77.316316,
+        23.072151
+      ]
+    ],
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            77.316316,
+            23.072151
+          ],
+          [
+            77.368513,
+            22.952071
+          ],
+          [
+            77.586917,
+            23.006436
+          ],
+          [
+            77.507248,
+            23.075942
+          ],
+          [
+            77.4056,
+            23.051935
+          ],
+          [
+            77.367139,
+            23.083522
+          ],
+          [
+            77.316316,
+            23.072151
+          ]
+        ]
+      ]
+    },
+    "created": "2025-10-03T08:04:00.508Z",
+    "lastModified": "2025-10-03T08:04:03.690Z",
+    "createdBy": "c59bf674-a4e6-4f72-9480-c39c9d8c279a",
+    "status": "active"
+  },
+  {
+    "id": "polygon_1759478656989_y5h0tu3dy",
+    "ownerName": "Ganesh Kumar",
+    "fatherName": "Kavita Mishra",
+    "address": {
+      "village": "Shivnagar",
+      "block": "Bhopal Block",
+      "district": "Bhopal",
+      "state": "Madhya Pradesh",
+      "pincode": 709540,
+      "fullAddress": "Shivnagar, Bhopal Block, Satna, Madhya Pradesh - 709540"
+    },
+    "landDetails": {
+      "surveyNo": "TG-BHO-768",
+      "khasra": "171/9",
+      "area": {
+        "hectares": 15608.693193806397,
+        "acres": 38569.08088189561,
+        "squareMeters": 156086931.93806398
+      },
+      "classification": "Grazing Land",
+      "fraStatus": "Under Review"
+    },
+    "coordinates": [
+      [
+        77.446809,
+        23.211058
+      ],
+      [
+        77.563566,
+        23.241346
+      ],
+      [
+        77.606148,
+        23.137834
+      ],
+      [
+        77.530599,
+        23.134046
+      ],
+      [
+        77.501753,
+        23.116365
+      ],
+      [
+        77.48527,
+        23.108786
+      ],
+      [
+        77.446809,
+        23.211058
+      ]
+    ],
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            77.446809,
+            23.211058
+          ],
+          [
+            77.563566,
+            23.241346
+          ],
+          [
+            77.606148,
+            23.137834
+          ],
+          [
+            77.530599,
+            23.134046
+          ],
+          [
+            77.501753,
+            23.116365
+          ],
+          [
+            77.48527,
+            23.108786
+          ],
+          [
+            77.446809,
+            23.211058
+          ]
+        ]
+      ]
+    },
+    "created": "2025-10-03T08:04:16.989Z",
+    "lastModified": "2025-10-03T08:04:20.445Z",
+    "createdBy": "c59bf674-a4e6-4f72-9480-c39c9d8c279a",
+    "status": "active"
+  },
+  {
+    "id": "polygon_1759478671607_o4r8q3g01",
+    "ownerName": "Anil Agarwal",
+    "fatherName": "Preeta Gupta",
+    "address": {
+      "village": "Greenpur",
+      "block": "Bhopal Block",
+      "district": "Bhopal",
+      "state": "Madhya Pradesh",
+      "pincode": 849287,
+      "fullAddress": "Greenpur, Bhopal Block, Bhopal, Madhya Pradesh - 849287"
+    },
+    "landDetails": {
+      "surveyNo": "TR-HYD-725",
+      "khasra": "4/6",
+      "area": {
+        "hectares": 20417.270914165587,
+        "acres": 50451.076428903165,
+        "squareMeters": 204172709.14165586
+      },
+      "classification": "Homestead Land",
+      "fraStatus": "Pending"
+    },
+    "coordinates": [
+      [
+        77.608895,
+        23.139097
+      ],
+      [
+        77.706421,
+        23.034243
+      ],
+      [
+        77.58417,
+        23.006436
+      ],
+      [
+        77.511368,
+        23.078468
+      ],
+      [
+        77.490764,
+        23.108786
+      ],
+      [
+        77.530599,
+        23.134046
+      ],
+      [
+        77.608895,
+        23.139097
+      ]
+    ],
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            77.608895,
+            23.139097
+          ],
+          [
+            77.706421,
+            23.034243
+          ],
+          [
+            77.58417,
+            23.006436
+          ],
+          [
+            77.511368,
+            23.078468
+          ],
+          [
+            77.490764,
+            23.108786
+          ],
+          [
+            77.530599,
+            23.134046
+          ],
+          [
+            77.608895,
+            23.139097
+          ]
+        ]
+      ]
+    },
+    "created": "2025-10-03T08:04:31.607Z",
+    "lastModified": "2025-10-03T08:04:31.607Z",
+    "createdBy": "c59bf674-a4e6-4f72-9480-c39c9d8c279a",
+    "status": "active"
+  },
+  {
+    "id": "polygon_1759478685473_6y11jxodh",
+    "ownerName": "Ganesh Tiwari",
+    "fatherName": "Vijay Pandey",
+    "address": {
+      "village": "Greenpur",
+      "block": "Berasia Block",
+      "district": "Bhopal",
+      "state": "Madhya Pradesh",
+      "pincode": 998386,
+      "fullAddress": "Greenpur, Berasia Block, Ujjain, Madhya Pradesh - 998386"
+    },
+    "landDetails": {
+      "surveyNo": "TR-AGR-577",
+      "khasra": "181/9",
+      "area": {
+        "hectares": 26356.12162727241,
+        "acres": 65125.97654099012,
+        "squareMeters": 263561216.2727241
+      },
+      "classification": "Homestead Land",
+      "fraStatus": "CFR Granted"
+    },
+    "coordinates": [
+      [
+        77.314942,
+        23.1896
+      ],
+      [
+        77.292964,
+        23.270365
+      ],
+      [
+        77.548456,
+        23.320819
+      ],
+      [
+        77.562192,
+        23.245132
+      ],
+      [
+        77.445435,
+        23.213583
+      ],
+      [
+        77.314942,
+        23.1896
+      ]
+    ],
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            77.314942,
+            23.1896
+          ],
+          [
+            77.292964,
+            23.270365
+          ],
+          [
+            77.548456,
+            23.320819
+          ],
+          [
+            77.562192,
+            23.245132
+          ],
+          [
+            77.445435,
+            23.213583
+          ],
+          [
+            77.314942,
+            23.1896
+          ]
+        ]
+      ]
+    },
+    "created": "2025-10-03T08:04:45.473Z",
+    "lastModified": "2025-10-03T08:04:48.973Z",
+    "createdBy": "c59bf674-a4e6-4f72-9480-c39c9d8c279a",
+    "status": "active"
+  },
+  {
+    "id": "polygon_1759478707528_jna42r856",
+    "ownerName": "Suresh Desai",
+    "fatherName": "Malti Sharma",
+    "address": {
+      "village": "Greenpur",
+      "block": "Berasia Block",
+      "district": "Bhopal",
+      "state": "Madhya Pradesh",
+      "pincode": 409318,
+      "fullAddress": "Greenpur, Berasia Block, Bhopal, Madhya Pradesh - 409318"
+    },
+    "landDetails": {
+      "surveyNo": "MP-BHO-929",
+      "khasra": "120/6",
+      "area": {
+        "hectares": 65393.39382039896,
+        "acres": 161587.07613020582,
+        "squareMeters": 653933938.2039896
+      },
+      "classification": "Forest Land (Community)",
+      "fraStatus": "Pending"
+    },
+    "coordinates": [
+      [
+        77.227045,
+        23.404025
+      ],
+      [
+        77.207815,
+        23.362429
+      ],
+      [
+        77.205067,
+        23.319558
+      ],
+      [
+        77.198232,
+        23.24387
+      ],
+      [
+        77.265539,
+        23.264057
+      ],
+      [
+        77.291638,
+        23.269104
+      ],
+      [
+        77.545756,
+        23.323341
+      ],
+      [
+        77.521031,
+        23.395203
+      ],
+      [
+        77.493558,
+        23.454428
+      ],
+      [
+        77.400153,
+        23.487179
+      ],
+      [
+        77.323231,
+        23.461987
+      ],
+      [
+        77.308121,
+        23.417888
+      ],
+      [
+        77.257297,
+        23.430489
+      ],
+      [
+        77.227045,
+        23.404025
+      ]
+    ],
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            77.227045,
+            23.404025
+          ],
+          [
+            77.207815,
+            23.362429
+          ],
+          [
+            77.205067,
+            23.319558
+          ],
+          [
+            77.198232,
+            23.24387
+          ],
+          [
+            77.265539,
+            23.264057
+          ],
+          [
+            77.291638,
+            23.269104
+          ],
+          [
+            77.545756,
+            23.323341
+          ],
+          [
+            77.521031,
+            23.395203
+          ],
+          [
+            77.493558,
+            23.454428
+          ],
+          [
+            77.400153,
+            23.487179
+          ],
+          [
+            77.323231,
+            23.461987
+          ],
+          [
+            77.308121,
+            23.417888
+          ],
+          [
+            77.257297,
+            23.430489
+          ],
+          [
+            77.227045,
+            23.404025
+          ]
+        ]
+      ]
+    },
+    "created": "2025-10-03T08:05:07.528Z",
+    "lastModified": "2025-10-03T08:05:07.528Z",
+    "createdBy": "c59bf674-a4e6-4f72-9480-c39c9d8c279a",
+    "status": "active"
+  },
+  {
+    "id": "polygon_1759478729767_bp3tggrt5",
+    "ownerName": "Shanti Shah",
+    "fatherName": "Rajesh Tripathi",
+    "address": {
+      "village": "Gopalpur",
+      "block": "Sihora Block",
+      "district": "Jabalpur",
+      "state": "Madhya Pradesh",
+      "pincode": 322842,
+      "fullAddress": "Gopalpur, Sihora Block, Jabalpur, Madhya Pradesh - 322842"
+    },
+    "landDetails": {
+      "surveyNo": "MP-BHO-582",
+      "khasra": "86/1",
+      "area": {
+        "hectares": 46400.93996036093,
+        "acres": 114656.72264205186,
+        "squareMeters": 464009399.60360926
+      },
+      "classification": "Homestead Land",
+      "fraStatus": "Under Review"
+    },
+    "coordinates": [
+      [
+        77.187243,
+        23.233775
+      ],
+      [
+        77.115816,
+        23.13152
+      ],
+      [
+        77.143288,
+        23.06457
+      ],
+      [
+        77.216089,
+        23.049407
+      ],
+      [
+        77.236693,
+        22.995059
+      ],
+      [
+        77.33834,
+        23.019076
+      ],
+      [
+        77.314989,
+        23.070888
+      ],
+      [
+        77.31911,
+        23.088575
+      ],
+      [
+        77.310868,
+        23.188338
+      ],
+      [
+        77.287517,
+        23.269104
+      ],
+      [
+        77.187243,
+        23.233775
+      ]
+    ],
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            77.187243,
+            23.233775
+          ],
+          [
+            77.115816,
+            23.13152
+          ],
+          [
+            77.143288,
+            23.06457
+          ],
+          [
+            77.216089,
+            23.049407
+          ],
+          [
+            77.236693,
+            22.995059
+          ],
+          [
+            77.33834,
+            23.019076
+          ],
+          [
+            77.314989,
+            23.070888
+          ],
+          [
+            77.31911,
+            23.088575
+          ],
+          [
+            77.310868,
+            23.188338
+          ],
+          [
+            77.287517,
+            23.269104
+          ],
+          [
+            77.187243,
+            23.233775
+          ]
+        ]
+      ]
+    },
+    "created": "2025-10-03T08:05:29.767Z",
+    "lastModified": "2025-10-03T08:05:29.767Z",
+    "createdBy": "c59bf674-a4e6-4f72-9480-c39c9d8c279a",
+    "status": "active"
+  },
+  {
+    "id": "polygon_1759478750209_65gdk70an",
+    "ownerName": "Meera Mehta",
+    "fatherName": "Sunil Kumar",
+    "address": {
+      "village": "Greenpur",
+      "block": "Bhopal Block",
+      "district": "Bhopal",
+      "state": "Madhya Pradesh",
+      "pincode": 520267,
+      "fullAddress": "Greenpur, Bhopal Block, Dewas, Madhya Pradesh - 520267"
+    },
+    "landDetails": {
+      "surveyNo": "OD-CUT-307",
+      "khasra": "169/7",
+      "area": {
+        "hectares": 96142.42321041277,
+        "acres": 237567.92775292997,
+        "squareMeters": 961424232.1041278
+      },
+      "classification": "Agricultural Land",
+      "fraStatus": "Pending"
+    },
+    "coordinates": [
+      [
+        77.13556,
+        23.06457
+      ],
+      [
+        77.206988,
+        23.049407
+      ],
+      [
+        77.239954,
+        22.988738
+      ],
+      [
+        77.322371,
+        23.019076
+      ],
+      [
+        77.371821,
+        22.958393
+      ],
+      [
+        77.685004,
+        23.034243
+      ],
+      [
+        77.734454,
+        22.892623
+      ],
+      [
+        77.245449,
+        22.821757
+      ],
+      [
+        77.13556,
+        23.06457
+      ]
+    ],
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            77.13556,
+            23.06457
+          ],
+          [
+            77.206988,
+            23.049407
+          ],
+          [
+            77.239954,
+            22.988738
+          ],
+          [
+            77.322371,
+            23.019076
+          ],
+          [
+            77.371821,
+            22.958393
+          ],
+          [
+            77.685004,
+            23.034243
+          ],
+          [
+            77.734454,
+            22.892623
+          ],
+          [
+            77.245449,
+            22.821757
+          ],
+          [
+            77.13556,
+            23.06457
+          ]
+        ]
+      ]
+    },
+    "created": "2025-10-03T08:05:50.209Z",
+    "lastModified": "2025-10-03T08:05:54.592Z",
+    "createdBy": "c59bf674-a4e6-4f72-9480-c39c9d8c279a",
+    "status": "active"
+  },
+  {
+    "id": "polygon_1759479289897_jnuquycv7",
+    "ownerName": "Malti Shah",
+    "fatherName": "Seema Kumar",
+    "address": {
+      "village": "Khordha",
+      "block": "Khordha Block",
+      "district": "Bhubaneswar",
+      "state": "Odisha",
+      "pincode": 870970,
+      "fullAddress": "Khordha, Khordha Block, Bhubaneswar, Odisha - 870970"
+    },
+    "landDetails": {
+      "surveyNo": "OD-BHO-174",
+      "khasra": "139/7",
+      "area": {
+        "hectares": 2.4148481291152164,
+        "acres": 5.9670897270436996,
+        "squareMeters": 24148.481291152166
+      },
+      "classification": "Forest Land (Community)",
+      "fraStatus": "CFR Granted"
+    },
+    "coordinates": [
+      [
+        83.427327,
+        20.215942
+      ],
+      [
+        83.426855,
+        20.215549
+      ],
+      [
+        83.42693,
+        20.215081
+      ],
+      [
+        83.426871,
+        20.214442
+      ],
+      [
+        83.427783,
+        20.214376
+      ],
+      [
+        83.428905,
+        20.214527
+      ],
+      [
+        83.428948,
+        20.214689
+      ],
+      [
+        83.428277,
+        20.215262
+      ],
+      [
+        83.428111,
+        20.215348
+      ],
+      [
+        83.428025,
+        20.215363
+      ],
+      [
+        83.427891,
+        20.215418
+      ],
+      [
+        83.427724,
+        20.215489
+      ],
+      [
+        83.427553,
+        20.21562
+      ],
+      [
+        83.42736,
+        20.215887
+      ],
+      [
+        83.427327,
+        20.215942
+      ]
+    ],
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            83.427327,
+            20.215942
+          ],
+          [
+            83.426855,
+            20.215549
+          ],
+          [
+            83.42693,
+            20.215081
+          ],
+          [
+            83.426871,
+            20.214442
+          ],
+          [
+            83.427783,
+            20.214376
+          ],
+          [
+            83.428905,
+            20.214527
+          ],
+          [
+            83.428948,
+            20.214689
+          ],
+          [
+            83.428277,
+            20.215262
+          ],
+          [
+            83.428111,
+            20.215348
+          ],
+          [
+            83.428025,
+            20.215363
+          ],
+          [
+            83.427891,
+            20.215418
+          ],
+          [
+            83.427724,
+            20.215489
+          ],
+          [
+            83.427553,
+            20.21562
+          ],
+          [
+            83.42736,
+            20.215887
+          ],
+          [
+            83.427327,
+            20.215942
+          ]
+        ]
+      ]
+    },
+    "created": "2025-10-03T08:14:49.897Z",
+    "lastModified": "2025-10-03T08:14:49.897Z",
+    "createdBy": "c59bf674-a4e6-4f72-9480-c39c9d8c279a",
+    "status": "active"
+  },
+  {
+    "id": "polygon_1759479353080_aj05kepr4",
+    "ownerName": "Dinesh Rajput",
+    "fatherName": "Seema Pandey",
+    "address": {
+      "village": "Phulbani",
+      "block": "Baripada Block",
+      "district": "Cuttack",
+      "state": "Odisha",
+      "pincode": 394227,
+      "fullAddress": "Phulbani, Baripada Block, Angul, Odisha - 394227"
+    },
+    "landDetails": {
+      "surveyNo": "TR-AGR-074",
+      "khasra": "109/4",
+      "area": {
+        "hectares": 7.4134358369622175,
+        "acres": 18.31859995313364,
+        "squareMeters": 74134.35836962218
+      },
+      "classification": "Grazing Land",
+      "fraStatus": "Under Review"
+    },
+    "coordinates": [
+      [
+        83.426871,
+        20.214437
+      ],
+      [
+        83.426871,
+        20.213938
+      ],
+      [
+        83.426871,
+        20.213516
+      ],
+      [
+        83.426957,
+        20.213002
+      ],
+      [
+        83.427129,
+        20.212428
+      ],
+      [
+        83.428706,
+        20.212448
+      ],
+      [
+        83.429501,
+        20.212549
+      ],
+      [
+        83.429554,
+        20.212912
+      ],
+      [
+        83.430219,
+        20.212962
+      ],
+      [
+        83.430177,
+        20.213969
+      ],
+      [
+        83.42993,
+        20.214089
+      ],
+      [
+        83.428958,
+        20.214689
+      ],
+      [
+        83.42891,
+        20.214527
+      ],
+      [
+        83.427783,
+        20.214371
+      ],
+      [
+        83.426871,
+        20.214437
+      ]
+    ],
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            83.426871,
+            20.214437
+          ],
+          [
+            83.426871,
+            20.213938
+          ],
+          [
+            83.426871,
+            20.213516
+          ],
+          [
+            83.426957,
+            20.213002
+          ],
+          [
+            83.427129,
+            20.212428
+          ],
+          [
+            83.428706,
+            20.212448
+          ],
+          [
+            83.429501,
+            20.212549
+          ],
+          [
+            83.429554,
+            20.212912
+          ],
+          [
+            83.430219,
+            20.212962
+          ],
+          [
+            83.430177,
+            20.213969
+          ],
+          [
+            83.42993,
+            20.214089
+          ],
+          [
+            83.428958,
+            20.214689
+          ],
+          [
+            83.42891,
+            20.214527
+          ],
+          [
+            83.427783,
+            20.214371
+          ],
+          [
+            83.426871,
+            20.214437
+          ]
+        ]
+      ]
+    },
+    "created": "2025-10-03T08:15:53.080Z",
+    "lastModified": "2025-10-03T08:15:56.517Z",
+    "createdBy": "c59bf674-a4e6-4f72-9480-c39c9d8c279a",
+    "status": "active"
+  },
+  {
+    "id": "polygon_1759479399600_5vsjk3ap0",
+    "ownerName": "Ajay Tripathi",
+    "fatherName": "Suresh Kumar",
+    "address": {
+      "village": "Baripada",
+      "block": "Cuttack Block",
+      "district": "Cuttack",
+      "state": "Odisha",
+      "pincode": 679194,
+      "fullAddress": "Baripada, Cuttack Block, Cuttack, Odisha - 679194"
+    },
+    "landDetails": {
+      "surveyNo": "TG-HYD-011",
+      "khasra": "175/8",
+      "area": {
+        "hectares": 2.43607670398982,
+        "acres": 6.019545535558846,
+        "squareMeters": 24360.7670398982
+      },
+      "classification": "Forest Land (Community)",
+      "fraStatus": "Pending"
+    },
+    "coordinates": [
+      [
+        83.427338,
+        20.215982
+      ],
+      [
+        83.42714,
+        20.216184
+      ],
+      [
+        83.426866,
+        20.216304
+      ],
+      [
+        83.426641,
+        20.216335
+      ],
+      [
+        83.425997,
+        20.216309
+      ],
+      [
+        83.425965,
+        20.213858
+      ],
+      [
+        83.426276,
+        20.213898
+      ],
+      [
+        83.426351,
+        20.214573
+      ],
+      [
+        83.426426,
+        20.214603
+      ],
+      [
+        83.426877,
+        20.214608
+      ],
+      [
+        83.42692,
+        20.215066
+      ],
+      [
+        83.426834,
+        20.215564
+      ],
+      [
+        83.427338,
+        20.215982
+      ]
+    ],
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            83.427338,
+            20.215982
+          ],
+          [
+            83.42714,
+            20.216184
+          ],
+          [
+            83.426866,
+            20.216304
+          ],
+          [
+            83.426641,
+            20.216335
+          ],
+          [
+            83.425997,
+            20.216309
+          ],
+          [
+            83.425965,
+            20.213858
+          ],
+          [
+            83.426276,
+            20.213898
+          ],
+          [
+            83.426351,
+            20.214573
+          ],
+          [
+            83.426426,
+            20.214603
+          ],
+          [
+            83.426877,
+            20.214608
+          ],
+          [
+            83.42692,
+            20.215066
+          ],
+          [
+            83.426834,
+            20.215564
+          ],
+          [
+            83.427338,
+            20.215982
+          ]
+        ]
+      ]
+    },
+    "created": "2025-10-03T08:16:39.600Z",
+    "lastModified": "2025-10-03T08:16:39.600Z",
+    "createdBy": "c59bf674-a4e6-4f72-9480-c39c9d8c279a",
+    "status": "active"
+  },
+  {
+    "id": "polygon_1759479441018_39cdfsgyo",
+    "ownerName": "Vinod Kumar",
+    "fatherName": "Shanti Pandey",
+    "address": {
+      "village": "Ganjam",
+      "block": "Ganjam Block",
+      "district": "Berhampur",
+      "state": "Odisha",
+      "pincode": 127601,
+      "fullAddress": "Ganjam, Ganjam Block, Berhampur, Odisha - 127601"
+    },
+    "landDetails": {
+      "surveyNo": "TG-BHO-868",
+      "khasra": "10/9",
+      "area": {
+        "hectares": 2.747696060573071,
+        "acres": 6.789556965676058,
+        "squareMeters": 27476.96060573071
+      },
+      "classification": "Agricultural Land",
+      "fraStatus": "CR Granted"
+    },
+    "coordinates": [
+      [
+        83.426866,
+        20.214598
+      ],
+      [
+        83.426431,
+        20.214603
+      ],
+      [
+        83.426335,
+        20.214563
+      ],
+      [
+        83.42627,
+        20.213868
+      ],
+      [
+        83.425949,
+        20.213863
+      ],
+      [
+        83.426024,
+        20.21273
+      ],
+      [
+        83.426077,
+        20.211844
+      ],
+      [
+        83.427172,
+        20.212166
+      ],
+      [
+        83.426914,
+        20.213123
+      ],
+      [
+        83.42685,
+        20.213516
+      ],
+      [
+        83.426855,
+        20.214432
+      ],
+      [
+        83.426866,
+        20.214598
+      ]
+    ],
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            83.426866,
+            20.214598
+          ],
+          [
+            83.426431,
+            20.214603
+          ],
+          [
+            83.426335,
+            20.214563
+          ],
+          [
+            83.42627,
+            20.213868
+          ],
+          [
+            83.425949,
+            20.213863
+          ],
+          [
+            83.426024,
+            20.21273
+          ],
+          [
+            83.426077,
+            20.211844
+          ],
+          [
+            83.427172,
+            20.212166
+          ],
+          [
+            83.426914,
+            20.213123
+          ],
+          [
+            83.42685,
+            20.213516
+          ],
+          [
+            83.426855,
+            20.214432
+          ],
+          [
+            83.426866,
+            20.214598
+          ]
+        ]
+      ]
+    },
+    "created": "2025-10-03T08:17:21.018Z",
+    "lastModified": "2025-10-03T08:17:21.018Z",
+    "createdBy": "c59bf674-a4e6-4f72-9480-c39c9d8c279a",
+    "status": "active"
+  },
+  {
+    "id": "polygon_1759479470570_3aa2g5akg",
+    "ownerName": "Sanjay Chauhan",
+    "fatherName": "Shanti Tripathi",
+    "address": {
+      "village": "Jatni",
+      "block": "Bhubaneswar Block",
+      "district": "Bhubaneswar",
+      "state": "Odisha",
+      "pincode": 802363,
+      "fullAddress": "Jatni, Bhubaneswar Block, Bhubaneswar, Odisha - 802363"
+    },
+    "landDetails": {
+      "surveyNo": "MP-BHO-095",
+      "khasra": "51/9",
+      "area": {
+        "hectares": 2.0017779847659223,
+        "acres": 4.946393400356594,
+        "squareMeters": 20017.77984765922
+      },
+      "classification": "Agricultural Land",
+      "fraStatus": "CFR Granted"
+    },
+    "coordinates": [
+      [
+        83.425948,
+        20.217482
+      ],
+      [
+        83.425948,
+        20.216294
+      ],
+      [
+        83.425058,
+        20.216189
+      ],
+      [
+        83.424595,
+        20.217261
+      ],
+      [
+        83.425067,
+        20.217925
+      ],
+      [
+        83.425475,
+        20.217523
+      ],
+      [
+        83.425948,
+        20.217482
+      ]
+    ],
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            83.425948,
+            20.217482
+          ],
+          [
+            83.425948,
+            20.216294
+          ],
+          [
+            83.425058,
+            20.216189
+          ],
+          [
+            83.424595,
+            20.217261
+          ],
+          [
+            83.425067,
+            20.217925
+          ],
+          [
+            83.425475,
+            20.217523
+          ],
+          [
+            83.425948,
+            20.217482
+          ]
+        ]
+      ]
+    },
+    "created": "2025-10-03T08:17:50.570Z",
+    "lastModified": "2025-10-03T08:17:50.570Z",
+    "createdBy": "c59bf674-a4e6-4f72-9480-c39c9d8c279a",
+    "status": "active"
+  }
+
+]

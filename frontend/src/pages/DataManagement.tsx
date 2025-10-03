@@ -57,7 +57,7 @@ interface ProcessedPDFData {
 
 const DataManagement: React.FC = () => {
   const navigate = useNavigate();
-  usePageTranslation();
+  // usePageTranslation(); // Translation disabled
   // Original states
   const [uploadInfo, setUploadInfo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -267,6 +267,15 @@ const DataManagement: React.FC = () => {
     loadPattaHolders();
   }, []);
 
+  // Reload data when component mounts or when localStorage changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      loadPattaHolders();
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   const loadProcessedPDFs = async () => {
     try {
       const response = await pdfProcessorAPI.getProcessedData();
@@ -278,12 +287,32 @@ const DataManagement: React.FC = () => {
 
   const loadPattaHolders = async () => {
     try {
-      const response = await pattaHoldersAPI.getAll();
-      if (response.success) {
-        setPattaHolders(response.data || []);
+      // Try to load from backend API first
+      try {
+        const response = await pattaHoldersAPI.getAll();
+        if (response.success && response.data) {
+          console.log('Loading patta holders from backend API:', response.data.length);
+          setPattaHolders(response.data);
+          return;
+        }
+      } catch (apiError) {
+        console.warn('Failed to load from backend API, trying localStorage:', apiError);
+      }
+      
+      // Fallback to localStorage
+      const saved = localStorage.getItem('pattaHolders');
+      console.log('Loading patta holders from localStorage:', saved);
+      if (saved) {
+        const records = JSON.parse(saved);
+        console.log('Parsed records:', records);
+        setPattaHolders(records);
+      } else {
+        console.log('No pattaHolders in localStorage');
+        setPattaHolders([]);
       }
     } catch (err) {
-      console.log('No patta holders found or error loading');
+      console.log('Error loading patta holders:', err);
+      setPattaHolders([]);
     }
   };
 
@@ -317,9 +346,7 @@ const DataManagement: React.FC = () => {
         <IconButton size="small" onClick={() => focusOnMap('/atlas', (params.row as ProcessedPDFData).geoJSON, (params.row as ProcessedPDFData).personalInfo)} title="Focus on FRA Atlas">
           <MyLocationIcon fontSize="small" />
         </IconButton>
-        <IconButton size="small" onClick={() => focusOnMap('/gis-plot', (params.row as ProcessedPDFData).geoJSON, (params.row as ProcessedPDFData).personalInfo)} title="Focus on GIS Plot">
-          <MyLocationIcon fontSize="small" />
-        </IconButton>
+
       </Box>
     ) },
   ]), []);
@@ -498,11 +525,11 @@ const DataManagement: React.FC = () => {
                   ...pattaHolders.map(holder => ({
                     id: holder.id,
                     name: holder.ownerName,
-                    village: holder.address.village,
-                    district: holder.address.district,
-                    area: `${holder.landDetails.area.hectares} hectares`,
-                    applicationDate: new Date(holder.created).toLocaleDateString(),
-                    processedAt: holder.lastModified,
+                    village: holder.address?.village || 'N/A',
+                    district: holder.address?.district || 'N/A',
+                    area: `${holder.landDetails?.area?.hectares || 0} hectares`,
+                    applicationDate: new Date(holder.created || Date.now()).toLocaleDateString(),
+                    processedAt: holder.created || new Date().toISOString(),
                     geoJSON: {
                       type: 'FeatureCollection',
                       features: [{

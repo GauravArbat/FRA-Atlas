@@ -27,7 +27,16 @@ import {
   Water,
   Agriculture,
   Forest,
-  Home
+  Home,
+  SmartToy,
+  Engineering,
+  Opacity,
+  NaturePeople,
+  AccountBalance,
+  Search,
+  TrendingDown,
+  Assessment,
+  Business
 } from '@mui/icons-material';
 import { api } from '../services/api';
 import AssetVisualizationMap from '../components/AssetVisualizationMap';
@@ -135,21 +144,55 @@ const AdvancedSatelliteMapping: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [dssResults, setDssResults] = useState<any>(null);
   const [dssLoading, setDssLoading] = useState(false);
+  const [showSpectralData, setShowSpectralData] = useState(false);
 
   const states = ['Madhya Pradesh', 'Odisha', 'Tripura', 'Telangana'];
   
   const districts = {
-    'Madhya Pradesh': ['Khargone', 'Dhar', 'Jhabua', 'Alirajpur'],
-    'Odisha': ['Mayurbhanj', 'Keonjhar', 'Sundargarh', 'Kandhamal'],
-    'Tripura': ['West Tripura', 'South Tripura', 'North Tripura'],
-    'Telangana': ['Hyderabad', 'Adilabad', 'Warangal', 'Khammam']
+    'Madhya Pradesh': ['Khargone', 'Dhar', 'Jhabua', 'Alirajpur', 'Barwani', 'Dewas', 'Indore', 'Ujjain', 'Ratlam', 'Mandsaur', 'Neemuch', 'Shajapur', 'Rajgarh', 'Sehore', 'Bhopal', 'Raisen', 'Vidisha', 'Guna', 'Ashoknagar', 'Shivpuri', 'Gwalior', 'Datia', 'Sheopur', 'Morena', 'Bhind', 'Tikamgarh', 'Chhatarpur', 'Panna', 'Sagar', 'Damoh', 'Jabalpur', 'Katni', 'Umaria', 'Shahdol', 'Anuppur', 'Dindori', 'Mandla', 'Chhindwara', 'Seoni', 'Balaghat', 'Narsinghpur', 'Hoshangabad', 'Betul', 'Harda', 'Khandwa', 'Burhanpur', 'Satna', 'Rewa', 'Sidhi', 'Singrauli'],
+    'Odisha': ['Angul', 'Balangir', 'Balasore', 'Bargarh', 'Bhadrak', 'Boudh', 'Cuttack', 'Deogarh', 'Dhenkanal', 'Gajapati', 'Ganjam', 'Jagatsinghpur', 'Jajpur', 'Jharsuguda', 'Kalahandi', 'Kandhamal', 'Kendrapara', 'Kendujhar', 'Khordha', 'Koraput', 'Malkangiri', 'Mayurbhanj', 'Nabarangpur', 'Nayagarh', 'Nuapada', 'Puri', 'Rayagada', 'Sambalpur', 'Subarnapur', 'Sundargarh'],
+    'Tripura': ['Dhalai', 'Gomati', 'Khowai', 'North Tripura', 'Sepahijala', 'South Tripura', 'Unakoti', 'West Tripura'],
+    'Telangana': ['Adilabad', 'Bhadradri Kothagudem', 'Hyderabad', 'Jagtial', 'Jangaon', 'Jayashankar Bhupalpally', 'Jogulamba Gadwal', 'Kamareddy', 'Karimnagar', 'Khammam', 'Komaram Bheem Asifabad', 'Mahabubabad', 'Mahabubnagar', 'Mancherial', 'Medak', 'Medchal Malkajgiri', 'Mulugu', 'Nagarkurnool', 'Nalgonda', 'Narayanpet', 'Nirmal', 'Nizamabad', 'Peddapalli', 'Rajanna Sircilla', 'Rangareddy', 'Sangareddy', 'Siddipet', 'Suryapet', 'Vikarabad', 'Wanaparthy', 'Warangal Rural', 'Warangal Urban', 'Yadadri Bhuvanagiri']
   };
 
   const villages = {
-    'Khargone': ['Khargone Village', 'Tribal Settlement A', 'Forest Village B'],
-    'Mayurbhanj': ['Tribal Settlement', 'Forest Village C', 'Adivasi Gram'],
-    'West Tripura': ['Forest Village', 'Tribal Colony', 'Hill Village'],
-    'Hyderabad': ['Suburban Village', 'Tribal Area', 'Forest Settlement']
+    // Madhya Pradesh
+    'Khargone': ['Khargone City', 'Segaon', 'Julwania', 'Maheshwar', 'Kasrawad', 'Bhikangaon', 'Barwaha'],
+    'Dhar': ['Dhar City', 'Manawar', 'Kukshi', 'Sardarpur', 'Gandhwani', 'Badnawar', 'Dharampuri'],
+    'Jhabua': ['Jhabua City', 'Petlawad', 'Thandla', 'Jobat', 'Alirajpur', 'Katthiwara', 'Ranapur'],
+    'Alirajpur': ['Alirajpur City', 'Jobat', 'Sondwa', 'Udaygarh', 'Bhabra', 'Katthiwara'],
+    'Barwani': ['Barwani City', 'Sendhwa', 'Thikri', 'Pansemal', 'Rajpur', 'Warla'],
+    'Dewas': ['Dewas City', 'Bagli', 'Khategaon', 'Sonkatch', 'Kannod', 'Tonk Khurd'],
+    'Indore': ['Indore City', 'Depalpur', 'Mhow', 'Sanwer', 'Hatod', 'Gautampura'],
+    'Bhopal': ['Bhopal City', 'Berasia', 'Phanda', 'Huzur'],
+    'Jabalpur': ['Jabalpur City', 'Sihora', 'Patan', 'Majholi', 'Panagar', 'Shahpura'],
+    
+    // Odisha
+    'Mayurbhanj': ['Baripada', 'Rairangpur', 'Karanjia', 'Udala', 'Jashipur', 'Bangriposi', 'Bisoi'],
+    'Keonjhar': ['Keonjhar City', 'Champua', 'Barbil', 'Anandapur', 'Ghatgaon', 'Patna', 'Saharpada'],
+    'Sundargarh': ['Sundargarh City', 'Rourkela', 'Bonai', 'Koida', 'Lahunipara', 'Kutra'],
+    'Kandhamal': ['Phulbani', 'Baliguda', 'G.Udayagiri', 'Tikabali', 'Raikia', 'Tumudibandh'],
+    'Koraput': ['Koraput City', 'Jeypore', 'Kotpad', 'Kundra', 'Nandapur', 'Pottangi'],
+    'Kalahandi': ['Bhawanipatna', 'Dharamgarh', 'Junagarh', 'Kesinga', 'Lanjigarh', 'Narla'],
+    
+    // Tripura
+    'Dhalai': ['Ambassa', 'Kamalpur', 'Salema', 'Chhamanu', 'Dumburnagar', 'Gandacherra'],
+    'Gomati': ['Udaipur', 'Amarpur', 'Karbook', 'Silachari', 'Kakraban', 'Matabari'],
+    'Khowai': ['Khowai City', 'Teliamura', 'Kalyanpur', 'Padmabil', 'Tulashikhar'],
+    'North Tripura': ['Kailashahar', 'Kumarghat', 'Panisagar', 'Dharmanagar', 'Kanchanpur'],
+    'Sepahijala': ['Bishramganj', 'Melaghar', 'Sonamura', 'Boxanagar', 'Jampuijala'],
+    'South Tripura': ['Belonia', 'Santirbazar', 'Sabroom', 'Matarbari', 'Hrishyamukh'],
+    'Unakoti': ['Fatikroy', 'Kumarghat', 'Pecharthal', 'Chandipur'],
+    'West Tripura': ['Agartala', 'Mohanpur', 'Hezamara', 'Jirania', 'Mandwi', 'Dukli'],
+    
+    // Telangana
+    'Adilabad': ['Adilabad City', 'Boath', 'Jainoor', 'Kerameri', 'Tamsi', 'Utnoor', 'Wankidi'],
+    'Hyderabad': ['Hyderabad City', 'Secunderabad', 'Kukatpally', 'LB Nagar', 'Charminar'],
+    'Khammam': ['Khammam City', 'Kothagudem', 'Yellandu', 'Burgampahad', 'Sathupalli'],
+    'Warangal Rural': ['Narsampet', 'Duggondi', 'Shayampet', 'Geesugonda', 'Chennaraopet'],
+    'Warangal Urban': ['Warangal City', 'Hanamkonda', 'Kazipet', 'Elkathurthy'],
+    'Karimnagar': ['Karimnagar City', 'Choppadandi', 'Vemulawada', 'Huzurabad', 'Manakondur'],
+    'Nizamabad': ['Nizamabad City', 'Bodhan', 'Kamareddy', 'Banswada', 'Yellareddy']
   };
 
   const runAdvancedMapping = async () => {
@@ -278,6 +321,14 @@ const AdvancedSatelliteMapping: React.FC = () => {
                     setSelectedDistrict(e.target.value);
                     setSelectedVillage('');
                   }}
+                  MenuProps={{
+                    disablePortal: true,
+                    PaperProps: {
+                      style: {
+                        maxHeight: 300
+                      }
+                    }
+                  }}
                 >
                   {selectedState && districts[selectedState as keyof typeof districts]?.map((district) => (
                     <MenuItem key={district} value={district}>{district}</MenuItem>
@@ -292,6 +343,14 @@ const AdvancedSatelliteMapping: React.FC = () => {
                 <Select
                   value={selectedVillage}
                   onChange={(e) => setSelectedVillage(e.target.value)}
+                  MenuProps={{
+                    disablePortal: true,
+                    PaperProps: {
+                      style: {
+                        maxHeight: 300
+                      }
+                    }
+                  }}
                 >
                   {selectedDistrict && villages[selectedDistrict as keyof typeof villages]?.map((village) => (
                     <MenuItem key={village} value={village}>{village}</MenuItem>
@@ -388,110 +447,125 @@ const AdvancedSatelliteMapping: React.FC = () => {
 
       {results && (
         <>
-          {/* Spectral Indices */}
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Spectral Indices Analysis
-              </Typography>
-              
-              <Grid container spacing={2}>
-                {Object.entries(results.spectral_indices).slice(0, 5).map(([index, value]) => (
-                  <Grid item xs={12} sm={6} md={2.4} key={index}>
-                    <Card variant="outlined">
-                      <CardContent sx={{ textAlign: 'center', py: 2 }}>
-                        <Typography variant="body2" color="text.secondary">
-                          {index.toUpperCase().replace('_', ' ')}
-                        </Typography>
-                        <Chip
-                          label={typeof value === 'number' ? value.toFixed(3) : value}
-                          color={typeof value === 'number' ? getSpectralIndexColor(index, value) : 'default'}
-                          sx={{ mt: 1 }}
-                        />
-                      </CardContent>
-                    </Card>
+          {/* Toggle Button for Spectral Data */}
+          <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
+            <Button
+              variant="outlined"
+              onClick={() => setShowSpectralData(!showSpectralData)}
+              startIcon={showSpectralData ? <TrendingDown /> : <TrendingUp />}
+            >
+              {showSpectralData ? 'Hide' : 'Show'} Spectral Indices & ML Performance
+            </Button>
+          </Box>
+
+          {showSpectralData && (
+            <>
+              {/* Spectral Indices */}
+              <Card sx={{ mb: 3 }}>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Spectral Indices Analysis
+                  </Typography>
+                  
+                  <Grid container spacing={2}>
+                    {Object.entries(results.spectral_indices).slice(0, 5).map(([index, value]) => (
+                      <Grid item xs={12} sm={6} md={2.4} key={index}>
+                        <Card variant="outlined">
+                          <CardContent sx={{ textAlign: 'center', py: 2 }}>
+                            <Typography variant="body2" color="text.secondary">
+                              {index.toUpperCase().replace('_', ' ')}
+                            </Typography>
+                            <Chip
+                              label={typeof value === 'number' ? value.toFixed(3) : value}
+                              color={typeof value === 'number' ? getSpectralIndexColor(index, value) : 'default'}
+                              sx={{ mt: 1 }}
+                            />
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    ))}
                   </Grid>
-                ))}
-              </Grid>
 
-              <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                <Chip 
-                  label={`Vegetation Health: ${results.spectral_indices.vegetation_health}`}
-                  color={results.spectral_indices.vegetation_health === 'good' ? 'success' : 'warning'}
-                />
-                <Chip 
-                  label={`Water Stress: ${results.spectral_indices.water_stress}`}
-                  color={results.spectral_indices.water_stress === 'low' ? 'success' : 'error'}
-                />
-                <Chip 
-                  label={`Groundwater: ${results.spectral_indices.groundwater_potential}`}
-                  color={results.spectral_indices.groundwater_potential === 'high' ? 'success' : 'warning'}
-                />
-              </Box>
-            </CardContent>
-          </Card>
+                  <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    <Chip 
+                      label={`Vegetation Health: ${results.spectral_indices.vegetation_health}`}
+                      color={results.spectral_indices.vegetation_health === 'good' ? 'success' : 'warning'}
+                    />
+                    <Chip 
+                      label={`Water Stress: ${results.spectral_indices.water_stress}`}
+                      color={results.spectral_indices.water_stress === 'low' ? 'success' : 'error'}
+                    />
+                    <Chip 
+                      label={`Groundwater: ${results.spectral_indices.groundwater_potential}`}
+                      color={results.spectral_indices.groundwater_potential === 'high' ? 'success' : 'warning'}
+                    />
+                  </Box>
+                </CardContent>
+              </Card>
 
-          {/* ML Model Performance */}
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                🤖 ML Model Performance
-              </Typography>
-              
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={4}>
-                  <Card variant="outlined">
-                    <CardContent sx={{ textAlign: 'center' }}>
-                      <Typography variant="body2" color="text.secondary">Random Forest</Typography>
-                      <Chip
-                        label={`${(results.ml_models.random_forest_accuracy * 100).toFixed(1)}%`}
-                        color="success"
-                        sx={{ mt: 1 }}
-                      />
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <Card variant="outlined">
-                    <CardContent sx={{ textAlign: 'center' }}>
-                      <Typography variant="body2" color="text.secondary">CNN Accuracy</Typography>
-                      <Chip
-                        label={`${(results.ml_models.cnn_accuracy * 100).toFixed(1)}%`}
-                        color="success"
-                        sx={{ mt: 1 }}
-                      />
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <Card variant="outlined">
-                    <CardContent sx={{ textAlign: 'center' }}>
-                      <Typography variant="body2" color="text.secondary">Ensemble Confidence</Typography>
-                      <Chip
-                        label={`${(results.ml_models.ensemble_confidence * 100).toFixed(1)}%`}
-                        color="primary"
-                        sx={{ mt: 1 }}
-                      />
-                    </CardContent>
-                  </Card>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
+              {/* ML Model Performance */}
+              <Card sx={{ mb: 3 }}>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <SmartToy /> ML Model Performance
+                  </Typography>
+                  
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={4}>
+                      <Card variant="outlined">
+                        <CardContent sx={{ textAlign: 'center' }}>
+                          <Typography variant="body2" color="text.secondary">Random Forest</Typography>
+                          <Chip
+                            label={`${(results.ml_models.random_forest_accuracy * 100).toFixed(1)}%`}
+                            color="success"
+                            sx={{ mt: 1 }}
+                          />
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <Card variant="outlined">
+                        <CardContent sx={{ textAlign: 'center' }}>
+                          <Typography variant="body2" color="text.secondary">CNN Accuracy</Typography>
+                          <Chip
+                            label={`${(results.ml_models.cnn_accuracy * 100).toFixed(1)}%`}
+                            color="success"
+                            sx={{ mt: 1 }}
+                          />
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <Card variant="outlined">
+                        <CardContent sx={{ textAlign: 'center' }}>
+                          <Typography variant="body2" color="text.secondary">Ensemble Confidence</Typography>
+                          <Chip
+                            label={`${(results.ml_models.ensemble_confidence * 100).toFixed(1)}%`}
+                            color="primary"
+                            sx={{ mt: 1 }}
+                          />
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </>
+          )}
 
           {/* Infrastructure Data */}
           <Card sx={{ mb: 3 }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                🏗️ Infrastructure & Environmental Data
+              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Engineering /> Infrastructure & Environmental Data
               </Typography>
               
               <Grid container spacing={3}>
                 <Grid item xs={12} md={4}>
                   <Card variant="outlined">
                     <CardContent>
-                      <Typography variant="subtitle2" gutterBottom color="primary">
-                        🚀 PM Gati Shakti
+                      <Typography variant="subtitle2" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <TrendingUp /> PM Gati Shakti
                       </Typography>
                       <Typography variant="body2">Road: {results.infrastructure_data.pm_gati_shakti.road_connectivity}</Typography>
                       <Typography variant="body2">Digital: {results.infrastructure_data.pm_gati_shakti.digital_connectivity}</Typography>
@@ -503,8 +577,8 @@ const AdvancedSatelliteMapping: React.FC = () => {
                 <Grid item xs={12} md={4}>
                   <Card variant="outlined">
                     <CardContent>
-                      <Typography variant="subtitle2" gutterBottom color="primary">
-                        💧 Groundwater Data
+                      <Typography variant="subtitle2" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Opacity /> Groundwater Data
                       </Typography>
                       <Typography variant="body2">Depth: {results.infrastructure_data.groundwater.depth_to_water}m</Typography>
                       <Typography variant="body2">Quality: {results.infrastructure_data.groundwater.quality_index}/100</Typography>
@@ -516,8 +590,8 @@ const AdvancedSatelliteMapping: React.FC = () => {
                 <Grid item xs={12} md={4}>
                   <Card variant="outlined">
                     <CardContent>
-                      <Typography variant="subtitle2" gutterBottom color="primary">
-                        🌲 Forest Data
+                      <Typography variant="subtitle2" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <NaturePeople /> Forest Data
                       </Typography>
                       <Typography variant="body2">Type: {results.infrastructure_data.forest_data.forest_type}</Typography>
                       <Typography variant="body2">Canopy: {results.infrastructure_data.forest_data.canopy_cover_percent}%</Typography>
@@ -611,18 +685,18 @@ const AdvancedSatelliteMapping: React.FC = () => {
               {/* Asset Visualization Map */}
               <Card sx={{ mt: 3 }}>
                 <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    🗺️ Asset Visualization Map
+                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <LocationOn /> Asset Visualization Map
                   </Typography>
                   <AssetVisualizationMap villageData={results} />
                 </CardContent>
               </Card>
 
               <Box sx={{ mt: 3, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  🤖 ML Analysis Complete | 
-                  📊 Spectral Indices: NDVI, NDWI, MNDWI, NDBI, SAVI | 
-                  🎯 Confidence Filtering: {(confidenceThreshold * 100).toFixed(0)}%
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                  <SmartToy fontSize="small" /> ML Analysis Complete |
+                  <Assessment fontSize="small" /> Spectral Indices: NDVI, NDWI, MNDWI, NDBI, SAVI |
+                  <Search fontSize="small" /> Confidence Filtering: {(confidenceThreshold * 100).toFixed(0)}%
                 </Typography>
                 
                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -660,8 +734,8 @@ const AdvancedSatelliteMapping: React.FC = () => {
                       <Grid item xs={12} md={6}>
                         <Card variant="outlined">
                           <CardContent>
-                            <Typography variant="subtitle1" gutterBottom>
-                              🎯 FRA Eligibility Assessment
+                            <Typography variant="subtitle1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Search /> FRA Eligibility Assessment
                             </Typography>
                             <Chip 
                               label={`${dssResults.eligibility_score}% Eligible`}
@@ -679,8 +753,8 @@ const AdvancedSatelliteMapping: React.FC = () => {
                       <Grid item xs={12} md={6}>
                         <Card variant="outlined">
                           <CardContent>
-                            <Typography variant="subtitle1" gutterBottom>
-                              📊 Priority Ranking
+                            <Typography variant="subtitle1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Assessment /> Priority Ranking
                             </Typography>
                             <Chip 
                               label={`Priority: ${dssResults.priority_level}`}
@@ -698,8 +772,8 @@ const AdvancedSatelliteMapping: React.FC = () => {
                       <Grid item xs={12}>
                         <Card variant="outlined">
                           <CardContent>
-                            <Typography variant="subtitle1" gutterBottom>
-                              🎯 Central Sector Schemes for FRA Patta Holders
+                            <Typography variant="subtitle1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Business /> Central Sector Schemes for FRA Patta Holders
                             </Typography>
                             
                             <Box sx={{ mb: 2 }}>
@@ -759,8 +833,8 @@ const AdvancedSatelliteMapping: React.FC = () => {
                       <Grid item xs={12}>
                         <Card variant="outlined">
                           <CardContent>
-                            <Typography variant="subtitle1" gutterBottom>
-                              🏛️ Multi-Ministry Coordination Required
+                            <Typography variant="subtitle1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <AccountBalance /> Multi-Ministry Coordination Required
                             </Typography>
                             <Grid container spacing={2}>
                               {Object.entries(dssResults.ministry_coordination || {}).map(([ministry, schemes]: [string, any]) => (
@@ -792,8 +866,8 @@ const AdvancedSatelliteMapping: React.FC = () => {
                       <Grid item xs={12}>
                         <Card variant="outlined">
                           <CardContent>
-                            <Typography variant="subtitle1" gutterBottom>
-                              🔍 Asset-based Insights & Interventions
+                            <Typography variant="subtitle1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Search /> Asset-based Insights & Interventions
                             </Typography>
                             <Grid container spacing={2}>
                               {Object.entries(dssResults.asset_insights || {}).map(([assetType, insight]: [string, any]) => (

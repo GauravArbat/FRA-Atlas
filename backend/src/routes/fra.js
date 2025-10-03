@@ -248,6 +248,125 @@ router.get('/dss/eligibility', async (req, res) => {
   }
 });
 
+// State-wise DSS Analysis
+router.get('/dss/state-analysis', async (req, res) => {
+  try {
+    const { state } = req.query;
+    
+    const mockStateData = {
+      state,
+      analysis_type: 'All Schemes',
+      schemes_analyzed: ['PM-KISAN', 'PMKSY', 'MGNREGA', 'Jal Jeevan Mission', 'DAJGUA'],
+      eligibility: {
+        beneficiaries: [
+          { name: 'PM-KISAN Eligible', village: '8,500 beneficiaries', eligibilityScore: 0.85 },
+          { name: 'MGNREGA Eligible', village: '12,200 beneficiaries', eligibilityScore: 0.92 },
+          { name: 'Jal Jeevan Mission', village: '6,800 beneficiaries', eligibilityScore: 0.78 },
+          { name: 'DAJGUA Eligible', village: '4,200 beneficiaries', eligibilityScore: 0.68 },
+          { name: 'PMKSY Eligible', village: '3,100 beneficiaries', eligibilityScore: 0.74 }
+        ]
+      },
+      priorities: {
+        recommendations: [
+          { block: 'MGNREGA Priority', priorityScore: 0.92, groundwaterIndex: 'High Employment Need' },
+          { block: 'PM-KISAN Priority', priorityScore: 0.85, groundwaterIndex: 'Agricultural Focus' },
+          { block: 'Jal Jeevan Priority', priorityScore: 0.78, groundwaterIndex: 'Water Security' },
+          { block: 'DAJGUA Priority', priorityScore: 0.68, groundwaterIndex: 'Tribal Development' }
+        ]
+      },
+      metrics: {
+        coveragePct: 75,
+        beneficiaries: 34800,
+        fundedProjects: 1240,
+        total_schemes: 5,
+        active_schemes: 5
+      }
+    };
+    
+    res.json(mockStateData);
+  } catch (error) {
+    res.status(500).json({ error: 'State analysis failed' });
+  }
+});
+
+// District-wise DSS Analysis
+router.get('/dss/district-analysis', async (req, res) => {
+  try {
+    const { state, district } = req.query;
+    
+    const mockDistrictData = {
+      state,
+      district,
+      analysis_type: 'All Schemes',
+      schemes_analyzed: ['PM-KISAN', 'PMKSY', 'MGNREGA', 'Jal Jeevan Mission', 'DAJGUA'],
+      eligibility: {
+        beneficiaries: [
+          { name: 'PM-KISAN Eligible', village: '1,200 beneficiaries', eligibilityScore: 0.88 },
+          { name: 'MGNREGA Eligible', village: '1,850 beneficiaries', eligibilityScore: 0.94 },
+          { name: 'Jal Jeevan Mission', village: '980 beneficiaries', eligibilityScore: 0.82 },
+          { name: 'DAJGUA Eligible', village: '650 beneficiaries', eligibilityScore: 0.76 },
+          { name: 'PMKSY Eligible', village: '420 beneficiaries', eligibilityScore: 0.71 }
+        ]
+      },
+      priorities: {
+        recommendations: [
+          { block: 'MGNREGA Priority', priorityScore: 0.94, groundwaterIndex: 'High Employment' },
+          { block: 'PM-KISAN Priority', priorityScore: 0.88, groundwaterIndex: 'Agricultural Support' },
+          { block: 'Jal Jeevan Priority', priorityScore: 0.82, groundwaterIndex: 'Water Access' },
+          { block: 'DAJGUA Priority', priorityScore: 0.76, groundwaterIndex: 'Tribal Welfare' }
+        ]
+      },
+      metrics: {
+        coveragePct: 68,
+        beneficiaries: 5100,
+        fundedProjects: 185,
+        total_schemes: 5,
+        active_schemes: 5
+      }
+    };
+    
+    res.json(mockDistrictData);
+  } catch (error) {
+    res.status(500).json({ error: 'District analysis failed' });
+  }
+});
+
+// Patta Holders DSS Analysis
+router.get('/dss/patta-analysis', async (req, res) => {
+  try {
+    const { state, district, village } = req.query;
+    
+    const mockPattaData = {
+      state,
+      district,
+      village,
+      eligibility: {
+        beneficiaries: [
+          { name: 'Ram Singh', village: 'Patta Holder 1', eligibilityScore: 0.92 },
+          { name: 'Sita Devi', village: 'Patta Holder 2', eligibilityScore: 0.84 },
+          { name: 'Mohan Lal', village: 'Patta Holder 3', eligibilityScore: 0.79 }
+        ]
+      },
+      priorities: {
+        recommendations: [
+          { block: 'Individual Rights', priorityScore: 0.91, groundwaterIndex: 'High' },
+          { block: 'Community Rights', priorityScore: 0.83, groundwaterIndex: 'Medium' },
+          { block: 'Development Rights', priorityScore: 0.76, groundwaterIndex: 'Medium' }
+        ]
+      },
+      metrics: {
+        coveragePct: 82,
+        beneficiaries: 156,
+        fundedProjects: 12
+      }
+    };
+    
+    res.json(mockPattaData);
+  } catch (error) {
+    res.status(500).json({ error: 'Patta analysis failed' });
+  }
+});
+
 router.get('/dss/prioritize', async (req, res) => {
   try {
     const { intervention = 'borewell', state = 'Madhya Pradesh', district = 'Balaghat' } = req.query;

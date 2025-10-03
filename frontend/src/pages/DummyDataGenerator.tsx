@@ -26,7 +26,18 @@ import {
   AutoFixHigh,
   Visibility,
   Person,
-  LocationOn
+  LocationOn,
+  Home,
+  Assignment,
+  Map,
+  DataUsage,
+  Terrain,
+  Place,
+  Straighten,
+  CheckCircle,
+  Info,
+  History,
+  MyLocation
 } from '@mui/icons-material';
 import L from 'leaflet';
 import { usePageTranslation } from '../hooks/usePageTranslation';
@@ -126,7 +137,7 @@ const locationMapping = {
 type PattaHolder = PattaHolderType;
 
 const DummyDataGenerator: React.FC = () => {
-  usePageTranslation();
+  // usePageTranslation(); // Translation disabled
   
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -311,42 +322,39 @@ const DummyDataGenerator: React.FC = () => {
     }
   };
 
-  // Save patta holder data
+  // Save patta holder data to both localStorage and backend
   const savePattaHolder = async () => {
     if (!generatedData) return;
 
     setLoading(true);
     try {
-      // Save to backend API
-      const response = await pattaHoldersAPI.create(generatedData);
-      
-      if (response.success) {
-        const newRecord = response.data;
-        const updatedRecords = [...savedRecords, newRecord];
-        setSavedRecords(updatedRecords);
-        
-        // Also save to localStorage as backup
-        localStorage.setItem('pattaHolders', JSON.stringify(updatedRecords));
+      // Save to localStorage first
+      const updatedRecords = [...savedRecords, generatedData];
+      setSavedRecords(updatedRecords);
+      localStorage.setItem('pattaHolders', JSON.stringify(updatedRecords));
 
-        setSuccess(`Patta holder data saved successfully! Owner: ${generatedData.ownerName}`);
-        setShowSaveDialog(false);
-        setGeneratedData(null);
-        
-        // Clear the drawn polygon
-        if (drawnItemsRef.current) {
-          drawnItemsRef.current.clearLayers();
-        }
-        
-        // Reload existing plots to show the new one
-        setTimeout(() => {
-          loadExistingPlotsOnMap();
-        }, 500);
-      } else {
-        throw new Error(response.message || 'Failed to save data');
+      // Also save to backend API for persistence
+      try {
+        await pattaHoldersAPI.create(generatedData);
+        console.log('✅ Data saved to backend successfully');
+      } catch (apiError: any) {
+        console.warn('⚠️ Backend save failed, data saved locally only:', apiError.message);
       }
+
+      setSuccess(`Patta holder data saved! Owner: ${generatedData.ownerName}`);
+      setShowSaveDialog(false);
+      setGeneratedData(null);
+      
+      if (drawnItemsRef.current) {
+        drawnItemsRef.current.clearLayers();
+      }
+      
+      setTimeout(() => {
+        loadExistingPlotsOnMap();
+      }, 500);
+      
     } catch (error: any) {
-      console.error('Error saving patta holder:', error);
-      setError(error.response?.data?.message || 'Failed to save patta holder data');
+      setError('Failed to save patta holder data');
     } finally {
       setLoading(false);
     }
@@ -387,77 +395,55 @@ const DummyDataGenerator: React.FC = () => {
     }
   };
 
-  // Load existing plots on map
-  const loadExistingPlotsOnMap = async () => {
-    try {
-      const response = await pattaHoldersAPI.getGeoJSON();
-      if (response.success && response.data && mapRef.current) {
-        const geojson = response.data;
-        
-        geojson.features.forEach((feature: any) => {
-          const props = feature.properties;
-          
-          let coordinates: [number, number][];
-          if (feature.geometry.type === 'Polygon') {
-            coordinates = feature.geometry.coordinates[0].map((coord: [number, number]) => [coord[1], coord[0]]);
-          } else if (feature.geometry.type === 'Point') {
-            const [lng, lat] = feature.geometry.coordinates;
-            const offset = 0.001;
-            coordinates = [
-              [lat - offset, lng - offset],
-              [lat - offset, lng + offset],
-              [lat + offset, lng + offset],
-              [lat + offset, lng - offset]
-            ];
-          } else {
-            return;
+  // Load existing plots from localStorage
+  const loadExistingPlotsOnMap = () => {
+    if (!mapRef.current) return;
+    
+    const saved = localStorage.getItem('pattaHolders');
+    if (saved) {
+      try {
+        const records = JSON.parse(saved);
+        records.forEach((record: PattaHolder) => {
+          if (record.coordinates && record.coordinates.length > 0) {
+            const coordinates: [number, number][] = record.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
+            
+            const polygon = L.polygon(coordinates, {
+              color: '#e91e63',
+              fillColor: '#f8bbd9',
+              fillOpacity: 0.3,
+              weight: 2,
+              dashArray: '5,5'
+            });
+
+            const popupContent = `
+              <div style="min-width: 200px;">
+                <h4>${record.ownerName}</h4>
+                <p><strong>Village:</strong> ${record.address.village}</p>
+                <p><strong>District:</strong> ${record.address.district}</p>
+                <p><strong>Area:</strong> ${record.landDetails.area.hectares.toFixed(2)} hectares</p>
+                <p><strong>Status:</strong> ${record.landDetails.fraStatus}</p>
+              </div>
+            `;
+
+            polygon.bindPopup(popupContent);
+            polygon.addTo(mapRef.current!);
           }
-
-          const polygon = L.polygon(coordinates, {
-            color: '#e91e63',
-            fillColor: '#f8bbd9',
-            fillOpacity: 0.3,
-            weight: 2,
-            dashArray: '5,5'
-          });
-
-          const popupContent = `
-            <div style="min-width: 200px;">
-              <h4>🏠 ${props.ownerName}</h4>
-              <p><strong>Village:</strong> ${props.village}</p>
-              <p><strong>District:</strong> ${props.district}</p>
-              <p><strong>Area:</strong> ${props.area} hectares</p>
-              <p><strong>Status:</strong> ${props.fraStatus}</p>
-              <p style="color: #e91e63; font-size: 12px;"><strong>Existing Plot</strong></p>
-            </div>
-          `;
-
-          polygon.bindPopup(popupContent);
-          polygon.addTo(mapRef.current!);
         });
+      } catch (error) {
+        console.warn('Failed to load existing plots:', error);
       }
-    } catch (error) {
-      console.warn('Failed to load existing plots:', error);
     }
   };
 
-  // Load saved records on component mount
+  // Load saved records from localStorage only
   useEffect(() => {
-    const loadRecords = async () => {
-      try {
-        // Try to load from API first
-        const response = await pattaHoldersAPI.getAll();
-        if (response.success && response.data) {
-          setSavedRecords(response.data);
-          // Update localStorage with latest data
-          localStorage.setItem('pattaHolders', JSON.stringify(response.data));
-        }
-      } catch (error) {
-        console.warn('Failed to load from API, using localStorage:', error);
-        // Fallback to localStorage
-        const saved = localStorage.getItem('pattaHolders');
-        if (saved) {
+    const loadRecords = () => {
+      const saved = localStorage.getItem('pattaHolders');
+      if (saved) {
+        try {
           setSavedRecords(JSON.parse(saved));
+        } catch (error) {
+          setSavedRecords([]);
         }
       }
     };
@@ -465,55 +451,66 @@ const DummyDataGenerator: React.FC = () => {
     loadRecords();
   }, []);
 
+
+
+  // Load saved records on component mount
+  useEffect(() => {
+    const saved = localStorage.getItem('pattaHolders');
+    if (saved) {
+      try {
+        setSavedRecords(JSON.parse(saved));
+      } catch (error) {
+        setSavedRecords([]);
+      }
+    }
+  }, []);
+
   return (
-    <Box 
-      sx={{ 
-        display: 'flex', 
-        height: 'calc(100vh - 104px)', 
-        bgcolor: 'background.default',
-        position: 'relative',
-        left: '260px',
-        width: 'calc(100vw - 260px)'
-      }}
-    >
-      {/* Controls Sidebar */}
-      <Box
-        sx={{
-          width: 400,
-          flexShrink: 0,
-          bgcolor: 'background.paper',
-          borderRight: (theme) => `1px solid ${theme.palette.divider}`,
-          height: '100%',
-          overflow: 'auto',
-          p: 2
-        }}
-      >
-        <Typography variant="h6" gutterBottom color="text.primary">
-          <span data-translate>Dummy Patta Data Generator</span>
+    <Box sx={{ 
+      marginLeft: '2px',
+      height: 'calc(100vh - 56px)',
+      display: 'flex',
+      bgcolor: '#f7f7f7'
+    }}>
+      {/* Left Sidebar - Controls */}
+      <Box sx={{
+        width: 350,
+        flexShrink: 0,
+        bgcolor: 'background.paper',
+        borderRight: 1,
+        borderColor: 'divider',
+        height: '100%',
+        overflow: 'auto',
+        p: 2
+      }}>
+        <Typography variant="h5" gutterBottom sx={{ color: 'primary.main', fontWeight: 600, mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Home /> Dummy Data Generator
         </Typography>
 
-        <Card sx={{ mb: 2 }}>
+        <Card sx={{ mb: 2, bgcolor: 'primary.50' }}>
           <CardContent>
-            <Typography variant="subtitle2" gutterBottom>
-              <span data-translate>Instructions</span>
+            <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Assignment /> Instructions
             </Typography>
             <Divider sx={{ mb: 2 }} />
-            <Typography variant="body2" color="text.secondary" paragraph>
-              1. Draw a polygon on the map to define the land boundary
-            </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              2. System will auto-generate Indian names and land details
-            </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              3. Review and save the generated patta holder data
-            </Typography>
+            <Stack spacing={1}>
+              <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Terrain color="primary" /> Draw a polygon on the map
+              </Typography>
+              <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <AutoFixHigh color="primary" /> Auto-generate Indian names & land details
+              </Typography>
+              <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Save color="primary" /> Review and save the data
+              </Typography>
+            </Stack>
           </CardContent>
         </Card>
 
         <Card sx={{ mb: 2 }}>
           <CardContent>
-            <Typography variant="subtitle2" gutterBottom>
-              <span data-translate>Statistics</span>
+            <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <DataUsage /> <span data-translate>Statistics</span>
             </Typography>
             <Divider sx={{ mb: 2 }} />
             <Grid container spacing={1}>
@@ -539,35 +536,38 @@ const DummyDataGenerator: React.FC = () => {
 
         {/* Recent Records */}
         {savedRecords.length > 0 && (
-          <Card>
+          <Card sx={{ bgcolor: 'info.50' }}>
             <CardContent>
-              <Typography variant="subtitle2" gutterBottom>
-                <span data-translate>Recent Records</span>
+              <Typography variant="h6" gutterBottom sx={{ color: 'info.main', display: 'flex', alignItems: 'center', gap: 1 }}>
+                <History /> Recent Records ({savedRecords.length})
               </Typography>
               <Divider sx={{ mb: 2 }} />
               <Stack spacing={1} sx={{ maxHeight: 300, overflow: 'auto' }}>
-                {savedRecords.slice(-5).reverse().map((record) => (
-                  <Box key={record.id} sx={{ p: 1, bgcolor: 'action.hover', borderRadius: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Box>
-                      <Typography variant="body2" fontWeight="bold">
-                        {record.ownerName}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {record.address.village}, {record.address.district}
-                      </Typography>
-                      <Typography variant="caption" display="block">
-                        {record.landDetails.area.hectares.toFixed(2)} hectares
-                      </Typography>
+                {savedRecords.slice(-5).reverse().map((record, index) => (
+                  <Card key={record.id || `record-${index}`} variant="outlined" sx={{ p: 1.5 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="subtitle2" fontWeight="bold" sx={{ color: 'primary.main', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Home fontSize="small" /> {record.ownerName}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" display="block" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Place fontSize="small" /> {record.address?.village || 'N/A'}, {record.address?.district || 'N/A'}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'success.main', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Straighten fontSize="small" /> {typeof record.landDetails?.area?.hectares === 'number' ? record.landDetails.area.hectares.toFixed(2) : '0'} hectares
+                        </Typography>
+                      </Box>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        onClick={() => focusOnPlot(record)}
+                        sx={{ minWidth: 60 }}
+                        startIcon={<MyLocation />}
+                      >
+                        Focus
+                      </Button>
                     </Box>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={() => focusOnPlot(record)}
-                      sx={{ minWidth: 'auto', px: 1 }}
-                    >
-                      Focus
-                    </Button>
-                  </Box>
+                  </Card>
                 ))}
               </Stack>
             </CardContent>
@@ -576,7 +576,30 @@ const DummyDataGenerator: React.FC = () => {
       </Box>
 
       {/* Map Container */}
-      <Box sx={{ flex: 1, position: 'relative' }}>
+      <Box sx={{ flex: 1, position: 'relative', bgcolor: 'grey.100' }}>
+        {/* Map Header */}
+        <Box sx={{ 
+          position: 'absolute', 
+          top: 16, 
+          left: 16, 
+          right: 16, 
+          zIndex: 1000,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <Card sx={{ px: 2, py: 1, bgcolor: 'rgba(255,255,255,0.9)' }}>
+            <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Map /> Interactive Map
+            </Typography>
+          </Card>
+          <Card sx={{ px: 2, py: 1, bgcolor: 'rgba(255,255,255,0.9)' }}>
+            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Terrain /> Draw polygons to generate data
+            </Typography>
+          </Card>
+        </Box>
+        
         <Box
           ref={containerRef}
           sx={{

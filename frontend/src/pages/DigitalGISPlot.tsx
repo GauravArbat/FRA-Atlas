@@ -214,7 +214,18 @@ const DigitalGISPlot: React.FC = () => {
             });
           }
         });
-        gj.bindPopup(`<strong>${layer.name}</strong>`);
+        const layerPopup = `
+          <div>
+            <div class="popup-section">
+              <h5>Layer Details</h5>
+              <table class="popup-table">
+                <tr><td>Name</td><td>${layer.name}</td></tr>
+                <tr><td>Type</td><td>Uploaded Layer</td></tr>
+              </table>
+            </div>
+          </div>
+        `;
+        gj.bindPopup(layerPopup, { className: 'custom-popup' });
         gj.addTo(uploadedLayersRef.current as L.LayerGroup);
         try { (gj as any).eachLayer?.((l: any) => l.bringToFront && l.bringToFront()); } catch {}
       });
@@ -274,7 +285,22 @@ const DigitalGISPlot: React.FC = () => {
           area += (coords[i][0] * coords[i + 1][1] - coords[i + 1][0] * coords[i][1]);
         }
         area = Math.abs(area) / 2;
-        setCalculatedArea(area * 111320 * 111320); // Rough conversion to square meters
+        setCalculatedArea(area * 111320 * 111320);
+        
+        // Create popup for drawn polygon
+        const areaPopup = `
+          <div>
+            <div class="popup-section">
+              <h5>Area Details</h5>
+              <table class="popup-table">
+                <tr><td>Name</td><td>Drawn Area</td></tr>
+                <tr><td>Area</td><td>${(area * 111320 * 111320 / 10000).toFixed(2)} hectares</td></tr>
+                <tr><td>Type</td><td>User Drawn</td></tr>
+              </table>
+            </div>
+          </div>
+        `;
+        layer.bindPopup(areaPopup, { className: 'custom-popup' });
         
         setShowAreaDialog(true);
       }

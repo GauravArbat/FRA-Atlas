@@ -33,6 +33,7 @@ const bhunakshaRoutes = require('./routes/bhunaksha');
 const translateRoutes = require('./routes/translate');
 const voiceRoutes = require('./routes/voice');
 const pattaHoldersRoutes = require('./routes/patta-holders');
+const adminRoutes = require('./routes/admin');
 
 const { errorHandler } = require('./middleware/errorHandler');
 const { authenticateToken, authorize } = require('./middleware/auth');
@@ -101,6 +102,7 @@ app.use('/api/bhunaksha', bhunakshaRoutes); // Bhunaksha-style land records
 app.use('/api/translate', translateRoutes); // Google Translate API
 app.use('/api/voice', voiceRoutes); // Voice Assistant API
 app.use('/api/patta-holders', pattaHoldersRoutes); // Patta holders management
+app.use('/api/admin', adminRoutes); // Admin management
 
 // Error handling middleware
 app.use(errorHandler);

@@ -34,6 +34,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import LanguageSwitcher from '../LanguageSwitcher';
 import { ThemeToggle } from '../ThemeToggle';
 import { usePageTranslation } from '../../hooks/usePageTranslation';
+import NotificationDropdown from '../NotificationDropdown';
 
 const Header: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -103,29 +104,8 @@ const Header: React.FC = () => {
             <ThemeToggle size="small" variant="contained" />
             <LanguageSwitcher />
             
-            {/* Notifications */}
-            <Tooltip title="Notifications" placement="bottom">
-              <IconButton 
-                onClick={() => navigate('/notifications')}
-                sx={{
-                  color: '#ffffff',
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: '8px',
-                  padding: '6px',
-                  minWidth: '36px',
-                  height: '36px',
-                  transition: 'all 0.2s ease',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                    transform: 'scale(1.05)'
-                  }
-                }}
-              >
-                <Badge badgeContent={3} color="error">
-                  <Notifications sx={{ fontSize: 20 }} />
-                </Badge>
-              </IconButton>
-            </Tooltip>
+            {/* Notifications Dropdown */}
+            <NotificationDropdown />
             
             {/* Admin Profile */}
             <Tooltip title={`${user?.username || 'Admin'} Profile`} placement="bottom">

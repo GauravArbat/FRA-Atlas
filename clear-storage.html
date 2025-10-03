@@ -1,22 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Clear Storage</title>
+    <title>Clear FRA Storage</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        .container { max-width: 400px; margin: 0 auto; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
 </head>
 <body>
-    <h1>Clear Browser Storage</h1>
-    <button onclick="clearStorage()">Clear All Storage</button>
-    <p id="result"></p>
+    <div class="container">
+        <h2>FRA Atlas - Clear Storage</h2>
+        <p>Click the button below to clear localStorage and fix React errors:</p>
+        <button onclick="clearStorage()">Clear Storage & Fix Errors</button>
+        <div id="message"></div>
+    </div>
     
     <script>
         function clearStorage() {
-            localStorage.clear();
-            sessionStorage.clear();
-            document.getElementById('result').innerHTML = 'Storage cleared! You can now refresh your app.';
+            try {
+                // Clear translation-related storage
+                localStorage.removeItem('translationDisabled');
+                localStorage.removeItem('selectedLanguage');
+                
+                // Clear any cached translations
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('translate_')) {
+                        localStorage.removeItem(key);
+                    }
+                });
+                
+                document.getElementById('message').innerHTML = 
+                    '<p class="success">✅ Storage cleared successfully!<br>You can now reload your FRA application.</p>';
+                    
+            } catch (error) {
+                document.getElementById('message').innerHTML = 
+                    '<p class="error">❌ Error clearing storage: ' + error.message + '</p>';
+            }
         }
         
-        // Auto-clear on load
-        clearStorage();
+        // Auto-clear on page load
+        window.onload = function() {
+            clearStorage();
+        };
     </script>
 </body>
 </html>

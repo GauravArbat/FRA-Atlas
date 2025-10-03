@@ -14,6 +14,14 @@ router.post('/translate', async (req, res) => {
       return res.status(400).json({ error: 'Text and target language are required' });
     }
 
+    // Check if translation is disabled or API key is missing
+    if (process.env.DISABLE_TRANSLATION === 'true' || !GOOGLE_TRANSLATE_API_KEY) {
+      return res.json({
+        translatedText: text,
+        detectedSourceLanguage: source || 'en'
+      });
+    }
+
     const params = {
       q: text,
       target: target,
@@ -24,7 +32,10 @@ router.post('/translate', async (req, res) => {
       params.source = source;
     }
 
-    const response = await axios.post(GOOGLE_TRANSLATE_URL, null, { params });
+    const response = await axios.post(GOOGLE_TRANSLATE_URL, null, { 
+      params,
+      timeout: 5000 // 5 second timeout
+    });
     
     const translation = response.data.data.translations[0];
     res.json({
@@ -32,8 +43,12 @@ router.post('/translate', async (req, res) => {
       detectedSourceLanguage: translation.detectedSourceLanguage,
     });
   } catch (error) {
-    console.error('Translation error:', error);
-    res.status(500).json({ error: 'Translation failed' });
+    console.error('Translation error:', error.message);
+    // Return original text instead of error
+    res.json({
+      translatedText: req.body.text,
+      detectedSourceLanguage: req.body.source || 'en'
+    });
   }
 });
 

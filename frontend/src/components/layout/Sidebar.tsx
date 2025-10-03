@@ -67,17 +67,18 @@ const Sidebar: React.FC = () => {
           items: [
             { text: 'Dashboard', icon: <Dashboard />, path: '/' },
             { text: 'FRA Atlas', icon: <Map />, path: '/atlas' },
-            { text: 'Digital GIS Plot', icon: <LocationOn />, path: '/gis-plot' },
+            // { text: 'Digital GIS Plot', icon: <LocationOn />, path: '/gis-plot' },
             { text: 'Dummy Data Generator', icon: <Assignment />, path: '/dummy-data' },
             { text: 'Data Management', icon: <Storage />, path: '/data' },
-            { text: 'Decision Support', icon: <Assessment />, path: '/decisions' },
-            { text: 'Satellite Asset Mapping', icon: <Map />, path: '/satellite-mapping' },
-            { text: 'Advanced ML Mapping', icon: <Psychology />, path: '/advanced-mapping' },
-            { text: 'Real-time Satellite', icon: <Satellite />, path: '/realtime-satellite' },
-            { text: 'AI Analysis', icon: <Analytics />, path: '/ai-analysis' },
+            // { text: 'Decision Support', icon: <Assessment />, path: '/decisions' },
+            { text: 'Satellite Asset Mapping', icon: <Map />, path: '/advanced-mapping' },
+            // { text: 'Advanced ML Mapping', icon: <Psychology />, path: '/advanced-mapping' },
+            // { text: 'Real-time Satellite', icon: <Satellite />, path: '/realtime-satellite' },
+            
             { text: 'Decision Support', icon: <Assessment />, path: '/dss-analysis' },
             { text: 'Reports & Analytics', icon: <BarChart />, path: '/reports' },
-            { text: 'User Settings', icon: <Settings />, path: '/settings' }
+            { text: 'User Settings', icon: <Settings />, path: '/settings' },
+            { text: 'AI Analysis', icon: <Analytics />, path: '/ai-analysis' }
           ]
         }
       ],
@@ -301,7 +302,7 @@ const Sidebar: React.FC = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, p: 1, borderRadius: '6px', '&:hover': { bgcolor: 'rgba(46, 125, 50, 0.05)' } }}>
               <Update sx={{ fontSize: 18, mr: 1.5, color: '#2e7d32' }} />
               <Typography variant="body2" sx={{ fontSize: '0.8rem', color: 'text.secondary' }} data-translate>
-                <strong style={{ color: 'inherit' }}>Last Updated:</strong> 15 Nov 2024
+                <strong style={{ color: 'inherit' }}>Last Updated:</strong> 10 Otc 2025
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', p: 1, borderRadius: '6px', '&:hover': { bgcolor: 'rgba(46, 125, 50, 0.05)' } }}>

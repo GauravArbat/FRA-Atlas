@@ -54,7 +54,7 @@ const AIAnalysis: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await api.get('/api/dss/dashboard');
+      const response = await api.get('/dss/dashboard');
       setDashboardData(response.data);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to fetch dashboard data');

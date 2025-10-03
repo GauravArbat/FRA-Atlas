@@ -31,39 +31,14 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     setCurrentLanguage(savedLanguage);
   }, []);
 
-  // Auto-translate when language changes or new content loads
+  // Auto-translate when language changes
   useEffect(() => {
     if (currentLanguage !== 'en') {
       const timer = setTimeout(() => {
         translatePageContent(currentLanguage);
-      }, 500); // Increased delay for DOM to be ready
+      }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [currentLanguage]);
-
-  // Listen for force translation events and route changes
-  useEffect(() => {
-    const handleForceTranslation = (event: CustomEvent) => {
-      const { language } = event.detail;
-      if (language && language !== 'en') {
-        setTimeout(() => translatePageContent(language), 200);
-      }
-    };
-
-    // Also listen for route changes
-    const handleRouteChange = () => {
-      if (currentLanguage !== 'en') {
-        setTimeout(() => translatePageContent(currentLanguage), 800);
-      }
-    };
-
-    document.addEventListener('forceTranslation', handleForceTranslation as EventListener);
-    window.addEventListener('popstate', handleRouteChange);
-    
-    return () => {
-      document.removeEventListener('forceTranslation', handleForceTranslation as EventListener);
-      window.removeEventListener('popstate', handleRouteChange);
-    };
   }, [currentLanguage]);
 
   // Watch for DOM changes and auto-translate new content
@@ -94,25 +69,17 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         subtree: true
       });
       
-      // Also observe Material-UI portal containers
-      const portalContainers = document.querySelectorAll('.MuiDrawer-root, .MuiDialog-root, .MuiPopover-root');
-      portalContainers.forEach(container => {
-        mutationObserver.observe(container, {
-          childList: true,
-          subtree: true
-        });
-      });
-      
       setObserver(mutationObserver);
       
       return () => {
         mutationObserver.disconnect();
+        setObserver(null);
       };
     } else if (observer) {
       observer.disconnect();
       setObserver(null);
     }
-  }, [currentLanguage, observer]);
+  }, [currentLanguage]); // Removed observer from dependencies to prevent infinite loop
 
   const setLanguage = async (language: string) => {
     setCurrentLanguage(language);
@@ -132,6 +99,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       const originalText = element.getAttribute('data-original-text');
       if (originalText) {
         element.textContent = originalText;
+        element.removeAttribute('data-translating');
       }
     });
   };
@@ -145,24 +113,40 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       const portalElements = document.querySelectorAll('.MuiDrawer-root [data-translate], .MuiDialog-root [data-translate], .MuiPopover-root [data-translate]');
       const allElements = [...Array.from(textElements), ...Array.from(portalElements)];
       
-      for (const element of allElements) {
-        // Always use current text content as original if not stored
+      // Batch translate for better performance
+      const textsToTranslate: { element: Element; text: string }[] = [];
+      
+      allElements.forEach(element => {
         let originalText = element.getAttribute('data-original-text');
         if (!originalText) {
-          originalText = element.textContent || '';
-          if (originalText.trim()) {
+          originalText = element.textContent?.trim() || '';
+          if (originalText) {
             element.setAttribute('data-original-text', originalText);
           }
         }
         
-        if (originalText && originalText.trim()) {
-          try {
-            const { translatedText } = await translateText(originalText, targetLanguage, 'en');
-            element.textContent = translatedText;
-          } catch (error) {
-            console.warn(`Failed to translate: ${originalText}`);
-          }
+        if (originalText && originalText.length > 0 && !element.hasAttribute('data-translating')) {
+          element.setAttribute('data-translating', 'true');
+          textsToTranslate.push({ element, text: originalText });
         }
+      });
+      
+      // Process in parallel batches of 10 for faster translation
+      const batchSize = 10;
+      for (let i = 0; i < textsToTranslate.length; i += batchSize) {
+        const batch = textsToTranslate.slice(i, i + batchSize);
+        await Promise.all(batch.map(async ({ element, text }) => {
+          try {
+            const { translatedText } = await translateText(text, targetLanguage, 'en');
+            if (translatedText && translatedText !== text) {
+              element.textContent = translatedText;
+            }
+          } catch (error) {
+            console.warn(`Failed to translate: ${text}`);
+          } finally {
+            element.removeAttribute('data-translating');
+          }
+        }));
       }
     } catch (error) {
       console.error('Page translation failed:', error);

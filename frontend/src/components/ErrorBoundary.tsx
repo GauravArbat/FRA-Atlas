@@ -22,6 +22,13 @@ class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    
+    // Handle infinite loop errors
+    if (error.message.includes('Maximum update depth exceeded')) {
+      console.warn('Detected infinite loop error - clearing localStorage and reloading');
+      localStorage.removeItem('translationDisabled');
+      localStorage.removeItem('selectedLanguage');
+    }
   }
 
   private handleReload = () => {

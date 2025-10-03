@@ -309,6 +309,113 @@ router.post('/analyze-assets', authenticateToken, async (req, res) => {
   }
 });
 
+// State-wise DSS Analysis
+router.get('/state-analysis', authenticateToken, async (req, res) => {
+  try {
+    const { state, scheme } = req.query;
+    
+    const mockStateData = {
+      state,
+      scheme,
+      eligibility: {
+        beneficiaries: [
+          { name: 'District A', village: 'Village 1', eligibilityScore: 0.85 },
+          { name: 'District B', village: 'Village 2', eligibilityScore: 0.72 },
+          { name: 'District C', village: 'Village 3', eligibilityScore: 0.68 }
+        ]
+      },
+      priorities: {
+        recommendations: [
+          { block: 'Block A', priorityScore: 0.92, groundwaterIndex: 'High' },
+          { block: 'Block B', priorityScore: 0.78, groundwaterIndex: 'Medium' },
+          { block: 'Block C', priorityScore: 0.65, groundwaterIndex: 'Low' }
+        ]
+      },
+      metrics: {
+        coveragePct: 75,
+        beneficiaries: 12500,
+        fundedProjects: 340
+      }
+    };
+    
+    res.json(mockStateData);
+  } catch (error) {
+    res.status(500).json({ error: 'State analysis failed' });
+  }
+});
+
+// District-wise DSS Analysis
+router.get('/district-analysis', authenticateToken, async (req, res) => {
+  try {
+    const { state, district, scheme } = req.query;
+    
+    const mockDistrictData = {
+      state,
+      district,
+      scheme,
+      eligibility: {
+        beneficiaries: [
+          { name: 'Village A', village: 'Block 1', eligibilityScore: 0.88 },
+          { name: 'Village B', village: 'Block 2', eligibilityScore: 0.76 },
+          { name: 'Village C', village: 'Block 3', eligibilityScore: 0.71 }
+        ]
+      },
+      priorities: {
+        recommendations: [
+          { block: 'Village A', priorityScore: 0.89, groundwaterIndex: 'High' },
+          { block: 'Village B', priorityScore: 0.74, groundwaterIndex: 'Medium' },
+          { block: 'Village C', priorityScore: 0.62, groundwaterIndex: 'Low' }
+        ]
+      },
+      metrics: {
+        coveragePct: 68,
+        beneficiaries: 3200,
+        fundedProjects: 85
+      }
+    };
+    
+    res.json(mockDistrictData);
+  } catch (error) {
+    res.status(500).json({ error: 'District analysis failed' });
+  }
+});
+
+// Patta Holders DSS Analysis
+router.get('/patta-analysis', authenticateToken, async (req, res) => {
+  try {
+    const { state, district, village } = req.query;
+    
+    const mockPattaData = {
+      state,
+      district,
+      village,
+      eligibility: {
+        beneficiaries: [
+          { name: 'Ram Singh', village: 'Patta Holder 1', eligibilityScore: 0.92 },
+          { name: 'Sita Devi', village: 'Patta Holder 2', eligibilityScore: 0.84 },
+          { name: 'Mohan Lal', village: 'Patta Holder 3', eligibilityScore: 0.79 }
+        ]
+      },
+      priorities: {
+        recommendations: [
+          { block: 'Individual Rights', priorityScore: 0.91, groundwaterIndex: 'High' },
+          { block: 'Community Rights', priorityScore: 0.83, groundwaterIndex: 'Medium' },
+          { block: 'Development Rights', priorityScore: 0.76, groundwaterIndex: 'Medium' }
+        ]
+      },
+      metrics: {
+        coveragePct: 82,
+        beneficiaries: 156,
+        fundedProjects: 12
+      }
+    };
+    
+    res.json(mockPattaData);
+  } catch (error) {
+    res.status(500).json({ error: 'Patta analysis failed' });
+  }
+});
+
 // Health check for DSS engine
 router.get('/health', async (req, res) => {
   try {

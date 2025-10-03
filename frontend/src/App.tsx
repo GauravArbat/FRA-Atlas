@@ -63,7 +63,7 @@ const AppContent: React.FC = () => {
             <Route path="/satellite-mapping" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><SatelliteAssetMapping /></RoleBasedRoute>} />
             <Route path="/advanced-mapping" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><AdvancedSatelliteMapping /></RoleBasedRoute>} />
             <Route path="/realtime-satellite" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><RealTimeSatelliteMapping /></RoleBasedRoute>} />
-            <Route path="/dss-analysis" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><SatelliteMapping /></RoleBasedRoute>} />
+            <Route path="/dss-analysis" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><DecisionSupport /></RoleBasedRoute>} />
             <Route path="/ai-analysis" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><AIAnalysis /></RoleBasedRoute>} />
             <Route path="/settings" element={<RoleBasedRoute allowedRoles={['admin']}><Settings /></RoleBasedRoute>} />
             <Route path="/model-results" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><Reports /></RoleBasedRoute>} />

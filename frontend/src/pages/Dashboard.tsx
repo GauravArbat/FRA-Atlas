@@ -42,11 +42,10 @@ const Dashboard: React.FC = () => {
             area: 35678900
           },
           districts: [
-            { name: 'Maharashtra', district: 'Gadchiroli', totalClaims: 12345, approved: 8765, rejected: 2340, pending: 1240 },
             { name: 'Madhya Pradesh', district: 'Dindori', totalClaims: 10987, approved: 7654, rejected: 1987, pending: 1346 },
-            { name: 'Chhattisgarh', district: 'Bastar', totalClaims: 9876, approved: 5432, rejected: 2109, pending: 2335 },
-            { name: 'Jharkhand', district: 'Gumla', totalClaims: 8765, approved: 4321, rejected: 3210, pending: 1234 },
-            { name: 'Odisha', district: 'Mayurbhanj', totalClaims: 7654, approved: 3210, rejected: 2109, pending: 2335 }
+            { name: 'Tripura', district: 'West Tripura', totalClaims: 9876, approved: 5432, rejected: 2109, pending: 2335 },
+            { name: 'Odisha', district: 'Mayurbhanj', totalClaims: 8765, approved: 4321, rejected: 3210, pending: 1234 },
+            { name: 'Telangana', district: 'Hyderabad', totalClaims: 7654, approved: 3210, rejected: 2109, pending: 2335 }
           ],
           ...res.data
         });
@@ -59,11 +58,10 @@ const Dashboard: React.FC = () => {
             area: 35678900
           },
           districts: [
-            { name: 'Maharashtra', district: 'Gadchiroli', totalClaims: 12345, approved: 8765, rejected: 2340, pending: 1240 },
             { name: 'Madhya Pradesh', district: 'Dindori', totalClaims: 10987, approved: 7654, rejected: 1987, pending: 1346 },
-            { name: 'Chhattisgarh', district: 'Bastar', totalClaims: 9876, approved: 5432, rejected: 2109, pending: 2335 },
-            { name: 'Jharkhand', district: 'Gumla', totalClaims: 8765, approved: 4321, rejected: 3210, pending: 1234 },
-            { name: 'Odisha', district: 'Mayurbhanj', totalClaims: 7654, approved: 3210, rejected: 2109, pending: 2335 }
+            { name: 'Tripura', district: 'West Tripura', totalClaims: 9876, approved: 5432, rejected: 2109, pending: 2335 },
+            { name: 'Odisha', district: 'Mayurbhanj', totalClaims: 8765, approved: 4321, rejected: 3210, pending: 1234 },
+            { name: 'Telangana', district: 'Hyderabad', totalClaims: 7654, approved: 3210, rejected: 2109, pending: 2335 }
           ]
         });
       } finally {
@@ -321,19 +319,19 @@ const Dashboard: React.FC = () => {
                   <ListItem>
                     <ListItemText 
                       primary={<span data-translate>Workshop on GIS Mapping</span>}
-                      secondary="15 Nov 2024"
+                      secondary="10 Otc 2025"
                     />
                   </ListItem>
                   <ListItem>
                     <ListItemText 
                       primary={<span data-translate>FRA Progress Review</span>}
-                      secondary="12 Nov 2024"
+                      secondary="12 Otc 2025"
                     />
                   </ListItem>
                   <ListItem>
                     <ListItemText 
                       primary={<span data-translate>New Guidelines for HABITAT</span>}
-                      secondary="10 Nov 2024"
+                      secondary="10 Otc 2025"
                     />
                   </ListItem>
                 </List>

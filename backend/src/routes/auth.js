@@ -163,8 +163,82 @@ router.get('/me', authenticateToken, async (req, res) => {
   }
 });
 
+// Update profile
+router.put('/profile', authenticateToken, [
+  body('username').optional().isLength({ min: 3 }).trim().escape(),
+  body('email').optional().isEmail().normalizeEmail(),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { username, email } = req.body;
+    const updates = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (username) {
+      // Check if username is already taken by another user
+      const existingUser = await pool.query(
+        'SELECT id FROM users WHERE username = $1 AND id != $2',
+        [username, req.user.userId]
+      );
+      
+      if (existingUser.rows.length > 0) {
+        return res.status(400).json({ error: 'Username already taken' });
+      }
+      
+      updates.push(`username = $${paramCount}`);
+      values.push(username);
+      paramCount++;
+    }
+
+    if (email) {
+      // Check if email is already taken by another user
+      const existingUser = await pool.query(
+        'SELECT id FROM users WHERE email = $1 AND id != $2',
+        [email, req.user.userId]
+      );
+      
+      if (existingUser.rows.length > 0) {
+        return res.status(400).json({ error: 'Email already taken' });
+      }
+      
+      updates.push(`email = $${paramCount}`);
+      values.push(email);
+      paramCount++;
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    values.push(req.user.userId);
+    
+    const query = `UPDATE users SET ${updates.join(', ')}, updated_at = NOW() WHERE id = $${paramCount} RETURNING id, username, email, role, state, district, block`;
+    
+    const result = await pool.query(query, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    logger.info(`Profile updated for user: ${req.user.userId}`);
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: result.rows[0]
+    });
+  } catch (error) {
+    logger.error('Update profile error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Change password
-router.post('/change-password', [
+router.post('/change-password', authenticateToken, [
   body('currentPassword').notEmpty(),
   body('newPassword').isLength({ min: 6 }),
 ], async (req, res) => {
@@ -198,7 +272,7 @@ router.post('/change-password', [
 
     // Update password
     await pool.query(
-      'UPDATE users SET password_hash = $1 WHERE id = $2',
+      'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
       [hashedPassword, req.user.userId]
     );
 

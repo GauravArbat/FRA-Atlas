@@ -11,17 +11,7 @@ export const usePageTranslation = () => {
       setTimeout(() => {
         const event = new CustomEvent('forceTranslation', { detail: { language: currentLanguage } });
         document.dispatchEvent(event);
-      }, 100);
-      
-      setTimeout(() => {
-        const event = new CustomEvent('forceTranslation', { detail: { language: currentLanguage } });
-        document.dispatchEvent(event);
-      }, 500);
-      
-      setTimeout(() => {
-        const event = new CustomEvent('forceTranslation', { detail: { language: currentLanguage } });
-        document.dispatchEvent(event);
-      }, 1000);
+      }, 50);
     }
   }, []); // Only run on mount
 
