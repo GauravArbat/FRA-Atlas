@@ -131,6 +131,12 @@ export const pattaHoldersAPI = {
       }
     );
     return response.data;
+  },
+
+  // Generate report for patta holder
+  generateReport: async (id: string) => {
+    const response = await axios.get(`${API_BASE_URL}/patta-report/${id}`);
+    return response.data;
   }
 };
 

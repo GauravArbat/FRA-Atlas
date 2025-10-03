@@ -68,7 +68,7 @@ const Sidebar: React.FC = () => {
             { text: 'Dashboard', icon: <Dashboard />, path: '/' },
             { text: 'FRA Atlas', icon: <Map />, path: '/atlas' },
             // { text: 'Digital GIS Plot', icon: <LocationOn />, path: '/gis-plot' },
-            { text: 'Dummy Data Generator', icon: <Assignment />, path: '/dummy-data' },
+            // { text: 'Dummy Data Generator', icon: <Assignment />, path: '/dummy-data' },
             { text: 'Data Management', icon: <Storage />, path: '/data' },
             // { text: 'Decision Support', icon: <Assessment />, path: '/decisions' },
             { text: 'Satellite Asset Mapping', icon: <Map />, path: '/advanced-mapping' },

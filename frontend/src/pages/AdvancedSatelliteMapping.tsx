@@ -145,6 +145,7 @@ const AdvancedSatelliteMapping: React.FC = () => {
   const [dssResults, setDssResults] = useState<any>(null);
   const [dssLoading, setDssLoading] = useState(false);
   const [showSpectralData, setShowSpectralData] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const states = ['Madhya Pradesh', 'Odisha', 'Tripura', 'Telangana'];
   
@@ -389,25 +390,44 @@ const AdvancedSatelliteMapping: React.FC = () => {
                 </Select>
               </FormControl>
             </Grid>
+            
+            <Grid item xs={12} md={1}>
+              <Button
+                variant={showSettings ? "contained" : "outlined"}
+                color="primary"
+                onClick={() => setShowSettings(!showSettings)}
+                startIcon={<Engineering />}
+                sx={{ 
+                  height: 56,
+                  fontWeight: 600,
+                  borderRadius: 2,
+                  textTransform: 'none'
+                }}
+              >
+                Settings
+              </Button>
+            </Grid>
           </Grid>
 
-          <Box sx={{ mb: 3 }}>
-            <Typography gutterBottom>
-              Confidence Threshold: {confidenceThreshold}
-            </Typography>
-            <Slider
-              value={confidenceThreshold}
-              onChange={(_, value) => setConfidenceThreshold(value as number)}
-              min={0.5}
-              max={0.95}
-              step={0.05}
-              marks={[
-                { value: 0.5, label: '50%' },
-                { value: 0.7, label: '70%' },
-                { value: 0.9, label: '90%' }
-              ]}
-            />
-          </Box>
+          {showSettings && (
+            <Box sx={{ mb: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: 2 }}>
+              <Typography gutterBottom>
+                Confidence Threshold: {confidenceThreshold}
+              </Typography>
+              <Slider
+                value={confidenceThreshold}
+                onChange={(_, value) => setConfidenceThreshold(value as number)}
+                min={0.5}
+                max={0.95}
+                step={0.05}
+                marks={[
+                  { value: 0.5, label: '50%' },
+                  { value: 0.7, label: '70%' },
+                  { value: 0.9, label: '90%' }
+                ]}
+              />
+            </Box>
+          )}
 
           <Button
             variant="contained"

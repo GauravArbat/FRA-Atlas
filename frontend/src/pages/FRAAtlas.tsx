@@ -85,6 +85,7 @@ import { LandRecord, getAllLandRecords } from '../services/bhunakshaService';
 import { pattaHoldersAPI } from '../services/pattaHoldersAPI';
 import { usePageTranslation } from '../hooks/usePageTranslation';
 import { useAuth } from '../contexts/AuthContext';
+import PattaReportModal from '../components/PattaReportModal';
 
 // Fix Leaflet default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -165,6 +166,9 @@ const FRAAtlas: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [selectedPattaId, setSelectedPattaId] = useState<string>('');
+  const [selectedOwnerName, setSelectedOwnerName] = useState<string>('');
 
 
   // Get map configuration based on user role and location
@@ -451,6 +455,12 @@ const FRAAtlas: React.FC = () => {
       mapRef.current = map;
       // Expose mapRef to window for popup controls
       (window as any).mapRef = mapRef;
+      // Expose report function to window for popup buttons
+      (window as any).openPattaReport = (pattaId: string, ownerName: string) => {
+        setSelectedPattaId(pattaId);
+        setSelectedOwnerName(ownerName);
+        setReportModalOpen(true);
+      };
       setMapLoaded(true);
       setLoading(false);
 
@@ -760,8 +770,9 @@ const FRAAtlas: React.FC = () => {
           }))
         };
         
-        geojson.features.forEach((feature: any) => {
+        geojson.features.forEach((feature: any, index: number) => {
           const props = feature.properties;
+          const recordId = records[index]?.id || `patta_${index}`;
           
           let coordinates: [number, number][];
           if (feature.geometry.type === 'Polygon') {
@@ -814,6 +825,36 @@ const FRAAtlas: React.FC = () => {
                   <tr><td>FRA Status</td><td><span class="status-chip ${statusClass}">${props.fraStatus}</span></td></tr>
                   <tr><td>Created</td><td>${new Date(props.created).toLocaleDateString()}</td></tr>
                 </table>
+              </div>
+              
+              <div class="popup-section" style="border-top: 1px solid #e0e0e0; padding-top: 12px; margin-top: 12px;">
+                <button 
+                  onclick="window.openPattaReport('${recordId}', '${props.ownerName}')"
+                  style="
+                    width: 100%;
+                    background: #f8f9fa;
+                    color: #1976d2;
+                    border: 1px solid #1976d2;
+                    padding: 8px 12px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-weight: 500;
+                    font-size: 12px;
+                    font-family: inherit;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 6px;
+                    transition: all 0.2s ease;
+                  "
+                  onmouseover="this.style.background='#1976d2'; this.style.color='white'"
+                  onmouseout="this.style.background='#f8f9fa'; this.style.color='#1976d2'"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                  </svg>
+                  Generate Report
+                </button>
               </div>
             </div>
           `;
@@ -2894,6 +2935,14 @@ const FRAAtlas: React.FC = () => {
           </Box>
         )}
       </Paper>
+
+      {/* Patta Report Modal */}
+      <PattaReportModal
+        open={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        pattaId={selectedPattaId}
+        ownerName={selectedOwnerName}
+      />
     </Box>
   );
 };
