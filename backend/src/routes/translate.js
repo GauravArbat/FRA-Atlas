@@ -9,6 +9,10 @@ const GOOGLE_TRANSLATE_URL = 'https://translation.googleapis.com/language/transl
 router.post('/translate', async (req, res) => {
   try {
     const { text, target, source } = req.body;
+    
+    console.log('Translation request:', { text, target, source });
+    console.log('API Key present:', !!GOOGLE_TRANSLATE_API_KEY);
+    console.log('DISABLE_TRANSLATION:', process.env.DISABLE_TRANSLATION);
 
     if (!text || !target) {
       return res.status(400).json({ error: 'Text and target language are required' });
@@ -16,6 +20,7 @@ router.post('/translate', async (req, res) => {
 
     // Check if translation is disabled or API key is missing
     if (process.env.DISABLE_TRANSLATION === 'true' || !GOOGLE_TRANSLATE_API_KEY) {
+      console.log('Translation disabled or API key missing');
       return res.json({
         translatedText: text,
         detectedSourceLanguage: source || 'en'

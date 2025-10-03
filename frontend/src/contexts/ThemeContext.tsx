@@ -29,8 +29,8 @@ export const CustomThemeProvider: React.FC<CustomThemeProviderProps> = ({ childr
     if (savedTheme) {
       return savedTheme === 'dark';
     }
-    // Check system preference
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // Default to light mode
+    return false;
   });
 
   const toggleTheme = () => {
@@ -41,18 +41,11 @@ export const CustomThemeProvider: React.FC<CustomThemeProviderProps> = ({ childr
     });
   };
 
-  // Listen for system theme changes
+  // Set initial theme in localStorage if not exists
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      // Only update if no saved preference exists
-      if (!localStorage.getItem('theme-mode')) {
-        setIsDarkMode(e.matches);
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    if (!localStorage.getItem('theme-mode')) {
+      localStorage.setItem('theme-mode', 'light');
+    }
   }, []);
 
   const theme = isDarkMode ? professionalDarkTheme : professionalTheme;

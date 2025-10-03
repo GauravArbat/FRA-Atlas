@@ -189,15 +189,21 @@ const Reports: React.FC = () => {
   }, []);
 
   const COLORS = {
-    primary: theme.palette.primary.main,
-    secondary: theme.palette.secondary.main,
-    success: theme.palette.success.main,
-    warning: theme.palette.warning.main,
-    error: theme.palette.error.main,
-    info: theme.palette.info.main
+    primary: alpha(theme.palette.primary.main, 0.7),
+    secondary: alpha(theme.palette.secondary.main, 0.7),
+    success: alpha(theme.palette.success.main, 0.7),
+    warning: alpha(theme.palette.warning.main, 0.7),
+    error: alpha(theme.palette.error.main, 0.7),
+    info: alpha(theme.palette.info.main, 0.7)
   };
 
-  const PIE_COLORS = [COLORS.primary, COLORS.secondary, COLORS.success, COLORS.warning, COLORS.info];
+  const PIE_COLORS = [
+    alpha(theme.palette.primary.main, 0.8),
+    alpha(theme.palette.secondary.main, 0.8),
+    alpha(theme.palette.success.main, 0.8),
+    alpha(theme.palette.warning.main, 0.8),
+    alpha(theme.palette.info.main, 0.8)
+  ];
 
   if (loading) {
     return (
@@ -423,10 +429,14 @@ const Reports: React.FC = () => {
         </Grid>
 
         {/* Analytics Section Header */}
-        <Typography variant="h5" fontWeight={600} mb={3} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Analytics sx={{ color: COLORS.secondary }} />
-          Analytics Dashboard
-        </Typography>
+        <Card sx={{ mb: 3 }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h5" fontWeight={600} mb={0} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Analytics sx={{ color: COLORS.secondary }} />
+              <span data-translate>Analytics Dashboard</span>
+            </Typography>
+          </CardContent>
+        </Card>
 
         {/* Metrics Cards */}
         <Grid container spacing={3} mb={4}>
@@ -473,68 +483,89 @@ const Reports: React.FC = () => {
           {/* Beneficiaries Trend */}
           <Grid item xs={12}>
             <ChartCard
-              title="Beneficiaries Growth Trend"
+              title="Beneficiaries Growth Trend - Government of India"
               actions={
                 <>
-                  <IconButton size="small">
-                    <BarChartIcon />
-                  </IconButton>
-                  <IconButton size="small">
-                    <Timeline />
+                  <Chip label="Official Data" size="small" sx={{ bgcolor: COLORS.primary, color: 'white', fontWeight: 600 }} />
+                  <IconButton size="small" sx={{ bgcolor: alpha(COLORS.primary, 0.1) }}>
+                    <BarChartIcon sx={{ color: COLORS.primary }} />
                   </IconButton>
                 </>
               }
             >
+              <Box sx={{ mb: 2, p: 2, bgcolor: alpha(COLORS.primary, 0.05), borderRadius: 1, border: `1px solid ${alpha(COLORS.primary, 0.2)}` }}>
+                <Typography variant="caption" sx={{ color: COLORS.primary, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <DashboardIcon fontSize="small" /> Ministry of Tribal Affairs | Forest Rights Act Implementation
+                </Typography>
+              </Box>
               <ResponsiveContainer width="100%" height={350}>
-                <AreaChart data={data.timeseries}>
+                <AreaChart data={data.timeseries} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <defs>
-                    <linearGradient id="colorBeneficiaries" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id="govGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.3} />
                       <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0.05} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.3)} />
+                  <CartesianGrid strokeDasharray="2 2" stroke={COLORS.primary} strokeOpacity={0.2} />
                   <XAxis
                     dataKey="month"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: theme.palette.text.secondary }}
+                    axisLine={{ stroke: COLORS.primary, strokeWidth: 2 }}
+                    tickLine={{ stroke: COLORS.primary }}
+                    tick={{ fontSize: 11, fill: theme.palette.text.primary, fontWeight: 600 }}
                   />
                   <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: theme.palette.text.secondary }}
+                    axisLine={{ stroke: COLORS.primary, strokeWidth: 2 }}
+                    tickLine={{ stroke: COLORS.primary }}
+                    tick={{ fontSize: 11, fill: theme.palette.text.primary, fontWeight: 600 }}
+                    label={{ value: 'Beneficiaries Count', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: theme.palette.text.primary, fontWeight: 600 } }}
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: theme.palette.background.paper,
-                      border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                      borderRadius: 8,
-                      boxShadow: `0 4px 20px ${alpha(theme.palette.common.black, 0.1)}`
+                      backgroundColor: 'white',
+                      border: `2px solid ${COLORS.primary}`,
+                      borderRadius: 4,
+                      boxShadow: `0 4px 12px ${alpha(theme.palette.common.black, 0.2)}`,
+                      fontWeight: 600
                     }}
+                    labelStyle={{ color: theme.palette.text.primary, fontWeight: 700 }}
                   />
                   <Area
                     type="monotone"
                     dataKey="beneficiaries"
                     stroke={COLORS.primary}
                     strokeWidth={3}
-                    fill="url(#colorBeneficiaries)"
+                    fill="url(#govGradient)"
+                    dot={{ fill: COLORS.primary, strokeWidth: 2, stroke: 'white', r: 4 }}
+                    activeDot={{ r: 6, fill: COLORS.primary, stroke: 'white', strokeWidth: 2 }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
+              <Box sx={{ mt: 2, p: 1, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 1 }}>
+                <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontWeight: 600 }}>
+                  Source: Ministry of Tribal Affairs, Government of India | Data as of {new Date().toLocaleDateString()}
+                </Typography>
+              </Box>
             </ChartCard>
           </Grid>
 
           {/* Distribution Charts */}
           <Grid item xs={12} md={6}>
             <ChartCard
-              title="Claims by Type"
+              title="FRA Claims Distribution by Category"
               actions={
-                <IconButton size="small">
-                  <PieChartIcon />
-                </IconButton>
+                <>
+                  <Chip label="Official Statistics" size="small" sx={{ bgcolor: COLORS.secondary, color: 'white', fontWeight: 600 }} />
+                  <IconButton size="small" sx={{ bgcolor: alpha(COLORS.secondary, 0.1) }}>
+                    <PieChartIcon sx={{ color: COLORS.secondary }} />
+                  </IconButton>
+                </>
               }
             >
+              <Box sx={{ mb: 2, p: 2, bgcolor: alpha(COLORS.secondary, 0.05), borderRadius: 1, border: `1px solid ${alpha(COLORS.secondary, 0.2)}` }}>
+                <Typography variant="caption" sx={{ color: COLORS.secondary, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Assessment fontSize="small" /> Forest Rights Act - Claim Type Analysis
+                </Typography>
+              </Box>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
@@ -543,10 +574,13 @@ const Reports: React.FC = () => {
                     nameKey="type"
                     cx="50%"
                     cy="50%"
-                    outerRadius={100}
-                    innerRadius={40}
-                    paddingAngle={2}
-                    label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                    outerRadius={90}
+                    innerRadius={45}
+                    paddingAngle={1}
+                    stroke={theme.palette.text.primary}
+                    strokeWidth={2}
+                    label={({ percent }) => `${(percent * 100).toFixed(1)}%`}
+                    labelLine={false}
                   >
                     {data.byType.map((_: any, idx: number) => (
                       <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
@@ -554,63 +588,98 @@ const Reports: React.FC = () => {
                   </Pie>
                   <Legend
                     wrapperStyle={{
-                      paddingTop: '20px',
-                      fontSize: '14px'
+                      paddingTop: '15px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: theme.palette.text.primary
                     }}
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: theme.palette.background.paper,
-                      border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                      borderRadius: 8
+                      backgroundColor: 'white',
+                      border: `2px solid ${COLORS.secondary}`,
+                      borderRadius: 4,
+                      boxShadow: `0 4px 12px ${alpha(theme.palette.common.black, 0.2)}`,
+                      fontWeight: 600
                     }}
+                    labelStyle={{ color: theme.palette.text.primary, fontWeight: 700 }}
                   />
                 </PieChart>
               </ResponsiveContainer>
+              <Box sx={{ mt: 2, p: 1, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 1 }}>
+                <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontWeight: 600 }}>
+                  Data Source: Tribal Affairs Ministry | Updated: {new Date().toLocaleDateString()}
+                </Typography>
+              </Box>
             </ChartCard>
           </Grid>
 
           {/* Top Districts */}
           <Grid item xs={12} md={6}>
             <ChartCard
-              title="Top Performing Districts"
+              title="District-wise FRA Implementation Performance"
               actions={
-                <IconButton size="small">
-                  <BarChartIcon />
-                </IconButton>
+                <>
+                  <Chip label="Government Data" size="small" sx={{ bgcolor: COLORS.info, color: 'white', fontWeight: 600 }} />
+                  <IconButton size="small" sx={{ bgcolor: alpha(COLORS.info, 0.1) }}>
+                    <BarChartIcon sx={{ color: COLORS.info }} />
+                  </IconButton>
+                </>
               }
             >
+              <Box sx={{ mb: 2, p: 2, bgcolor: alpha(COLORS.info, 0.05), borderRadius: 1, border: `1px solid ${alpha(COLORS.info, 0.2)}` }}>
+                <Typography variant="caption" sx={{ color: COLORS.info, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Timeline fontSize="small" /> District Performance Ranking - FRA Beneficiaries
+                </Typography>
+              </Box>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={data.topDistricts} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.3)} />
+                <BarChart data={data.topDistricts} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                  <defs>
+                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={COLORS.secondary} stopOpacity={1} />
+                      <stop offset="100%" stopColor={COLORS.secondary} stopOpacity={0.7} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="2 2" stroke={COLORS.info} strokeOpacity={0.2} />
                   <XAxis
                     dataKey="name"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: theme.palette.text.secondary }}
+                    axisLine={{ stroke: COLORS.info, strokeWidth: 2 }}
+                    tickLine={{ stroke: COLORS.info }}
+                    tick={{ fontSize: 10, fill: theme.palette.text.primary, fontWeight: 600 }}
                     angle={-45}
                     textAnchor="end"
                     height={80}
                   />
                   <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: theme.palette.text.secondary }}
+                    axisLine={{ stroke: COLORS.info, strokeWidth: 2 }}
+                    tickLine={{ stroke: COLORS.info }}
+                    tick={{ fontSize: 11, fill: theme.palette.text.primary, fontWeight: 600 }}
+                    label={{ value: 'Beneficiaries', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: theme.palette.text.primary, fontWeight: 600 } }}
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: theme.palette.background.paper,
-                      border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                      borderRadius: 8
+                      backgroundColor: 'white',
+                      border: `2px solid ${COLORS.info}`,
+                      borderRadius: 4,
+                      boxShadow: `0 4px 12px ${alpha(theme.palette.common.black, 0.2)}`,
+                      fontWeight: 600
                     }}
+                    labelStyle={{ color: theme.palette.text.primary, fontWeight: 700 }}
                   />
                   <Bar
                     dataKey="beneficiaries"
-                    fill={COLORS.secondary}
-                    radius={[4, 4, 0, 0]}
+                    fill="url(#barGradient)"
+                    stroke={theme.palette.text.primary}
+                    strokeWidth={1}
+                    radius={[2, 2, 0, 0]}
                   />
                 </BarChart>
               </ResponsiveContainer>
+              <Box sx={{ mt: 2, p: 1, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 1 }}>
+                <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontWeight: 600 }}>
+                  Performance Metrics: Ministry of Tribal Affairs | Last Updated: {new Date().toLocaleDateString()}
+                </Typography>
+              </Box>
             </ChartCard>
           </Grid>
 

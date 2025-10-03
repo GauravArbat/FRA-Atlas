@@ -1,0 +1,246 @@
+/* FRA Layer Styles */
+
+/* Popup styling */
+.popup-content {
+  font-family: 'Roboto', sans-serif;
+  max-width: 300px;
+  padding: 8px;
+}
+
+.popup-content h4 {
+  margin: 0 0 8px 0;
+  color: #1976d2;
+  font-size: 16px;
+  font-weight: 600;
+  border-bottom: 2px solid #e3f2fd;
+  padding-bottom: 4px;
+}
+
+.popup-content p {
+  margin: 4px 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.popup-content strong {
+  color: #424242;
+  font-weight: 500;
+}
+
+/* Status indicators */
+.status-granted {
+  background: #4caf50;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-potential {
+  background: #ff9800;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-approved {
+  background: #4caf50;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-pending {
+  background: #ff9800;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-rejected {
+  background: #f44336;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Layer control styling */
+.fra-layer-control {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  padding: 12px;
+  margin: 8px;
+  min-width: 200px;
+}
+
+.fra-layer-control h4 {
+  margin: 0 0 8px 0;
+  color: #1976d2;
+  font-size: 14px;
+  font-weight: 600;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 4px;
+}
+
+.layer-toggle {
+  display: flex;
+  align-items: center;
+  margin: 6px 0;
+  font-size: 13px;
+}
+
+.layer-toggle input[type="checkbox"] {
+  margin-right: 8px;
+  transform: scale(1.1);
+}
+
+.layer-toggle label {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+}
+
+.layer-color-indicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  margin-right: 6px;
+  border: 1px solid #ccc;
+}
+
+/* Legend styling */
+.fra-legend {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  padding: 12px;
+  margin: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.fra-legend h4 {
+  margin: 0 0 8px 0;
+  color: #1976d2;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin: 4px 0;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  margin-right: 6px;
+  border: 1px solid #999;
+}
+
+.legend-text {
+  font-size: 11px;
+  color: #424242;
+}
+
+/* Performance optimization classes */
+.leaflet-interactive {
+  cursor: pointer;
+}
+
+.leaflet-interactive:hover {
+  stroke-width: 3;
+  stroke-opacity: 0.8;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .popup-content {
+    max-width: 250px;
+    font-size: 12px;
+  }
+  
+  .popup-content h4 {
+    font-size: 14px;
+  }
+  
+  .fra-layer-control {
+    min-width: 180px;
+    padding: 8px;
+  }
+  
+  .fra-legend {
+    padding: 8px;
+    font-size: 11px;
+  }
+}
+
+/* Loading states */
+.layer-loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.layer-loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid #1976d2;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .popup-content {
+    border: 2px solid #000;
+    background: #fff;
+  }
+  
+  .status-granted,
+  .status-approved {
+    background: #000;
+    color: #fff;
+  }
+  
+  .status-potential,
+  .status-pending {
+    background: #666;
+    color: #fff;
+  }
+  
+  .status-rejected {
+    background: #000;
+    color: #fff;
+    text-decoration: line-through;
+  }
+}

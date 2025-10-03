@@ -19,13 +19,15 @@ import {
   ListItem,
   ListItemText,
   Button,
-  Chip
+  Chip,
+  useTheme
 } from '@mui/material';
 import { Home, NavigateNext } from '@mui/icons-material';
 import { api } from '../services/api';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 const Dashboard: React.FC = () => {
+  const theme = useTheme();
   const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -73,7 +75,7 @@ const Dashboard: React.FC = () => {
   return (
     <Box>
       {/* Breadcrumb */}
-      <Box sx={{ bgcolor: 'white', p: 2, borderBottom: '1px solid #ddd' }}>
+      <Box sx={{ bgcolor: 'background.paper', p: 2, borderBottom: 1, borderColor: 'divider' }}>
         <Breadcrumbs separator={<NavigateNext fontSize="small" />}>
           <Link color="inherit" href="/" sx={{ display: 'flex', alignItems: 'center' }}>
             <Home sx={{ mr: 0.5, fontSize: 16 }} />
@@ -95,7 +97,11 @@ const Dashboard: React.FC = () => {
             {/* Stats Cards */}
             <Grid container spacing={2} sx={{ mb: 3 }}>
               <Grid item xs={6}>
-                <Card sx={{ bgcolor: '#e3f2fd', border: '1px solid #1976d2' }}>
+                <Card sx={{ 
+                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(25, 118, 210, 0.1)' : '#e3f2fd', 
+                  border: '1px solid #1976d2',
+                  '&:hover': { boxShadow: 3 }
+                }}>
                   <CardContent sx={{ textAlign: 'center', py: 2 }}>
                     <Typography variant="h4" sx={{ color: '#1976d2', fontWeight: 700 }}>
                       42,56,789
@@ -107,7 +113,11 @@ const Dashboard: React.FC = () => {
                 </Card>
               </Grid>
               <Grid item xs={6}>
-                <Card sx={{ bgcolor: '#e8f5e8', border: '1px solid #4caf50' }}>
+                <Card sx={{ 
+                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(76, 175, 80, 0.1)' : '#e8f5e8', 
+                  border: '1px solid #4caf50',
+                  '&:hover': { boxShadow: 3 }
+                }}>
                   <CardContent sx={{ textAlign: 'center', py: 2 }}>
                     <Typography variant="h4" sx={{ color: '#4caf50', fontWeight: 700 }}>
                       21,34,567
@@ -119,7 +129,11 @@ const Dashboard: React.FC = () => {
                 </Card>
               </Grid>
               <Grid item xs={6}>
-                <Card sx={{ bgcolor: '#fff3e0', border: '1px solid #ff9800' }}>
+                <Card sx={{ 
+                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 152, 0, 0.1)' : '#fff3e0', 
+                  border: '1px solid #ff9800',
+                  '&:hover': { boxShadow: 3 }
+                }}>
                   <CardContent sx={{ textAlign: 'center', py: 2 }}>
                     <Typography variant="h4" sx={{ color: '#ff9800', fontWeight: 700 }}>
                       18,45,678
@@ -131,7 +145,11 @@ const Dashboard: React.FC = () => {
                 </Card>
               </Grid>
               <Grid item xs={6}>
-                <Card sx={{ bgcolor: '#f3e5f5', border: '1px solid #9c27b0' }}>
+                <Card sx={{ 
+                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(156, 39, 176, 0.1)' : '#f3e5f5', 
+                  border: '1px solid #9c27b0',
+                  '&:hover': { boxShadow: 3 }
+                }}>
                   <CardContent sx={{ textAlign: 'center', py: 2 }}>
                     <Typography variant="h4" sx={{ color: '#9c27b0', fontWeight: 700 }}>
                       35,67,890
@@ -150,25 +168,31 @@ const Dashboard: React.FC = () => {
                 <Typography variant="h6" sx={{ mb: 2, color: '#1976d2', fontWeight: 600 }}>
                   <span data-translate>District-wise Claims Status</span>
                 </Typography>
-                <Box sx={{ height: 300, p: 2, bgcolor: '#fafafa', borderRadius: 2 }}>
+                <Box sx={{ 
+                  height: 300, 
+                  p: 2, 
+                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : '#fafafa', 
+                  borderRadius: 2 
+                }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={summary?.districts || []} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                      <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.mode === 'dark' ? '#444' : '#e0e0e0'} />
                       <XAxis 
                         dataKey="district" 
-                        tick={{ fontSize: 12, fill: '#666' }}
-                        axisLine={{ stroke: '#ccc' }}
+                        tick={{ fontSize: 12, fill: theme.palette.text.secondary }}
+                        axisLine={{ stroke: theme.palette.mode === 'dark' ? '#666' : '#ccc' }}
                       />
                       <YAxis 
-                        tick={{ fontSize: 12, fill: '#666' }}
-                        axisLine={{ stroke: '#ccc' }}
+                        tick={{ fontSize: 12, fill: theme.palette.text.secondary }}
+                        axisLine={{ stroke: theme.palette.mode === 'dark' ? '#666' : '#ccc' }}
                       />
                       <Tooltip 
                         contentStyle={{ 
-                          backgroundColor: '#fff', 
-                          border: '1px solid #ddd', 
+                          backgroundColor: theme.palette.background.paper, 
+                          border: `1px solid ${theme.palette.divider}`, 
                           borderRadius: '8px',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                          color: theme.palette.text.primary
                         }}
                       />
                       <Legend 
@@ -189,7 +213,12 @@ const Dashboard: React.FC = () => {
                 <Typography variant="h6" sx={{ mb: 2, color: '#1976d2', fontWeight: 600 }}>
                   <span data-translate>Monthly Trend of Claim Processing</span>
                 </Typography>
-                <Box sx={{ height: 300, p: 2, bgcolor: '#fafafa', borderRadius: 2 }}>
+                <Box sx={{ 
+                  height: 300, 
+                  p: 2, 
+                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : '#fafafa', 
+                  borderRadius: 2 
+                }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart 
                       data={[
@@ -202,22 +231,23 @@ const Dashboard: React.FC = () => {
                       ]}
                       margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                      <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.mode === 'dark' ? '#444' : '#e0e0e0'} />
                       <XAxis 
                         dataKey="month" 
-                        tick={{ fontSize: 12, fill: '#666' }}
-                        axisLine={{ stroke: '#ccc' }}
+                        tick={{ fontSize: 12, fill: theme.palette.text.secondary }}
+                        axisLine={{ stroke: theme.palette.mode === 'dark' ? '#666' : '#ccc' }}
                       />
                       <YAxis 
-                        tick={{ fontSize: 12, fill: '#666' }}
-                        axisLine={{ stroke: '#ccc' }}
+                        tick={{ fontSize: 12, fill: theme.palette.text.secondary }}
+                        axisLine={{ stroke: theme.palette.mode === 'dark' ? '#666' : '#ccc' }}
                       />
                       <Tooltip 
                         contentStyle={{ 
-                          backgroundColor: '#fff', 
-                          border: '1px solid #ddd', 
+                          backgroundColor: theme.palette.background.paper, 
+                          border: `1px solid ${theme.palette.divider}`, 
                           borderRadius: '8px',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                          color: theme.palette.text.primary
                         }}
                       />
                       <Legend 
@@ -384,7 +414,14 @@ const Dashboard: React.FC = () => {
                 </TableHead>
                 <TableBody>
                   {summary?.districts?.map((row: any, index: number) => (
-                    <TableRow key={index} sx={{ '&:nth-of-type(odd)': { bgcolor: '#f9f9f9' } }}>
+                    <TableRow key={index} sx={{ 
+                      '&:nth-of-type(odd)': { 
+                        bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : '#f9f9f9' 
+                      },
+                      '&:hover': {
+                        bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f0f0f0'
+                      }
+                    }}>
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>{row.name}</TableCell>
                       <TableCell>{row.district}</TableCell>

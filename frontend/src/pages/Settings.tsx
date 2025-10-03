@@ -37,7 +37,8 @@ import {
   ListItemAvatar,
   Accordion,
   AccordionSummary,
-  AccordionDetails
+  AccordionDetails,
+  useTheme
 } from '@mui/material';
 import {
   Person,
@@ -60,6 +61,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
 
 const Settings: React.FC = () => {
+  const theme = useTheme();
   const { user, refreshUser } = useAuth();
   const [apiUrl, setApiUrl] = useState(localStorage.getItem('API_URL') || (process.env.REACT_APP_API_URL || 'http://localhost:8000/api'));
   const [info, setInfo] = useState<string | null>(null);
@@ -571,9 +573,11 @@ const Settings: React.FC = () => {
               }}>
                 {/* Directory Header */}
                 <Box sx={{ 
-                  background: 'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)', 
+                  background: theme.palette.mode === 'dark' 
+                    ? 'linear-gradient(90deg, rgba(25, 118, 210, 0.2) 0%, rgba(25, 118, 210, 0.3) 100%)'
+                    : 'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)', 
                   p: 3, 
-                  borderBottom: '2px solid #90caf9' 
+                  borderBottom: `2px solid ${theme.palette.mode === 'dark' ? 'rgba(25, 118, 210, 0.5)' : '#90caf9'}` 
                 }}>
                   <Typography variant="h6" fontWeight="bold" color="#1565c0" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <SupervisorAccount sx={{ fontSize: 24 }} />
@@ -585,7 +589,11 @@ const Settings: React.FC = () => {
                 </Box>
                 
                 {/* Search & Filter */}
-                <Box sx={{ p: 2, bgcolor: '#f8f9fa', borderBottom: '1px solid #e0e0e0' }}>
+                <Box sx={{ 
+                  p: 2, 
+                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : '#f8f9fa', 
+                  borderBottom: `1px solid ${theme.palette.divider}` 
+                }}>
                   <TextField
                     size="small"
                     placeholder="Search officials..."
@@ -603,9 +611,13 @@ const Settings: React.FC = () => {
                       <Box sx={{ 
                         p: 2, 
                         cursor: 'pointer',
-                        bgcolor: selectedUser?.id === u.id ? '#e3f2fd' : 'transparent',
+                        bgcolor: selectedUser?.id === u.id 
+                          ? (theme.palette.mode === 'dark' ? 'rgba(25, 118, 210, 0.2)' : '#e3f2fd')
+                          : 'transparent',
                         borderLeft: selectedUser?.id === u.id ? '4px solid #1976d2' : '4px solid transparent',
-                        '&:hover': { bgcolor: '#f5f5f5' },
+                        '&:hover': { 
+                          bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f5f5f5' 
+                        },
                         transition: 'all 0.2s'
                       }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
