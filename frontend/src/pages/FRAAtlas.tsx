@@ -77,6 +77,8 @@ import '../styles/fraLayers.css';
 import FRALayerManager from '../components/FRALayerManager';
 import { loadAllFRAData } from '../utils/dataFetcher';
 import { loadRealFRAData } from '../services/realFRAData';
+import { loadLocalFRAData, setCachedData, getCachedData } from '../data/localData';
+import { fetchAndSaveRealData } from '../scripts/fetchRealData';
 import { fetchRealStateBoundaries, fetchRealDistrictBoundaries } from '../services/realBoundaries';
 import { fetchRealForestAreas } from '../services/realForestData';
 import { geojsonPlotAPI } from '../services/api';
@@ -86,6 +88,32 @@ import { pattaHoldersAPI } from '../services/pattaHoldersAPI';
 import { usePageTranslation } from '../hooks/usePageTranslation';
 import { useAuth } from '../contexts/AuthContext';
 import PattaReportModal from '../components/PattaReportModal';
+
+// Load data - try real data first, then permanent files
+const loadPermanentData = async () => {
+  try {
+    // Check if we have real cached data
+    const realBoundaries = localStorage.getItem('real_boundaries');
+    const realForests = localStorage.getItem('real_forests');
+    
+    if (!realBoundaries || !realForests) {
+      // Fetch real data in background
+      fetchAndSaveRealData();
+    }
+    
+    const [granted, potential, boundaries, forests] = await Promise.all([
+      fetch('/data/fra-granted.geojson').then(r => r.json()),
+      fetch('/data/fra-potential.geojson').then(r => r.json()),
+      realBoundaries ? Promise.resolve(JSON.parse(realBoundaries)) : fetch('/data/state-boundaries.geojson').then(r => r.json()),
+      realForests ? Promise.resolve(JSON.parse(realForests)) : fetch('/data/fra-states-forest-data.geojson').then(r => r.json())
+    ]);
+    
+    return { fraGranted: granted, fraPotential: potential, boundaries, forestAreas: forests };
+  } catch (error) {
+    console.warn('Failed to load data, using fallback');
+    return loadLocalFRAData();
+  }
+};
 
 // Fix Leaflet default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -111,6 +139,45 @@ interface FRAData {
 const FRAAtlas: React.FC = () => {
   // usePageTranslation(); // Translation disabled
   const { user } = useAuth();
+
+  // Convert cached data to FRAData format
+  const convertToFRAData = (data: any): FRAData[] => {
+    const converted: FRAData[] = [];
+    
+    // Convert granted claims
+    data.fraGranted?.features?.forEach((f: any) => {
+      converted.push({
+        id: f.properties.id,
+        claimantName: f.properties.claimantName,
+        area: f.properties.area,
+        status: 'granted' as const,
+        coordinates: f.geometry.coordinates[0].map((coord: number[]) => [coord[0], coord[1]] as [number, number]),
+        village: f.properties.village,
+        district: f.properties.district,
+        state: f.properties.state,
+        dateSubmitted: f.properties.dateGranted,
+        surveyNumber: f.properties.id
+      });
+    });
+    
+    // Convert potential claims
+    data.fraPotential?.features?.forEach((f: any) => {
+      converted.push({
+        id: f.properties.id,
+        claimantName: f.properties.claimantName,
+        area: f.properties.area,
+        status: 'potential' as const,
+        coordinates: f.geometry.coordinates[0].map((coord: number[]) => [coord[0], coord[1]] as [number, number]),
+        village: f.properties.village,
+        district: f.properties.district,
+        state: f.properties.state,
+        dateSubmitted: f.properties.dateSubmitted,
+        surveyNumber: f.properties.id
+      });
+    });
+    
+    return converted;
+  };
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const drawControlRef = useRef<L.Control.Draw | null>(null);
@@ -121,6 +188,7 @@ const FRAAtlas: React.FC = () => {
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapInitialized, setMapInitialized] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const [currentMapStyle, setCurrentMapStyle] = useState<'satellite' | 'terrain' | 'osm'>('satellite');
   const [fraData, setFraData] = useState<FRAData[]>([]);
@@ -137,7 +205,8 @@ const FRAAtlas: React.FC = () => {
     fraPotential: true,
     boundaries: false,
     forests: true,
-    pattaHolders: true
+    pattaHolders: true,
+    waterBodies: true
   });
 
   // Layer references
@@ -146,6 +215,7 @@ const FRAAtlas: React.FC = () => {
   const boundariesLayerRef = useRef<L.LayerGroup | null>(null);
   const forestsLayerRef = useRef<L.LayerGroup | null>(null);
   const pattaHoldersLayerRef = useRef<L.LayerGroup | null>(null);
+  const waterBodiesLayerRef = useRef<L.LayerGroup | null>(null);
 
   // OCR and NER states
   const [showOCRDialog, setShowOCRDialog] = useState(false);
@@ -360,7 +430,7 @@ const FRAAtlas: React.FC = () => {
 
   // Initialize map
   useEffect(() => {
-    if (containerRef.current && !mapRef.current) {
+    if (containerRef.current && !mapRef.current && !mapInitialized) {
       const { center, zoom, bounds } = getMapConfigForUser();
       
       // Initialize map with strict bounds - only show user's area
@@ -462,6 +532,7 @@ const FRAAtlas: React.FC = () => {
         setReportModalOpen(true);
       };
       setMapLoaded(true);
+      setMapInitialized(true);
       setLoading(false);
 
       // Load FRA data
@@ -471,25 +542,47 @@ const FRAAtlas: React.FC = () => {
     }
 
     return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-      }
+      // Only cleanup on actual unmount, not on re-renders
     };
-  }, []);
+  }, [user]); // Only re-initialize if user changes
+
+  // Refresh patta holders layer on load
+  useEffect(() => {
+    if (mapLoaded && pattaHoldersLayerRef.current) {
+      // Toggle off then on to refresh
+      setTimeout(() => {
+        setLayerVisibility(prev => ({ ...prev, pattaHolders: false }));
+        setTimeout(() => {
+          setLayerVisibility(prev => ({ ...prev, pattaHolders: true }));
+        }, 100);
+      }, 1000);
+    }
+  }, [mapLoaded]);
 
   // Load FRA data
   const loadFRAData = async () => {
+    if (fraData.length > 0) return; // Don't reload if data already exists
     try {
       setLoading(true);
       
-      // Try to load real government data first
+      // Load from permanent GeoJSON files first
+      const permanentData = await loadPermanentData();
+      console.log('✅ Using permanent GeoJSON files');
+      const filteredMockData = filterDataForUser(convertToFRAData(permanentData));
+      setFraData(filteredMockData);
+      setFilteredData(filteredMockData);
+      updateMapLayers(filteredMockData);
+      setLoading(false);
+      return;
+      
+      // Try to load real government data
       try {
         const realData = await loadRealFRAData();
         console.log('✅ Real FRA data loaded from government APIs');
+        setCachedData(realData); // Cache the data
         
         // Convert and use real data
-        const convertedData: FRAData[] = [
+        const convertedRealData: FRAData[] = [
           ...realData.fraGranted.features.map((f: any) => ({
             id: f.properties.id,
             claimantName: f.properties.claimantName,
@@ -516,13 +609,15 @@ const FRAAtlas: React.FC = () => {
           }))
         ];
         
-        const mockData = filterDataForUser(convertedData);
-        setFraData(mockData);
-        setFilteredData(mockData);
-        updateMapLayers(mockData);
+        const realMockData = filterDataForUser(convertedRealData);
+        setFraData(realMockData);
+        setFilteredData(realMockData);
+        updateMapLayers(realMockData);
         return;
       } catch (error) {
-        console.warn('⚠️ Real data unavailable, using sample data:', error);
+        console.warn('⚠️ Real data unavailable, using local data:', error);
+        const localData = loadLocalFRAData();
+        setCachedData(localData);
       }
       // Simulate API call - replace with actual API endpoint
       const allMockData: FRAData[] = [
@@ -576,25 +671,38 @@ const FRAAtlas: React.FC = () => {
         }
       ];
       
-      // Filter data based on user role and location
-      const mockData = filterDataForUser(allMockData);
+      // Use local data as fallback
+      const localData = loadLocalFRAData();
+      const localMockData = convertToFRAData(localData);
+      const finalMockData = filterDataForUser(localMockData);
       
-      setFraData(mockData);
-      setFilteredData(mockData);
+      setFraData(finalMockData);
+      setFilteredData(finalMockData);
       
       // Initialize layer groups
       fraGrantedLayerRef.current = L.layerGroup().addTo(mapRef.current);
       fraPotentialLayerRef.current = L.layerGroup().addTo(mapRef.current);
       boundariesLayerRef.current = L.layerGroup();
-      forestsLayerRef.current = L.layerGroup().addTo(mapRef.current);
+      forestsLayerRef.current = L.layerGroup();
       pattaHoldersLayerRef.current = L.layerGroup();
+      waterBodiesLayerRef.current = L.layerGroup();
 
       // Add layers based on visibility
       if (layerVisibility.boundaries) {
         boundariesLayerRef.current.addTo(mapRef.current);
       }
+      if (layerVisibility.forests) {
+        forestsLayerRef.current.addTo(mapRef.current);
+        addForestsLayer();
+      }
       if (layerVisibility.pattaHolders) {
         pattaHoldersLayerRef.current.addTo(mapRef.current);
+        loadPattaHoldersData(); // Load patta holders data by default
+      }
+      if (layerVisibility.waterBodies) {
+        waterBodiesLayerRef.current = L.layerGroup();
+        waterBodiesLayerRef.current.addTo(mapRef.current);
+        addWaterBodiesLayer();
       }
 
       // Add FRA layers to map
@@ -656,14 +764,17 @@ const FRAAtlas: React.FC = () => {
           }
         });
 
-        // Add sample boundaries and forest areas
+        // Add sample boundaries layer
         addBoundariesLayer();
-        addForestsLayer();
       };
       
-      updateMapLayers(mockData);
-      // Load patta holders data
-      await loadPattaHoldersData();
+      updateMapLayers(finalMockData);
+      
+      // Load patta holders data immediately
+      if (layerVisibility.pattaHolders && pattaHoldersLayerRef.current) {
+        await loadPattaHoldersData();
+      }
+      
       // Load uploaded layers as well
       await loadUploadedLayers();
     } catch (error) {
@@ -733,16 +844,24 @@ const FRAAtlas: React.FC = () => {
         const response = await pattaHoldersAPI.getAll();
         if (response.success && response.data) {
           records = response.data;
-          console.log(`Loaded ${records.length} patta holders from backend API`);
+          console.log('✅ Loaded patta holders from backend API:', records.length);
         }
       } catch (error) {
-        console.warn('Failed to load from backend, trying localStorage:', error);
+        console.warn('⚠️ Failed to load from backend, trying localStorage:', error);
         // Fallback to localStorage
         const saved = localStorage.getItem('pattaHolders');
         if (saved) {
           records = JSON.parse(saved);
-          console.log(`Loaded ${records.length} patta holders from localStorage`);
+          console.log('✅ Loaded patta holders from localStorage:', records.length);
+        } else {
+          console.warn('⚠️ No patta holders data found in localStorage either');
         }
+      }
+      
+      console.log('🔍 Total patta holders to display:', records.length);
+      
+      if (records.length === 0) {
+        console.log('⚠️ No patta holders found, checking uploaded layers...');
       }
 
       if (records.length > 0) {
@@ -799,37 +918,43 @@ const FRAAtlas: React.FC = () => {
           });
 
           const statusClass = props.fraStatus?.includes('Granted') ? 'status-granted' : 'status-potential';
+          const escapeHtml = (text: string) => {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+          };
+          
           const popupContent = `
             <div>
               <div class="popup-header">
-                <h4>🏠 ${props.ownerName}</h4>
+                <h4>🏠 ${escapeHtml(props.ownerName || '')}</h4>
               </div>
               
               <div class="popup-section">
                 <h5>Owner Details</h5>
                 <table class="popup-table">
-                  <tr><td>Father</td><td>${props.fatherName || 'N/A'}</td></tr>
-                  <tr><td>Village</td><td>${props.village}</td></tr>
-                  <tr><td>District</td><td>${props.district}</td></tr>
-                  <tr><td>State</td><td>${props.state}</td></tr>
+                  <tr><td>Father</td><td>${escapeHtml(props.fatherName || 'N/A')}</td></tr>
+                  <tr><td>Village</td><td>${escapeHtml(props.village || '')}</td></tr>
+                  <tr><td>District</td><td>${escapeHtml(props.district || '')}</td></tr>
+                  <tr><td>State</td><td>${escapeHtml(props.state || '')}</td></tr>
                 </table>
               </div>
               
               <div class="popup-section">
                 <h5>Land Details</h5>
                 <table class="popup-table">
-                  <tr><td>Survey No</td><td>${props.surveyNo}</td></tr>
-                  <tr><td>Khasra</td><td>${props.khasra}</td></tr>
-                  <tr><td>Area</td><td>${props.area} hectares</td></tr>
-                  <tr><td>Classification</td><td>${props.classification}</td></tr>
-                  <tr><td>FRA Status</td><td><span class="status-chip ${statusClass}">${props.fraStatus}</span></td></tr>
-                  <tr><td>Created</td><td>${new Date(props.created).toLocaleDateString()}</td></tr>
+                  <tr><td>Survey No</td><td>${escapeHtml(props.surveyNo || '')}</td></tr>
+                  <tr><td>Khasra</td><td>${escapeHtml(props.khasra || '')}</td></tr>
+                  <tr><td>Area</td><td>${escapeHtml(String(props.area || 0))} hectares</td></tr>
+                  <tr><td>Classification</td><td>${escapeHtml(props.classification || '')}</td></tr>
+                  <tr><td>FRA Status</td><td><span class="status-chip ${statusClass}">${escapeHtml(props.fraStatus || '')}</span></td></tr>
+                  <tr><td>Created</td><td>${escapeHtml(new Date(props.created).toLocaleDateString())}</td></tr>
                 </table>
               </div>
               
               <div class="popup-section" style="border-top: 1px solid #e0e0e0; padding-top: 12px; margin-top: 12px;">
                 <button 
-                  onclick="window.openPattaReport('${recordId}', '${props.ownerName}')"
+                  onclick="window.openPattaReport('${escapeHtml(recordId)}', '${escapeHtml(props.ownerName || '')}')"
                   style="
                     width: 100%;
                     background: #f8f9fa;
@@ -870,59 +995,218 @@ const FRAAtlas: React.FC = () => {
           });
 
           polygon.addTo(pattaHoldersLayerRef.current!);
+          
+          // Ensure patta holders are visible
+          polygon.bringToFront();
         });
 
-        console.log(`Displayed ${geojson.features.length} patta holder records on map`);
+        console.log('✅ Displayed patta holder records on map:', geojson.features.length);
+      } else {
+        console.warn('⚠️ No patta holders data available to display');
+        // Force reload from Digital GIS Plot if no data found
+        console.log('🔄 Attempting to reload from uploaded layers...');
+        await loadUploadedLayers();
       }
     } catch (error) {
-      console.warn('Failed to load patta holders data:', error);
+      console.error('❌ Failed to load patta holders data:', error);
     }
   };
 
-  // Add forests layer
-  const addForestsLayer = () => {
+  // Add forests layer - Load from fra-states-forest-data.geojson only
+  const addForestsLayer = async () => {
     if (!mapRef.current || !forestsLayerRef.current) return;
 
     forestsLayerRef.current.clearLayers();
 
-    // Sample forest areas
-    const forests = [
-      {
-        name: 'Kanha National Park',
-        coordinates: [[22.2, 80.6], [22.2, 80.8], [22.4, 80.8], [22.4, 80.6]]
-      },
-      {
-        name: 'Simlipal Forest',
-        coordinates: [[21.8, 86.1], [21.8, 86.3], [22.0, 86.3], [22.0, 86.1]]
-      }
-    ];
+    try {
+      const fraStatesForest = await fetch('/data/fra-states-forest-data.geojson').then(r => r.json());
+      const forestFeatures = fraStatesForest.features || [];
 
-    forests.forEach(forest => {
-      const coordinates = forest.coordinates.map(coord => [coord[0], coord[1]] as [number, number]);
-      const polygon = L.polygon(coordinates, {
-        color: '#2e7d32',
-        fillColor: '#4caf50',
-        fillOpacity: 0.3,
-        weight: 2
+      console.log('Loading forest areas:', forestFeatures.length);
+
+      forestFeatures.forEach((feature: any) => {
+        const props = feature.properties;
+        const geometry = feature.geometry;
+
+        if (geometry.type === 'Polygon') {
+          // Convert coordinates from [lng, lat] to [lat, lng] for Leaflet
+          const coordinates = geometry.coordinates[0].map((coord: [number, number]) => [coord[1], coord[0]] as [number, number]);
+          
+          const polygon = L.polygon(coordinates, {
+            color: '#2e7d32',
+            fillColor: '#4caf50',
+            fillOpacity: 0.4,
+            weight: 2
+          });
+
+          const forestPopup = `
+            <div>
+              <div class="popup-header">
+                <h4>🌲 ${props.name || 'Forest Area'}</h4>
+              </div>
+              <div class="popup-section">
+                <h5>Forest Details</h5>
+                <table class="popup-table">
+                  <tr><td>Type</td><td>${props.type || 'Forest'}</td></tr>
+                  <tr><td>Area</td><td>${props.area || 'Unknown'} ${typeof props.area === 'number' ? 'sq km' : ''}</td></tr>
+                  <tr><td>State</td><td>${props.state || 'N/A'}</td></tr>
+                  ${props.osm_id ? `<tr><td>OSM ID</td><td>${props.osm_id}</td></tr>` : ''}
+                  ${props.source ? `<tr><td>Source</td><td>${props.source}</td></tr>` : ''}
+                </table>
+              </div>
+            </div>
+          `;
+          
+          polygon.bindPopup(forestPopup, { className: 'custom-popup' });
+          polygon.on('click', () => {
+            try {
+              const b = polygon.getBounds();
+              if (b && b.isValid() && mapRef.current) {
+                mapRef.current.fitBounds(b, { padding: [16, 16] });
+              }
+            } catch {}
+          });
+          
+          polygon.addTo(forestsLayerRef.current!);
+          
+          // Send forest polygon to back
+          polygon.bringToBack();
+        }
       });
 
-      const forestPopup = `
-        <div>
-          <div class="popup-header">
-            <h4>${forest.name}</h4>
-          </div>
-          <div class="popup-section">
-            <h5>Forest Details</h5>
-            <table class="popup-table">
-              <tr><td>Type</td><td>Forest Area</td></tr>
-            </table>
-          </div>
-        </div>
-      `;
-      polygon.bindPopup(forestPopup, { className: 'custom-popup' });
-      polygon.addTo(forestsLayerRef.current!);
-    });
+
+
+      console.log('✅ Loaded forest areas successfully:', forestFeatures.length);
+    } catch (error) {
+      console.error('Failed to load forest data:', error);
+    }
   };
+
+  // Add water bodies layer
+  const addWaterBodiesLayer = async () => {
+    if (!mapRef.current || !waterBodiesLayerRef.current) return;
+
+    waterBodiesLayerRef.current.clearLayers();
+
+    try {
+      console.log('Fetching real water bodies from external sources...');
+      
+      // Use OpenStreetMap data via Nominatim for water bodies
+      const bounds = mapRef.current.getBounds();
+      const bbox = `${bounds.getWest()},${bounds.getSouth()},${bounds.getEast()},${bounds.getNorth()}`;
+      
+      // Fetch water bodies using Nominatim search
+      const waterQueries = [
+        'river in India',
+        'lake in India', 
+        'reservoir in India'
+      ];
+      
+      let totalFeatures = 0;
+      
+      for (const query of waterQueries) {
+        try {
+          const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=geojson&q=${encodeURIComponent(query)}&limit=20&polygon_geojson=1`;
+          const response = await fetch(nominatimUrl);
+          const data = await response.json();
+          
+          if (data.features) {
+            data.features.forEach((feature: any) => {
+              const props = feature.properties;
+              const geometry = feature.geometry;
+              
+              if (geometry && (geometry.type === 'Polygon' || geometry.type === 'LineString')) {
+                let waterFeature;
+                
+                if (geometry.type === 'LineString') {
+                  const coordinates = geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
+                  waterFeature = L.polyline(coordinates, {
+                    color: '#00bcd4',
+                    weight: 6,
+                    opacity: 1
+                  });
+                } else {
+                  const coordinates = geometry.coordinates[0].map((coord: [number, number]) => [coord[1], coord[0]]);
+                  waterFeature = L.polygon(coordinates, {
+                    color: '#00bcd4',
+                    fillColor: '#4dd0e1',
+                    fillOpacity: 0.8,
+                    weight: 4
+                  });
+                }
+                
+                const name = props.display_name?.split(',')[0] || 'Water Body';
+                const type = props.type || query.split(' ')[0];
+                
+                waterFeature.bindPopup(`
+                  <div>
+                    <h4>💧 ${name}</h4>
+                    <p>Type: ${type}</p>
+                    <p>Source: OpenStreetMap</p>
+                  </div>
+                `);
+                
+                waterFeature.addTo(waterBodiesLayerRef.current!);
+                totalFeatures++;
+              }
+            });
+          }
+          
+          // Add delay between requests to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (error) {
+          console.warn(`Failed to fetch ${query}:`, error);
+        }
+      }
+      
+      console.log(`✅ Real water bodies loaded: ${totalFeatures} features from OpenStreetMap`);
+      
+    } catch (error) {
+      console.error('Failed to load external water data:', error);
+      
+      // Fallback to local data
+      try {
+        const response = await fetch('/data/water-bodies.geojson');
+        const waterData = await response.json();
+        
+        waterData.features.forEach((feature: any) => {
+          const props = feature.properties;
+          const geometry = feature.geometry;
+          
+          let waterFeature;
+          
+          if (geometry.type === 'LineString') {
+            const coordinates = geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
+            waterFeature = L.polyline(coordinates, {
+              color: '#00bcd4',
+              weight: 6,
+              opacity: 1
+            });
+          } else if (geometry.type === 'Polygon') {
+            const coordinates = geometry.coordinates[0].map((coord: [number, number]) => [coord[1], coord[0]]);
+            waterFeature = L.polygon(coordinates, {
+              color: '#00bcd4',
+              fillColor: '#4dd0e1',
+              fillOpacity: 0.8,
+              weight: 4
+            });
+          }
+          
+          if (waterFeature) {
+            waterFeature.bindPopup(`<h4>💧 ${props.name}</h4><p>Type: ${props.type}</p>`);
+            waterFeature.addTo(waterBodiesLayerRef.current!);
+            waterFeature.bringToFront();
+          }
+        });
+        
+        console.log('✅ Fallback water bodies loaded');
+      } catch (fallbackError) {
+        console.error('Fallback also failed:', fallbackError);
+      }
+    }
+  };
+
+
 
   // Toggle layer visibility
   const toggleLayerVisibility = (layerName: keyof typeof layerVisibility) => {
@@ -931,7 +1215,7 @@ const FRAAtlas: React.FC = () => {
 
   // Handle layer visibility changes
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || !mapLoaded) return;
 
     // FRA Granted layer
     if (fraGrantedLayerRef.current) {
@@ -989,7 +1273,7 @@ const FRAAtlas: React.FC = () => {
       }
     }
 
-    // Forests layer - auto-fetch real data when toggled on
+    // Forests layer - load forest data when toggled on
     if (!forestsLayerRef.current) {
       forestsLayerRef.current = L.layerGroup();
     }
@@ -998,33 +1282,10 @@ const FRAAtlas: React.FC = () => {
       if (!mapRef.current.hasLayer(forestsLayerRef.current)) {
         forestsLayerRef.current.addTo(mapRef.current);
         
-        // Auto-fetch real forest data when layer is turned on
+        // Load forest data when layer is turned on
         if (forestsLayerRef.current.getLayers().length === 0) {
-          console.log('🌲 Auto-fetching real forest areas...');
-          fetchRealForestAreas().then(forestData => {
-            if (forestData && forestData.features && forestData.features.length > 0) {
-              const geoJsonLayer = L.geoJSON(forestData as any, {
-                style: {
-                  color: '#00ff00',
-                  fillColor: '#32cd32',
-                  fillOpacity: 0.8,
-                  weight: 3
-                },
-                onEachFeature: (feature, layer) => {
-                  const name = feature.properties?.name || 'Forest Area';
-                  const type = feature.properties?.type || 'Forest';
-                  layer.bindPopup(`<h4>${name}</h4><p>Type: ${type}</p>`);
-                }
-              });
-              
-              geoJsonLayer.addTo(forestsLayerRef.current!);
-              console.log(`✅ Loaded ${forestData.features.length} real forest areas automatically`);
-            } else {
-              console.warn('No forest data received');
-            }
-          }).catch(error => {
-            console.warn('Failed to auto-load forest areas:', error);
-          });
+          console.log('🌲 Loading forest areas...');
+          addForestsLayer();
         }
       }
     } else {
@@ -1055,7 +1316,26 @@ const FRAAtlas: React.FC = () => {
         }
       }
     }
-  }, [layerVisibility]);
+
+    // Water Bodies layer - load water data when toggled on
+    if (!waterBodiesLayerRef.current) {
+      waterBodiesLayerRef.current = L.layerGroup();
+    }
+    
+    if (layerVisibility.waterBodies) {
+      if (!mapRef.current.hasLayer(waterBodiesLayerRef.current)) {
+        waterBodiesLayerRef.current.addTo(mapRef.current);
+        
+        // Load water bodies data when layer is turned on
+        console.log('💧 Loading water bodies...');
+        addWaterBodiesLayer();
+      }
+    } else {
+      if (mapRef.current.hasLayer(waterBodiesLayerRef.current)) {
+        mapRef.current.removeLayer(waterBodiesLayerRef.current);
+      }
+    }
+  }, [layerVisibility, mapLoaded]);
 
   const loadUploadedLayers = async () => {
     try {
@@ -1328,30 +1608,36 @@ const FRAAtlas: React.FC = () => {
             });
 
             const statusClass = 'status-potential';
+            const escapeHtml = (text: string) => {
+              const div = document.createElement('div');
+              div.textContent = text;
+              return div.innerHTML;
+            };
+            
             const popupContent = `
               <div>
                 <div class="popup-header">
-                  <h4>🏠 ${props.ownerName}</h4>
+                  <h4>🏠 ${escapeHtml(props.ownerName || '')}</h4>
                 </div>
                 
                 <div class="popup-section">
                   <h5>Owner Details</h5>
                   <table class="popup-table">
-                    <tr><td>Father</td><td>${props.fatherName || 'N/A'}</td></tr>
-                    <tr><td>Village</td><td>${props.village}</td></tr>
-                    <tr><td>District</td><td>${props.district}</td></tr>
-                    <tr><td>State</td><td>${props.state}</td></tr>
+                    <tr><td>Father</td><td>${escapeHtml(props.fatherName || 'N/A')}</td></tr>
+                    <tr><td>Village</td><td>${escapeHtml(props.village || '')}</td></tr>
+                    <tr><td>District</td><td>${escapeHtml(props.district || '')}</td></tr>
+                    <tr><td>State</td><td>${escapeHtml(props.state || '')}</td></tr>
                   </table>
                 </div>
                 
                 <div class="popup-section">
                   <h5>Land Details</h5>
                   <table class="popup-table">
-                    <tr><td>Survey No</td><td>${props.surveyNo}</td></tr>
-                    <tr><td>Khasra</td><td>${props.khasra}</td></tr>
-                    <tr><td>Area</td><td>${props.area} hectares</td></tr>
-                    <tr><td>Classification</td><td>${props.classification}</td></tr>
-                    <tr><td>FRA Status</td><td><span class="status-chip ${statusClass}">${props.fraStatus}</span></td></tr>
+                    <tr><td>Survey No</td><td>${escapeHtml(props.surveyNo || '')}</td></tr>
+                    <tr><td>Khasra</td><td>${escapeHtml(props.khasra || '')}</td></tr>
+                    <tr><td>Area</td><td>${escapeHtml(String(props.area || 0))} hectares</td></tr>
+                    <tr><td>Classification</td><td>${escapeHtml(props.classification || '')}</td></tr>
+                    <tr><td>FRA Status</td><td><span class="status-chip ${statusClass}">${escapeHtml(props.fraStatus || '')}</span></td></tr>
                     <tr><td>Type</td><td>Patta Holder</td></tr>
                   </table>
                 </div>
@@ -1375,10 +1661,10 @@ const FRAAtlas: React.FC = () => {
 
   // Apply filters when filter selection changes
   useEffect(() => {
-    if (fraData.length > 0) {
+    if (fraData.length > 0 && mapRef.current) {
       applyFiltersAndUpdateMap();
     }
-  }, [selectedFilters]);
+  }, [selectedFilters, fraData]);
 
   // Refresh uploaded list when the dialog opens
   useEffect(() => {
@@ -1627,13 +1913,14 @@ const FRAAtlas: React.FC = () => {
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
       {/* Header */}
       <Paper sx={{ 
-        p: { xs: 1.5, sm: 2 }, 
+        p: { xs: 1, sm: 1.5, md: 2 }, 
         mb: 0, 
         borderRadius: 0, 
         boxShadow: 1,
         position: 'sticky',
         top: 0,
-        zIndex: 1200
+        zIndex: 1200,
+        minHeight: { xs: '56px', sm: '64px', md: '72px' }
       }}>
         <Box sx={{ 
           display: 'flex', 
@@ -1652,7 +1939,7 @@ const FRAAtlas: React.FC = () => {
             <Satellite 
               color="primary" 
               sx={{ 
-                fontSize: { xs: 24, sm: 28, md: 32 },
+                fontSize: { xs: 20, sm: 24, md: 28, lg: 32 },
                 flexShrink: 0
               }} 
             />
@@ -1662,7 +1949,7 @@ const FRAAtlas: React.FC = () => {
                 fontWeight="bold" 
                 color="primary"
                 sx={{
-                  fontSize: { xs: '16px', sm: '20px', md: '24px' },
+                  fontSize: { xs: '14px', sm: '16px', md: '20px', lg: '24px' },
                   lineHeight: 1.2,
                   mb: 0.5
                 }}
@@ -1673,7 +1960,7 @@ const FRAAtlas: React.FC = () => {
                 variant="body2" 
                 color="text.secondary"
                 sx={{
-                  fontSize: { xs: '11px', sm: '12px', md: '14px' },
+                  fontSize: { xs: '10px', sm: '11px', md: '12px', lg: '14px' },
                   display: { xs: 'none', sm: 'block' }
                 }}
               >
@@ -1691,14 +1978,14 @@ const FRAAtlas: React.FC = () => {
               label={<span data-translate>{`${filteredData.length} Claims`}</span>} 
               color="primary" 
               variant="outlined"
-              size={window.innerWidth < 600 ? "small" : "medium"}
-              sx={{ fontSize: { xs: '10px', sm: '12px' } }}
+              size={window.innerWidth < 768 ? "small" : "medium"}
+              sx={{ fontSize: { xs: '8px', sm: '10px', md: '12px' } }}
             />
             <Chip 
               label={currentMapStyle.toUpperCase()} 
               color="secondary" 
               size="small"
-              sx={{ fontSize: { xs: '9px', sm: '11px' } }}
+              sx={{ fontSize: { xs: '7px', sm: '9px', md: '11px' } }}
             />
           </Stack>
         </Box>
@@ -1727,20 +2014,20 @@ const FRAAtlas: React.FC = () => {
           variant="temporary"
           sx={{
             '& .MuiDrawer-paper': {
-              width: { xs: '100vw', sm: 400, md: 420 },
+              width: { xs: '100vw', sm: '90vw', md: 400, lg: 420 },
               backgroundColor: '#f8fafc',
               borderLeft: '2.4px solid #1976d2',
               borderRight: '0.8px solid rgba(27, 27, 39, 0.12)',
               boxShadow: '-4px 0 20px rgba(0, 0, 0, 0.15)',
               position: 'fixed',
               right: 0,
-              top: 36,
-              height: 'calc(100vh - 36px - 24px)',
+              top: { xs: 0, sm: 36 },
+              height: { xs: '100vh', sm: 'calc(100vh - 36px - 24px)' },
               overflowX: 'auto',
               overflowY: 'auto',
               transition: 'transform 0.225s cubic-bezier(0, 0, 0.2, 1)',
               zIndex: 1300,
-              m: '24px 0 0 8px'
+              m: { xs: 0, sm: '24px 0 0 8px' }
             }
           }}
         >
@@ -2034,6 +2321,26 @@ const FRAAtlas: React.FC = () => {
                   <FormControlLabel
                     control={
                       <Switch
+                        checked={layerVisibility.waterBodies}
+                        onChange={() => toggleLayerVisibility('waterBodies')}
+                        color="info"
+                        size={window.innerWidth < 600 ? 'small' : 'medium'}
+                      />
+                    }
+                    label={
+                      <Typography 
+                        variant="body2" 
+                        fontWeight={500}
+                        sx={{ fontSize: { xs: '12px', sm: '14px' } }}
+                      >
+                        <span data-translate>Water Bodies</span>
+                      </Typography>
+                    }
+                    sx={{ mx: 0, width: '100%' }}
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
                         checked={allPlotsVisible}
                         onChange={toggleAllPlotsLayer}
                         color="info"
@@ -2192,16 +2499,16 @@ const FRAAtlas: React.FC = () => {
 
           {/* Base Layer Switcher */}
           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-            <Box sx={{ display: 'flex', gap: '20px', '@media (max-width: 991px)': { flexDirection: 'column', alignItems: 'stretch', gap: 0 } }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', lineHeight: 'normal', width: '50%', ml: 0, '@media (max-width: 991px)': { width: '100%', ml: 0 } }}>
-                <Paper sx={{ position: 'absolute', top: 14, left: 58, zIndex: 1000, p: 1, minWidth: 120, width: 136, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', m: 'auto 0', transition: 'box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Box sx={{ display: 'flex', gap: { xs: '8px', sm: '12px', md: '20px' }, '@media (max-width: 767px)': { flexDirection: 'column', alignItems: 'stretch', gap: 0 } }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', lineHeight: 'normal', width: { xs: '100%', md: '50%' }, ml: 0 }}>
+                <Paper sx={{ position: 'absolute', top: { xs: 8, sm: 12, md: 14 }, left: { xs: 8, sm: 32, md: 58 }, zIndex: 1000, p: { xs: 0.5, sm: 0.75, md: 1 }, minWidth: { xs: 80, sm: 100, md: 120 }, width: { xs: 90, sm: 110, md: 136 }, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', m: 'auto 0', transition: 'box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 0.25, sm: 0.375, md: 0.5 } }}>
                     <Button
                       size="small"
                       variant={currentMapStyle === 'satellite' ? 'contained' : 'outlined'}
                       onClick={() => changeMapStyle('satellite')}
-                      startIcon={<Satellite sx={{ fontSize: 16 }} />}
-                      sx={{ justifyContent: 'flex-start', py: 0.5, fontSize: '11px' }}
+                      startIcon={<Satellite sx={{ fontSize: { xs: 12, sm: 14, md: 16 } }} />}
+                      sx={{ justifyContent: 'flex-start', py: { xs: 0.25, sm: 0.375, md: 0.5 }, fontSize: { xs: '8px', sm: '9px', md: '11px' } }}
                     >
                       Satellite
                     </Button>
@@ -2209,8 +2516,8 @@ const FRAAtlas: React.FC = () => {
                       size="small"
                       variant={currentMapStyle === 'terrain' ? 'contained' : 'outlined'}
                       onClick={() => changeMapStyle('terrain')}
-                      startIcon={<Terrain sx={{ fontSize: 16 }} />}
-                      sx={{ justifyContent: 'flex-start', py: 0.5, fontSize: '11px' }}
+                      startIcon={<Terrain sx={{ fontSize: { xs: 12, sm: 14, md: 16 } }} />}
+                      sx={{ justifyContent: 'flex-start', py: { xs: 0.25, sm: 0.375, md: 0.5 }, fontSize: { xs: '8px', sm: '9px', md: '11px' } }}
                     >
                       Terrain
                     </Button>
@@ -2218,16 +2525,16 @@ const FRAAtlas: React.FC = () => {
                       size="small"
                       variant={currentMapStyle === 'osm' ? 'contained' : 'outlined'}
                       onClick={() => changeMapStyle('osm')}
-                      startIcon={<MapIcon sx={{ fontSize: 16 }} />}
-                      sx={{ justifyContent: 'flex-start', py: 0.5, fontSize: '11px' }}
+                      startIcon={<MapIcon sx={{ fontSize: { xs: 12, sm: 14, md: 16 } }} />}
+                      sx={{ justifyContent: 'flex-start', py: { xs: 0.25, sm: 0.375, md: 0.5 }, fontSize: { xs: '8px', sm: '9px', md: '11px' } }}
                     >
                       OSM
                     </Button>
                   </Box>
                 </Paper>
               </Box>
-              <Box sx={{ display: 'flex', flexDirection: 'column', lineHeight: 'normal', width: '50%', ml: '20px', '@media (max-width: 991px)': { width: '100%', ml: 0 } }}>
-                <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', fontSize: '12px', fontWeight: 600, lineHeight: '20px', mb: 1 }}>
+              <Box sx={{ display: { xs: 'none', md: 'flex' }, flexDirection: 'column', lineHeight: 'normal', width: '50%', ml: { xs: 0, md: '20px' } }}>
+                <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', fontSize: { xs: '10px', sm: '11px', md: '12px' }, fontWeight: 600, lineHeight: '20px', mb: 1 }}>
                   Base Layer
                 </Typography>
               </Box>
@@ -2240,30 +2547,31 @@ const FRAAtlas: React.FC = () => {
             top: { xs: 8, sm: 16 }, 
             right: { 
               xs: showControls ? '100vw' : 8, 
-              sm: showControls ? 420 : 16, 
-              md: showControls ? 440 : 16 
+              sm: showControls ? '90vw' : 16, 
+              md: showControls ? 420 : 16, 
+              lg: showControls ? 440 : 16 
             }, 
             display: 'flex', 
             flexDirection: 'column', 
             gap: { xs: 0.5, sm: 1 }, 
             zIndex: 1400, 
             transition: 'right 300ms ease-in-out',
-            opacity: showControls && window.innerWidth < 600 ? 0 : 1
+            opacity: showControls && window.innerWidth < 768 ? 0 : 1
           }}>
             <Tooltip title="Map Controls">
               <Fab
-                size={window.innerWidth < 600 ? "small" : "medium"}
+                size={window.innerWidth < 768 ? "small" : "medium"}
                 color="primary"
                 onClick={() => setShowControls(true)}
                 sx={{
-                  width: { xs: 40, sm: 48, md: 52 },
-                  height: { xs: 40, sm: 48, md: 56 },
+                  width: { xs: 36, sm: 44, md: 48, lg: 52 },
+                  height: { xs: 36, sm: 44, md: 48, lg: 56 },
                   minHeight: 0,
                   ml: 'auto',
                   boxShadow: 3
                 }}
               >
-                <Layers sx={{ fontSize: { xs: 18, sm: 20, md: 24 } }} />
+                <Layers sx={{ fontSize: { xs: 16, sm: 18, md: 20, lg: 24 } }} />
               </Fab>
             </Tooltip>
             <Tooltip title="Uploaded Data">
@@ -2272,11 +2580,11 @@ const FRAAtlas: React.FC = () => {
                 color="default" 
                 onClick={() => setShowLayersDialog(true)}
                 sx={{ 
-                  width: { xs: 36, sm: 40 },
-                  height: { xs: 36, sm: 40 }
+                  width: { xs: 32, sm: 36, md: 40 },
+                  height: { xs: 32, sm: 36, md: 40 }
                 }}
               >
-                <ListIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />
+                <ListIcon sx={{ fontSize: { xs: 14, sm: 16, md: 18 } }} />
               </Fab>
             </Tooltip>
             <Tooltip title="Land Records">
@@ -2285,11 +2593,11 @@ const FRAAtlas: React.FC = () => {
                 color="secondary" 
                 onClick={() => setShowBhunakshaSearch(true)}
                 sx={{ 
-                  width: { xs: 36, sm: 40 },
-                  height: { xs: 36, sm: 40 }
+                  width: { xs: 32, sm: 36, md: 40 },
+                  height: { xs: 32, sm: 36, md: 40 }
                 }}
               >
-                <MapIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />
+                <MapIcon sx={{ fontSize: { xs: 14, sm: 16, md: 18 } }} />
               </Fab>
             </Tooltip>
             <Tooltip title="My Location">
@@ -2298,11 +2606,11 @@ const FRAAtlas: React.FC = () => {
                 color="default" 
                 onClick={() => locateMe(false)}
                 sx={{ 
-                  width: { xs: 36, sm: 40 },
-                  height: { xs: 36, sm: 40 }
+                  width: { xs: 32, sm: 36, md: 40 },
+                  height: { xs: 32, sm: 36, md: 40 }
                 }}
               >
-                <MyLocation sx={{ fontSize: { xs: 16, sm: 18 } }} />
+                <MyLocation sx={{ fontSize: { xs: 14, sm: 16, md: 18 } }} />
               </Fab>
             </Tooltip>
             <Tooltip title="OCR Processing">
@@ -2312,13 +2620,13 @@ const FRAAtlas: React.FC = () => {
                 onClick={() => document.getElementById('file-upload')?.click()}
                 disabled={processingOCR}
                 sx={{ 
-                  width: { xs: 36, sm: 40 },
-                  height: { xs: 36, sm: 40 }
+                  width: { xs: 32, sm: 36, md: 40 },
+                  height: { xs: 32, sm: 36, md: 40 }
                 }}
               >
                 {processingOCR ? 
-                  <CircularProgress size={window.innerWidth < 600 ? 16 : 20} /> : 
-                  <PhotoCamera sx={{ fontSize: { xs: 16, sm: 18 } }} />
+                  <CircularProgress size={window.innerWidth < 768 ? 14 : 18} /> : 
+                  <PhotoCamera sx={{ fontSize: { xs: 14, sm: 16, md: 18 } }} />
                 }
               </Fab>
             </Tooltip>
@@ -2330,13 +2638,13 @@ const FRAAtlas: React.FC = () => {
                 onClick={() => setShowNERDialog(true)}
                 disabled={processingNER}
                 sx={{ 
-                  width: { xs: 36, sm: 40 },
-                  height: { xs: 36, sm: 40 }
+                  width: { xs: 32, sm: 36, md: 40 },
+                  height: { xs: 32, sm: 36, md: 40 }
                 }}
               >
                 {processingNER ? 
-                  <CircularProgress size={window.innerWidth < 600 ? 16 : 20} /> : 
-                  <TextFields sx={{ fontSize: { xs: 16, sm: 18 } }} />
+                  <CircularProgress size={window.innerWidth < 768 ? 14 : 18} /> : 
+                  <TextFields sx={{ fontSize: { xs: 14, sm: 16, md: 18 } }} />
                 }
               </Fab>
             </Tooltip>
@@ -2347,162 +2655,48 @@ const FRAAtlas: React.FC = () => {
                 color="default"
                 onClick={() => setShowLocationSearch(true)}
                 sx={{ 
-                  width: { xs: 36, sm: 40 },
-                  height: { xs: 36, sm: 40 }
+                  width: { xs: 32, sm: 36, md: 40 },
+                  height: { xs: 32, sm: 36, md: 40 }
                 }}
               >
-                <Search sx={{ fontSize: { xs: 16, sm: 18 } }} />
-              </Fab>
-            </Tooltip>
-            
-            <Tooltip title="Reload Patta Holders">
-              <Fab 
-                size="small" 
-                color="secondary" 
-                onClick={async () => {
-                  try {
-                    console.log('Reloading patta holders...');
-                    if (!pattaHoldersLayerRef.current) {
-                      pattaHoldersLayerRef.current = L.layerGroup().addTo(mapRef.current!);
-                    }
-                    pattaHoldersLayerRef.current.clearLayers();
-                    await loadPattaHoldersData();
-                    setInfo('Patta holders reloaded successfully!');
-                  } catch (error) {
-                    console.error('Failed to reload patta holders:', error);
-                    setError('Failed to reload patta holders');
-                  }
-                }}
-                sx={{ 
-                  width: { xs: 36, sm: 40 },
-                  height: { xs: 36, sm: 40 }
-                }}
-              >
-                <LocationOn sx={{ fontSize: { xs: 16, sm: 18 } }} />
+                <Search sx={{ fontSize: { xs: 14, sm: 16, md: 18 } }} />
               </Fab>
             </Tooltip>
             
 
             
-            <Tooltip title="Load Real FRA Data">
+
+            
+            <Tooltip title="Fetch Real External Data">
               <Fab 
                 size="small" 
                 color="success" 
                 sx={{ 
-                  width: { xs: 36, sm: 40 },
-                  height: { xs: 36, sm: 40 }
+                  width: { xs: 32, sm: 36, md: 40 },
+                  height: { xs: 32, sm: 36, md: 40 }
                 }}
                 onClick={async () => {
-                  try {
-                    setLoading(true);
-                    const realData = await loadRealFRAData();
-                    console.log('Real data loaded:', realData);
-                    
-                    // Initialize layers if not exists
-                    if (!fraGrantedLayerRef.current) fraGrantedLayerRef.current = L.layerGroup().addTo(mapRef.current!);
-                    if (!fraPotentialLayerRef.current) fraPotentialLayerRef.current = L.layerGroup().addTo(mapRef.current!);
-                    if (!boundariesLayerRef.current) boundariesLayerRef.current = L.layerGroup().addTo(mapRef.current!);
-                    if (!forestsLayerRef.current) forestsLayerRef.current = L.layerGroup().addTo(mapRef.current!);
-                    
-                    // Clear existing layers
-                    fraGrantedLayerRef.current.clearLayers();
-                    fraPotentialLayerRef.current.clearLayers();
-                    boundariesLayerRef.current.clearLayers();
-                    forestsLayerRef.current.clearLayers();
-                    
-                    // Plot FRA Granted areas
-                    realData.fraGranted.features.forEach((feature: any) => {
-                      const coords = feature.geometry.coordinates[0].map((c: number[]) => [c[1], c[0]]);
-                      const polygon = L.polygon(coords, {
-                        color: '#1b5e20',
-                        fillColor: '#2e7d32',
-                        fillOpacity: 0.35,
-                        weight: 2
-                      });
-                      polygon.bindPopup(`<h4>${feature.properties.claimantName}</h4><p>Status: Granted</p><p>Area: ${feature.properties.area} hectares</p>`);
-                      polygon.addTo(fraGrantedLayerRef.current!);
-                    });
-                    
-                    // Plot FRA Potential areas
-                    realData.fraPotential.features.forEach((feature: any) => {
-                      const coords = feature.geometry.coordinates[0].map((c: number[]) => [c[1], c[0]]);
-                      const polygon = L.polygon(coords, {
-                        color: '#ff6f00',
-                        fillColor: '#ff9800',
-                        fillOpacity: 0.25,
-                        weight: 2
-                      });
-                      polygon.bindPopup(`<h4>${feature.properties.claimantName}</h4><p>Status: Potential</p><p>Area: ${feature.properties.area} hectares</p>`);
-                      polygon.addTo(fraPotentialLayerRef.current!);
-                    });
-                    
-                    // Plot Real State Boundaries
-                    try {
-                      const stateBoundaries = await fetchRealStateBoundaries();
-                      L.geoJSON(stateBoundaries as any, {
-                        style: {
-                          color: '#1976d2',
-                          fillColor: '#2196f3',
-                          fillOpacity: 0.1,
-                          weight: 3,
-                          dashArray: '10,5'
-                        },
-                        onEachFeature: (feature, layer) => {
-                          layer.bindPopup(`<h4>${feature.properties.name}</h4><p>Type: State</p>`);
-                        }
-                      }).addTo(boundariesLayerRef.current!);
-                      
-                      console.log('✅ Real state boundaries plotted');
-                    } catch (error) {
-                      console.warn('Failed to load state boundaries:', error);
-                    }
-                    
-                    // Plot Real District Boundaries
-                    try {
-                      const districtBoundaries = await fetchRealDistrictBoundaries();
-                      L.geoJSON(districtBoundaries as any, {
-                        style: {
-                          color: '#ff5722',
-                          fillColor: '#ffccbc',
-                          fillOpacity: 0.15,
-                          weight: 2,
-                          dashArray: '5,3'
-                        },
-                        onEachFeature: (feature, layer) => {
-                          layer.bindPopup(`<h4>${feature.properties.name}</h4><p>State: ${feature.properties.state}</p><p>Type: District</p>`);
-                        }
-                      }).addTo(boundariesLayerRef.current!);
-                      
-                      console.log('✅ Real district boundaries plotted');
-                    } catch (error) {
-                      console.warn('Failed to load district boundaries:', error);
-                    }
-                    
-                    // Plot Forest Areas
-                    realData.forestAreas.features.forEach((feature: any) => {
-                      const coords = feature.geometry.coordinates[0].map((c: number[]) => [c[1], c[0]]);
-                      const polygon = L.polygon(coords, {
-                        color: '#2e7d32',
-                        fillColor: '#4caf50',
-                        fillOpacity: 0.3,
-                        weight: 2
-                      });
-                      polygon.bindPopup(`<h4>${feature.properties.name}</h4><p>Type: ${feature.properties.type}</p><p>Area: ${feature.properties.area} sq km</p>`);
-                      polygon.addTo(forestsLayerRef.current!);
-                    });
-                    
-                    setInfo(`Real FRA data plotted: ${realData.fraGranted.features.length} granted + ${realData.fraPotential.features.length} potential areas`);
-                  } catch (error) {
-                    console.error('Failed to load real data:', error);
-                    setError('Failed to load real FRA data');
-                  } finally {
-                    setLoading(false);
+                  setLoading(true);
+                  const success = await fetchAndSaveRealData();
+                  if (success) {
+                    // Reload with real data
+                    const realData = await loadPermanentData();
+                    const mockData = filterDataForUser(convertToFRAData(realData));
+                    setFraData(mockData);
+                    setFilteredData(mockData);
+                    updateMapLayers(mockData);
+                    setInfo('Real external data fetched and loaded!');
+                  } else {
+                    setError('Failed to fetch real external data');
                   }
+                  setLoading(false);
                 }}
               >
-                <Refresh sx={{ fontSize: { xs: 16, sm: 18 } }} />
+                <Refresh sx={{ fontSize: { xs: 14, sm: 16, md: 18 } }} />
               </Fab>
             </Tooltip>
+            
+
             
 
           </Box>
@@ -2748,8 +2942,53 @@ const FRAAtlas: React.FC = () => {
       </Dialog>
 
       {/* Location Search Dialog */}
-      <Dialog open={showLocationSearch} onClose={() => setShowLocationSearch(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
+      <Dialog 
+        open={showLocationSearch} 
+        onClose={() => setShowLocationSearch(false)} 
+        PaperProps={{
+          style: {
+            position: 'fixed',
+            top: '20%',
+            left: '30%',
+            width: '400px',
+            height: '500px',
+            resize: 'both',
+            overflow: 'auto',
+            minWidth: '300px',
+            minHeight: '200px',
+            margin: 0,
+            maxWidth: 'none',
+            maxHeight: 'none'
+          },
+          onMouseDown: (e: any) => {
+            const dialog = e.currentTarget;
+            const rect = dialog.getBoundingClientRect();
+            const offsetX = e.clientX - rect.left;
+            const offsetY = e.clientY - rect.top;
+            
+            const handleMouseMove = (moveEvent: MouseEvent) => {
+              dialog.style.left = (moveEvent.clientX - offsetX) + 'px';
+              dialog.style.top = (moveEvent.clientY - offsetY) + 'px';
+            };
+            
+            const handleMouseUp = () => {
+              document.removeEventListener('mousemove', handleMouseMove);
+              document.removeEventListener('mouseup', handleMouseUp);
+            };
+            
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+          }
+        }}
+      >
+        <DialogTitle
+          style={{
+            cursor: 'move',
+            userSelect: 'none',
+            backgroundColor: '#f5f5f5',
+            borderBottom: '1px solid #ddd'
+          }}
+        >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Search />
             Search Location
@@ -2872,19 +3111,49 @@ const FRAAtlas: React.FC = () => {
       </Dialog>
 
       {/* Legend */}
-      <Paper sx={{ 
-        position: 'absolute', 
-        bottom: { xs: 8, sm: 16 }, 
-        left: { xs: 8, sm: 16 }, 
-        p: { xs: 1, sm: 2 }, 
-        display: 'flex', 
-        gap: { xs: 1.5, sm: 3 },
-        bgcolor: 'background.paper',
-        boxShadow: 3,
-        borderRadius: 2,
-        flexWrap: { xs: 'wrap', sm: 'nowrap' },
-        maxWidth: { xs: 'calc(100vw - 16px)', sm: 'auto' }
-      }}>
+      <Paper 
+        sx={{ 
+          position: 'absolute', 
+          bottom: 20, 
+          left: 20, 
+          p: 2, 
+          display: 'flex', 
+          gap: 2,
+          bgcolor: 'rgba(255, 255, 255, 0.9)',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+          borderRadius: 2,
+          border: '1px solid rgba(0,0,0,0.1)',
+          flexWrap: 'wrap',
+          maxWidth: 'calc(100vw - 40px)',
+          zIndex: 1000,
+          cursor: 'move',
+          userSelect: 'none',
+          resize: 'horizontal',
+          overflow: 'hidden',
+          minWidth: '200px',
+          width: '400px'
+        }}
+        onMouseDown={(e) => {
+          const legend = e.currentTarget;
+          const rect = legend.getBoundingClientRect();
+          const offsetX = e.clientX - rect.left;
+          const offsetY = e.clientY - rect.top;
+          
+          const handleMouseMove = (moveEvent: MouseEvent) => {
+            legend.style.left = (moveEvent.clientX - offsetX) + 'px';
+            legend.style.top = (moveEvent.clientY - offsetY) + 'px';
+            legend.style.bottom = 'auto';
+          };
+          
+          const handleMouseUp = () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+          };
+          
+          document.addEventListener('mousemove', handleMouseMove);
+          document.addEventListener('mouseup', handleMouseUp);
+        }}
+      >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 } }}>
           <Box sx={{ 
             width: { xs: 12, sm: 16 }, 
@@ -2894,7 +3163,7 @@ const FRAAtlas: React.FC = () => {
             border: '2px solid #1b5e20', 
             borderRadius: 1 
           }} />
-          <Typography variant="body2" sx={{ fontSize: { xs: '11px', sm: '14px' } }}>Granted FRA</Typography>
+          <Typography variant="body2" sx={{ fontSize: { xs: '9px', sm: '11px', md: '14px' }, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Granted FRA</Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 } }}>
           <Box sx={{ 
@@ -2905,7 +3174,7 @@ const FRAAtlas: React.FC = () => {
             border: '2px solid #ff6f00', 
             borderRadius: 1 
           }} />
-          <Typography variant="body2" sx={{ fontSize: { xs: '11px', sm: '14px' } }}>Potential FRA</Typography>
+          <Typography variant="body2" sx={{ fontSize: { xs: '9px', sm: '11px', md: '14px' }, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Potential FRA</Typography>
         </Box>
 
         {allPlotsVisible && (
@@ -2918,7 +3187,20 @@ const FRAAtlas: React.FC = () => {
               border: '2px solid #4caf50', 
               borderRadius: 1 
             }} />
-            <Typography variant="body2" sx={{ fontSize: { xs: '11px', sm: '14px' } }}>All Land Plots</Typography>
+            <Typography variant="body2" sx={{ fontSize: { xs: '9px', sm: '11px', md: '14px' }, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>All Land Plots</Typography>
+          </Box>
+        )}
+        {layerVisibility.forests && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 } }}>
+            <Box sx={{ 
+              width: { xs: 12, sm: 16 }, 
+              height: { xs: 12, sm: 16 }, 
+              bgcolor: '#4caf50', 
+              opacity: 0.4, 
+              border: '2px solid #2e7d32', 
+              borderRadius: 1 
+            }} />
+            <Typography variant="body2" sx={{ fontSize: { xs: '9px', sm: '11px', md: '14px' }, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Forest Areas</Typography>
           </Box>
         )}
         {layerVisibility.pattaHolders && (
@@ -2931,7 +3213,20 @@ const FRAAtlas: React.FC = () => {
               border: '2px solid #ff9800', 
               borderRadius: 1 
             }} />
-            <Typography variant="body2" sx={{ fontSize: { xs: '11px', sm: '14px' } }}>Patta Holders</Typography>
+            <Typography variant="body2" sx={{ fontSize: { xs: '9px', sm: '11px', md: '14px' }, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Patta Holders</Typography>
+          </Box>
+        )}
+        {layerVisibility.waterBodies && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 } }}>
+            <Box sx={{ 
+              width: { xs: 12, sm: 16 }, 
+              height: { xs: 12, sm: 16 }, 
+              bgcolor: '#4dd0e1', 
+              opacity: 0.8, 
+              border: '2px solid #00bcd4', 
+              borderRadius: 1 
+            }} />
+            <Typography variant="body2" sx={{ fontSize: { xs: '9px', sm: '11px', md: '14px' }, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Water Bodies</Typography>
           </Box>
         )}
       </Paper>

@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import {
   MenuItem,
   Box,
-  IconButton,
+  Button,
   Tooltip,
   Menu,
   alpha,
+  Typography,
+  Chip
 } from '@mui/material';
-import { Language as LanguageIcon } from '@mui/icons-material';
+import { Language as LanguageIcon, ExpandMore } from '@mui/icons-material';
 import { getSupportedLanguages } from '../services/translationService';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -35,10 +37,14 @@ const LanguageSwitcher: React.FC = () => {
     return lang ? lang.name.split('(')[0].trim() : 'English';
   };
 
+  const getCurrentLanguageCode = () => {
+    return currentLanguage.toUpperCase();
+  };
+
   return (
     <>
       <Tooltip 
-        title={`Current: ${getCurrentLanguageName()}`} 
+        title={`Change Language (Current: ${getCurrentLanguageName()})`} 
         placement="bottom"
         componentsProps={{
           tooltip: {
@@ -51,27 +57,37 @@ const LanguageSwitcher: React.FC = () => {
           }
         }}
       >
-        <IconButton 
+        <Button 
           onClick={handleClick}
           disabled={isTranslating}
+          startIcon={<LanguageIcon sx={{ fontSize: 18 }} />}
+          endIcon={<ExpandMore sx={{ fontSize: 16 }} />}
           sx={{
             color: '#ffffff',
             border: `1px solid ${alpha('#ffffff', 0.3)}`,
-            borderRadius: '6px',
-            padding: '6px',
+            borderRadius: '8px',
+            padding: '6px 12px',
+            minWidth: 'auto',
+            textTransform: 'none',
+            fontSize: '0.8rem',
+            fontWeight: 500,
             transition: 'all 0.3s ease',
             '&:hover': {
               backgroundColor: alpha('#ffffff', 0.1),
               border: `1px solid ${alpha('#ffffff', 0.5)}`,
-              transform: 'scale(1.05)'
+              transform: 'translateY(-1px)'
             },
             '&:disabled': {
               opacity: 0.5
             }
           }}
         >
-          <LanguageIcon sx={{ fontSize: 20 }} />
-        </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.75rem' }}>
+              {getCurrentLanguageCode()}
+            </Typography>
+          </Box>
+        </Button>
       </Tooltip>
       
       <Menu
@@ -81,7 +97,7 @@ const LanguageSwitcher: React.FC = () => {
         PaperProps={{
           sx: {
             mt: 1,
-            minWidth: 200,
+            minWidth: 220,
             maxHeight: 300,
             overflow: 'auto',
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
@@ -89,6 +105,11 @@ const LanguageSwitcher: React.FC = () => {
           }
         }}
       >
+        <Box sx={{ px: 2, py: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'primary.main' }}>
+            Select Language
+          </Typography>
+        </Box>
         {supportedLanguages.map((lang) => (
           <MenuItem 
             key={lang.code} 
@@ -96,7 +117,11 @@ const LanguageSwitcher: React.FC = () => {
             selected={lang.code === currentLanguage}
             sx={{
               fontSize: '0.85rem',
-              py: 1,
+              py: 1.5,
+              px: 2,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
               '&.Mui-selected': {
                 backgroundColor: alpha('#1976d2', 0.12),
                 '&:hover': {
@@ -105,7 +130,18 @@ const LanguageSwitcher: React.FC = () => {
               }
             }}
           >
-            {lang.name}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <LanguageIcon sx={{ fontSize: 16, opacity: 0.7 }} />
+              <Typography variant="body2">{lang.name}</Typography>
+            </Box>
+            {lang.code === currentLanguage && (
+              <Chip 
+                label="Current" 
+                size="small" 
+                color="primary" 
+                sx={{ fontSize: '0.7rem', height: 20 }}
+              />
+            )}
           </MenuItem>
         ))}
       </Menu>

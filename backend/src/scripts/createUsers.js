@@ -14,6 +14,20 @@ const createUsers = async () => {
         district: null
       },
       {
+        email: 'state.mp@fraatlas.gov.in',
+        password: 'state123',
+        role: 'state_admin',
+        state: 'Madhya Pradesh',
+        district: null
+      },
+      {
+        email: 'district.khargone@fraatlas.gov.in',
+        password: 'district123',
+        role: 'district_admin',
+        state: 'Madhya Pradesh',
+        district: 'Khargone'
+      },
+      {
         email: 'test@example.com',
         password: 'testpass123',
         role: 'user',
@@ -28,14 +42,14 @@ const createUsers = async () => {
       
       // Insert user
       await pool.query(`
-        INSERT INTO users (email, password, role, state, district)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO users (id, username, email, password_hash, role, state, district)
+        VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6)
         ON CONFLICT (email) DO UPDATE SET
-          password = EXCLUDED.password,
+          password_hash = EXCLUDED.password_hash,
           role = EXCLUDED.role,
           state = EXCLUDED.state,
           district = EXCLUDED.district
-      `, [user.email, hashedPassword, user.role, user.state, user.district]);
+      `, [user.email.split('@')[0], user.email, hashedPassword, user.role, user.state, user.district]);
       
       console.log(`✅ Created user: ${user.email} (${user.role})`);
     }

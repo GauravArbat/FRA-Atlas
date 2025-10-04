@@ -208,7 +208,7 @@ const VoiceAssistant: React.FC = () => {
       recognition.onresult = (event: any) => {
         clearTimeout(commandTimeout);
         const transcript = event.results[0][0].transcript;
-        console.log('📝 Command received:', transcript);
+        console.log('📝 Command received:', transcript.replace(/[\r\n\t]/g, ' ').substring(0, 100));
         processCommand(transcript);
       };
       

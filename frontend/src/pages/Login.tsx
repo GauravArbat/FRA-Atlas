@@ -26,7 +26,10 @@ import {
   Login as LoginIcon,
   Park,
   ArrowForward,
-  Security
+  Security,
+  AccountTree,
+  LocationCity,
+  AdminPanelSettings
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -71,6 +74,45 @@ const Login: React.FC = () => {
     setShowPassword(!showPassword);
   };
 
+  const handleDemoLogin = async (demoEmail: string, demoPassword: string) => {
+    setError('');
+    
+    // Clear fields first
+    setEmail('');
+    setPassword('');
+    
+    // Animate email typing
+    for (let i = 0; i <= demoEmail.length; i++) {
+      await new Promise(resolve => setTimeout(resolve, 80));
+      setEmail(demoEmail.substring(0, i));
+    }
+    
+    // Small pause
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Animate password typing
+    for (let i = 0; i <= demoPassword.length; i++) {
+      await new Promise(resolve => setTimeout(resolve, 80));
+      setPassword(demoPassword.substring(0, i));
+    }
+    
+    // Pause before auto-clicking login
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    // Auto-submit form
+    setLoading(true);
+    
+    try {
+      await login(demoEmail, demoPassword);
+      navigate('/', { replace: true });
+    } catch (err: any) {
+      const errorMessage = err.message || 'Login failed';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -94,46 +136,230 @@ const Login: React.FC = () => {
         }
       }}
     >
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-        <Grid container spacing={4} alignItems="center">
+      <Container maxWidth="lg" sx={{ 
+        position: 'relative', 
+        zIndex: 1,
+        px: { xs: 2, sm: 3, md: 4 }
+      }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', lg: 'row' },
+          gap: { xs: 2, lg: 3 }, 
+          alignItems: { xs: 'center', lg: 'flex-start' }
+        }}>
           {/* Left Side - Branding */}
-          <Grid item xs={12} md={6}>
+          <Box sx={{ 
+            flex: { lg: 1 },
+            width: { xs: '100%', lg: 'auto' },
+            textAlign: { xs: 'center', lg: 'left' }
+          }}>
             <Fade in timeout={1000}>
-              <Box sx={{ textAlign: isMobile ? 'center' : 'left', mb: isMobile ? 4 : 0 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'center' : 'flex-start', mb: 3 }}>
-                  <Park sx={{ fontSize: 48, color: 'primary.main', mr: 2 }} />
-                  <Typography variant="h3" sx={{ fontWeight: 700, color: 'primary.main' }}>
+              <Box>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: { xs: 'center', lg: 'flex-start' },
+                  mb: { xs: 3, md: 4 } 
+                }}>
+                  <Park sx={{ 
+                    fontSize: { xs: 40, sm: 48, md: 64 }, 
+                    color: 'primary.main', 
+                    mr: { xs: 2, md: 3 } 
+                  }} />
+                  <Typography variant="h2" sx={{ 
+                    fontWeight: 800, 
+                    color: 'primary.main', 
+                    letterSpacing: { xs: '1px', md: '2px' },
+                    fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' }
+                  }}>
                     FRA Atlas
                   </Typography>
                 </Box>
-                <Typography variant="h4" sx={{ fontWeight: 600, mb: 2, color: 'text.primary' }}>
+                <Typography variant="h3" sx={{ 
+                  fontWeight: 700, 
+                  mb: { xs: 2, md: 3 }, 
+                  color: 'text.primary',
+                  fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }
+                }}>
                   Forest Rights Act
                 </Typography>
-                <Typography variant="h5" sx={{ fontWeight: 400, mb: 3, color: 'text.secondary' }}>
+                <Typography variant="h4" sx={{ 
+                  fontWeight: 600, 
+                  mb: { xs: 3, md: 4 }, 
+                  color: 'text.secondary',
+                  fontSize: { xs: '1.25rem', sm: '1.5rem', md: '2rem' }
+                }}>
                   Digital Platform
                 </Typography>
-                <Typography variant="body1" sx={{ mb: 4, color: 'text.secondary', maxWidth: 400, mx: isMobile ? 'auto' : 0 }}>
+                <Typography variant="h6" sx={{ 
+                  mb: { xs: 3, md: 5 }, 
+                  color: 'text.secondary', 
+                  maxWidth: { xs: '100%', md: 500 }, 
+                  lineHeight: 1.6,
+                  fontSize: { xs: '1rem', md: '1.25rem' }
+                }}>
                   Comprehensive digital platform for FRA governance, data digitization, 
                   spatial integration, and decision support for policy implementation.
                 </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'center' : 'flex-start' }}>
-                  <Security sx={{ mr: 1, color: 'success.main' }} />
-                  <Typography variant="body2" color="success.main" sx={{ fontWeight: 500 }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center',
+                  justifyContent: { xs: 'center', lg: 'flex-start' }
+                }}>
+                  <Security sx={{ 
+                    mr: { xs: 1, md: 2 }, 
+                    color: 'success.main', 
+                    fontSize: { xs: 20, md: 32 } 
+                  }} />
+                  <Typography variant="body2" color="success.main" sx={{ fontWeight: 600, fontSize: { xs: '0.875rem', md: '1.25rem' } }}>
                     Secure & Government Approved
                   </Typography>
                 </Box>
               </Box>
             </Fade>
-          </Grid>
+          </Box>
+
+          {/* Middle - Demo Accounts */}
+          <Box sx={{ 
+            width: { xs: '100%', sm: 400, lg: 300 },
+            order: { xs: 3, lg: 2 }
+          }}>
+            <Typography variant="h6" sx={{ 
+              mb: 2, 
+              fontWeight: 600, 
+              textAlign: 'center',
+              fontSize: { xs: '1rem', md: '1.25rem' }
+            }}>
+              🏆 SIH Demo Accounts
+            </Typography>
+            
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              {/* Admin */}
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                p: 1.5,
+                border: '1px solid #ddd',
+                borderRadius: 2,
+                '&:hover': { backgroundColor: alpha('#f44336', 0.05) }
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <AdminPanelSettings sx={{ color: '#f44336', mr: 1.5, fontSize: 20 }} />
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 600, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                      Admin
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{
+                      fontSize: { xs: '0.65rem', sm: '0.75rem' }
+                    }}>
+                      admin@fraatlas.gov.in
+                    </Typography>
+                  </Box>
+                </Box>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => handleDemoLogin('admin@fraatlas.gov.in', 'admin123')}
+                  disabled={loading}
+                  sx={{ 
+                    background: '#f44336',
+                    '&:hover': { background: '#d32f2f' },
+                    textTransform: 'none'
+                  }}
+                >
+                  {loading ? 'Logging...' : 'Login'}
+                </Button>
+              </Box>
+
+              {/* State */}
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                p: 1.5,
+                border: '1px solid #ddd',
+                borderRadius: 2,
+                '&:hover': { backgroundColor: alpha('#ff9800', 0.05) }
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <AccountTree sx={{ color: '#ff9800', mr: 1.5, fontSize: 20 }} />
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 600, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                      State (MP)
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{
+                      fontSize: { xs: '0.65rem', sm: '0.75rem' }
+                    }}>
+                      state@mp.gov.in
+                    </Typography>
+                  </Box>
+                </Box>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => handleDemoLogin('state@mp.gov.in', 'mp123')}
+                  disabled={loading}
+                  sx={{ 
+                    background: '#ff9800',
+                    '&:hover': { background: '#f57c00' },
+                    textTransform: 'none'
+                  }}
+                >
+                  {loading ? 'Logging...' : 'Login'}
+                </Button>
+              </Box>
+
+              {/* District */}
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                p: 1.5,
+                border: '1px solid #ddd',
+                borderRadius: 2,
+                '&:hover': { backgroundColor: alpha('#4caf50', 0.05) }
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <LocationCity sx={{ color: '#4caf50', mr: 1.5, fontSize: 20 }} />
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 600, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                      District (Bhopal)
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{
+                      fontSize: { xs: '0.65rem', sm: '0.75rem' }
+                    }}>
+                      tribal.bhopal@mp.gov.in
+                    </Typography>
+                  </Box>
+                </Box>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => handleDemoLogin('tribal.bhopal@mp.gov.in', 'bhopal123')}
+                  disabled={loading}
+                  sx={{ 
+                    background: '#4caf50',
+                    '&:hover': { background: '#388e3c' },
+                    textTransform: 'none'
+                  }}
+                >
+                  {loading ? 'Logging...' : 'Login'}
+                </Button>
+              </Box>
+            </Box>
+          </Box>
 
           {/* Right Side - Login Form */}
-          <Grid item xs={12} md={6}>
+          <Box sx={{ 
+            flex: { lg: 1 },
+            width: { xs: '100%', lg: 'auto' },
+            order: { xs: 2, lg: 3 }
+          }}>
             <Slide direction="left" in timeout={1000}>
               <Card
                 elevation={24}
                 sx={{
-                  maxWidth: 480,
-                  mx: 'auto',
                   borderRadius: 3,
                   background: `linear-gradient(145deg, ${theme.palette.background.paper} 0%, ${alpha(theme.palette.background.paper, 0.95)} 100%)`,
                   backdropFilter: 'blur(20px)',
@@ -141,12 +367,12 @@ const Login: React.FC = () => {
                   boxShadow: `0 20px 40px ${alpha(theme.palette.common.black, 0.1)}`,
                 }}
               >
-                <CardContent sx={{ p: 4 }}>
-                  <Box sx={{ textAlign: 'center', mb: 4 }}>
-                    <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: 'text.primary' }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ textAlign: 'center', mb: 3 }}>
+                    <Typography variant="h5" sx={{ fontWeight: 700, mb: 1, color: 'text.primary' }}>
                       Welcome Back
                     </Typography>
-                    <Typography variant="body1" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary">
                       Sign in to your FRA Atlas account
                     </Typography>
                   </Box>
@@ -300,16 +526,12 @@ const Login: React.FC = () => {
                     </Button>
                   </Box>
 
-                  <Box sx={{ mt: 4, p: 2, backgroundColor: alpha(theme.palette.info.main, 0.1), borderRadius: 2 }}>
-                    <Typography variant="caption" display="block" align="center" color="info.main" sx={{ fontWeight: 500 }}>
-                      Demo Credentials: admin@fraatlas.gov.in / admin123
-                    </Typography>
-                  </Box>
+
                 </CardContent>
               </Card>
             </Slide>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Container>
     </Box>
   );

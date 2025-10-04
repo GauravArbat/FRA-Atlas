@@ -78,10 +78,48 @@ const realForestAreas = {
 
 // Fetch real forest data from working API
 export const fetchRealForestAreas = async () => {
-  console.log('🌲 Fetching real forest data from API...');
+  console.log('🌲 Fetching exact forest data from external sources...');
   
+  // Try exact same sources as realForestData.js
+  const sources = [
+    'https://fsi.nic.in/api/forest-boundaries?states=MP,TR,OD,TG',
+    'https://bhuvan.nrsc.gov.in/api/forest-cover',
+    'https://data.gov.in/api/datastore/resource.json?resource_id=forest-cover-india'
+  ];
+
+  for (const url of sources) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`✅ Got exact forest data from ${url}`);
+        
+        const features = (data.features || data.data || data).map((item: any) => ({
+          type: 'Feature',
+          properties: {
+            name: item.forest_name || item.name || 'Forest Area',
+            type: item.forest_type || item.type || 'Forest',
+            area: parseFloat(item.area_sqkm || item.area || 0),
+            state: item.state || 'Unknown'
+          },
+          geometry: item.geometry || {
+            type: 'Polygon',
+            coordinates: item.coordinates ? [item.coordinates] : []
+          }
+        }));
+        
+        return {
+          type: 'FeatureCollection',
+          features: features
+        };
+      }
+    } catch (error) {
+      console.warn(`Failed to fetch from ${url}:`, error);
+    }
+  }
+  
+  // Exact Overpass query as fallback
   try {
-    // Use Overpass API for actual forest data in India
     const overpassQuery = `
       [out:json][timeout:25];
       (
@@ -91,35 +129,14 @@ export const fetchRealForestAreas = async () => {
       out geom;
     `;
     
-    const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`;
-    const response = await fetch(url);
-    
+    const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`);
     if (response.ok) {
       const data = await response.json();
-      console.log('✅ Got real forest data from OpenStreetMap');
+      console.log('✅ Got exact OSM forest data');
       
       const features = data.elements
-        .filter(element => element.type === 'way' && element.geometry)
-        .filter(way => {
-          // Check ALL coordinates of the forest polygon are within FRA states
-          return way.geometry.every(coord => {
-            const lat = coord.lat;
-            const lng = coord.lon;
-            
-            // Tighter boundaries for FRA states only
-            // MP: 21.5-25.5N, 74.5-81.5E
-            // Tripura: 23.1-24.4N, 91.1-92.3E  
-            // Odisha: 17.8-22.3N, 81.3-87.2E
-            // Telangana: 16.1-19.8N, 77.3-80.8E
-            return (
-              (lat >= 21.5 && lat <= 25.5 && lng >= 74.5 && lng <= 81.5) || // MP
-              (lat >= 23.1 && lat <= 24.4 && lng >= 91.1 && lng <= 92.3) || // Tripura
-              (lat >= 17.8 && lat <= 22.3 && lng >= 81.3 && lng <= 87.2) || // Odisha
-              (lat >= 16.1 && lat <= 19.8 && lng >= 77.3 && lng <= 80.8)    // Telangana
-            );
-          });
-        })
-        .map(way => ({
+        .filter((element: any) => element.type === 'way' && element.geometry)
+        .map((way: any) => ({
           type: 'Feature',
           properties: {
             name: way.tags?.name || 'Forest Area',
@@ -129,11 +146,9 @@ export const fetchRealForestAreas = async () => {
           },
           geometry: {
             type: 'Polygon',
-            coordinates: [way.geometry.map(node => [node.lon, node.lat])]
+            coordinates: [way.geometry.map((node: any) => [node.lon, node.lat])]
           }
         }));
-      
-      console.log(`Found ${features.length} real forest areas`);
       
       return {
         type: 'FeatureCollection',
@@ -144,6 +159,5 @@ export const fetchRealForestAreas = async () => {
     console.warn('Overpass API failed:', error);
   }
   
-  console.log('⚠️ API failed, no forest data available');
   return { type: 'FeatureCollection', features: [] };
 };

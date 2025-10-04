@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { logger } = require('../utils/logger');
 
-// Mock Bhunaksha-style land records data
+// Mock Bhunaksha-style land records data with realistic patta plot shapes
 const LAND_RECORDS = {
   'Balaghat': [
     {
@@ -18,7 +18,7 @@ const LAND_RECORDS = {
       fraStatus: 'IFR Granted',
       boundaries: {
         type: 'Polygon',
-        coordinates: [[[80.1847, 21.8047], [80.1857, 21.8047], [80.1857, 21.8057], [80.1847, 21.8057], [80.1847, 21.8047]]]
+        coordinates: [[[80.1847, 21.8047], [80.1862, 21.8049], [80.1859, 21.8061], [80.1851, 21.8058], [80.1845, 21.8055], [80.1847, 21.8047]]]
       },
       mutationHistory: [
         { date: '2024-03-15', type: 'FRA Grant', details: 'Individual Forest Rights granted under FRA 2006' },
@@ -38,7 +38,7 @@ const LAND_RECORDS = {
       fraStatus: 'Pending',
       boundaries: {
         type: 'Polygon',
-        coordinates: [[[80.1867, 21.8067], [80.1877, 21.8067], [80.1877, 21.8077], [80.1867, 21.8077], [80.1867, 21.8067]]]
+        coordinates: [[[80.1867, 21.8067], [80.1881, 21.8069], [80.1878, 21.8078], [80.1872, 21.8081], [80.1864, 21.8076], [80.1867, 21.8067]]]
       },
       mutationHistory: [
         { date: '2024-02-10', type: 'Application', details: 'FRA claim application under review' }
@@ -59,7 +59,7 @@ const LAND_RECORDS = {
       fraStatus: 'IFR Granted',
       boundaries: {
         type: 'Polygon',
-        coordinates: [[[86.7350, 21.9287], [86.7360, 21.9287], [86.7360, 21.9297], [86.7350, 21.9297], [86.7350, 21.9287]]]
+        coordinates: [[[86.7350, 21.9287], [86.7368, 21.9289], [86.7365, 21.9301], [86.7358, 21.9304], [86.7348, 21.9298], [86.7352, 21.9291], [86.7350, 21.9287]]]
       },
       mutationHistory: [
         { date: '2024-03-10', type: 'FRA Grant', details: 'Individual Forest Rights granted' },
@@ -81,7 +81,7 @@ const LAND_RECORDS = {
       fraStatus: 'Pending',
       boundaries: {
         type: 'Polygon',
-        coordinates: [[[91.8624, 23.8372], [91.8634, 23.8372], [91.8634, 23.8382], [91.8624, 23.8382], [91.8624, 23.8372]]]
+        coordinates: [[[91.8624, 23.8372], [91.8639, 23.8374], [91.8641, 23.8385], [91.8635, 23.8388], [91.8626, 23.8384], [91.8622, 23.8378], [91.8624, 23.8372]]]
       },
       mutationHistory: [
         { date: '2024-01-20', type: 'Application', details: 'FRA claim application submitted' }
@@ -102,7 +102,7 @@ const LAND_RECORDS = {
       fraStatus: 'CFR Granted',
       boundaries: {
         type: 'Polygon',
-        coordinates: [[[78.5311, 19.6677], [78.5321, 19.6677], [78.5321, 19.6687], [78.5311, 19.6687], [78.5311, 19.6677]]]
+        coordinates: [[[78.5311, 19.6677], [78.5328, 19.6679], [78.5341, 19.6685], [78.5349, 19.6694], [78.5345, 19.6708], [78.5338, 19.6715], [78.5325, 19.6712], [78.5315, 19.6705], [78.5308, 19.6695], [78.5305, 19.6684], [78.5311, 19.6677]]]
       },
       mutationHistory: [
         { date: '2024-02-28', type: 'CFR Grant', details: 'Community Forest Rights granted to Gram Sabha' },
