@@ -1,13 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, VolumeUp, Close, SmartToy } from '@mui/icons-material';
+import { Mic, MicOff, VolumeUp, Close, SmartToy, GraphicEq } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { Fab, Tooltip, Box, Typography, Paper, Zoom, Fade } from '@mui/material';
+import { Fab, Tooltip, Box, Typography, Paper, Zoom, Fade, Chip } from '@mui/material';
 
 const VoiceAssistant: React.FC = () => {
   const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [status, setStatus] = useState('Click to activate voice assistant');
+  const [currentCommand, setCurrentCommand] = useState('');
   const wakeWordRecognitionRef = useRef<any>(null);
   const commandRecognitionRef = useRef<any>(null);
   const isProcessingRef = useRef(false);
@@ -115,7 +117,8 @@ const VoiceAssistant: React.FC = () => {
           console.error('❌ Wake word detection error:', event.error);
         }
         wakeWordRecognitionRef.current = null;
-        if (event.error !== 'aborted' && !isListening && !isProcessingRef.current) {
+        // Always restart unless currently processing a command
+        if (!isProcessingRef.current) {
           setTimeout(startWakeWordDetection, 1000);
         }
       };
@@ -126,8 +129,9 @@ const VoiceAssistant: React.FC = () => {
         if (wakeWordDetectedRef.current) {
           console.log('✅ Wake word detected, not restarting');
         } else {
-          console.log('🔄 Wake word not detected, click to try again');
-          setStatus('Click to start listening for "Hey Rudra"');
+          console.log('🔄 Wake word not detected, restarting listening');
+          setStatus('Always listening for "Hey Rudra"...');
+          setTimeout(() => startWakeWordDetection(), 500);
         }
       };
       
@@ -164,21 +168,30 @@ const VoiceAssistant: React.FC = () => {
     }
     
     setIsVisible(true);
-    setIsListening(true);
-    setStatus('Hey! I\'m listening...');
+    setIsListening(false);
+    setIsSpeaking(true);
+    setStatus('Hey! I\'m Rudra');
     
     // Speak greeting
     const greeting = "Hey there! I am Rudra, your voice assistant. How can I help you?";
     const utterance = new SpeechSynthesisUtterance(greeting);
     utterance.lang = 'en-IN';
+    utterance.rate = 0.9;
+    
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      setStatus('Speaking...');
+    };
     
     utterance.onend = () => {
+      setIsSpeaking(false);
       if (isProcessingRef.current) {
         startCommandListening();
       }
     };
     
     utterance.onerror = () => {
+      setIsSpeaking(false);
       if (isProcessingRef.current) {
         startCommandListening();
       }
@@ -189,58 +202,60 @@ const VoiceAssistant: React.FC = () => {
 
   const startCommandListening = () => {
     try {
-      setStatus('Listening for your command...');
+      setIsListening(true);
+      setIsSpeaking(false);
+      setStatus('Listening...');
+      setCurrentCommand('');
       
       const recognition = new (window as any).webkitSpeechRecognition();
       commandRecognitionRef.current = recognition;
       recognition.continuous = false;
-      recognition.interimResults = false;
+      recognition.interimResults = true;
       recognition.lang = 'en-US';
       
       // Set timeout for command recognition
       const commandTimeout = setTimeout(() => {
         if (commandRecognitionRef.current) {
           console.log('🔄 Command timeout - using test command');
-          processCommand('navigate to dashboard');
+          processCommand('what is FRA');
         }
-      }, 3000);
+      }, 5000);
       
       recognition.onresult = (event: any) => {
         clearTimeout(commandTimeout);
         const transcript = event.results[0][0].transcript;
+        setCurrentCommand(transcript);
         console.log('📝 Command received:', transcript.replace(/[\r\n\t]/g, ' ').substring(0, 100));
-        processCommand(transcript);
+        if (event.results[0].isFinal) {
+          setIsListening(false);
+          processCommand(transcript);
+        }
       };
       
       recognition.onerror = (event: any) => {
+        setIsListening(false);
         if (event.error === 'no-speech' || event.error === 'network') {
           console.log('🔄 Using fallback command');
           processCommand('what is FRA');
         } else if (event.error === 'aborted') {
           // Normal abort, do nothing
-        } else if (false) {
-          console.log('🔄 No speech detected');
-          setStatus('No command heard');
-          resetToWakeWordDetection();
         } else {
           console.error('❌ Command recognition error:', event.error);
-          setStatus('Could not understand command');
-          resetToWakeWordDetection();
+          setStatus('Could not understand');
+          setTimeout(() => resetToWakeWordDetection(), 2000);
         }
       };
       
       recognition.onend = () => {
         clearTimeout(commandTimeout);
-        if (status === 'Listening for your command...') {
-          setStatus('No command detected');
-          resetToWakeWordDetection();
-        }
+        setIsListening(false);
       };
       
       recognition.start();
       
     } catch (error) {
       console.error('❌ Command recognition failed:', error);
+      setIsListening(false);
       resetToWakeWordDetection();
     }
   };
@@ -251,26 +266,19 @@ const VoiceAssistant: React.FC = () => {
       commandRecognitionRef.current = null;
     }
     
-    if (wakeWordRecognitionRef.current) {
-      wakeWordRecognitionRef.current.abort();
-      wakeWordRecognitionRef.current = null;
-    }
-    
     wakeWordDetectedRef.current = false;
     isProcessingRef.current = false;
     setIsListening(false);
+    setIsSpeaking(false);
     setIsVisible(false);
-    setStatus('Listening for "Hey Rudra"...');
+    setCurrentCommand('');
+    setStatus('Always listening for "Hey Rudra"...');
     
-    // Restart wake word detection
+    // Always restart wake word detection immediately
     setTimeout(() => {
-      if (!wakeWordRecognitionRef.current) {
-        startWakeWordDetection();
-      }
-    }, 500);
+      startWakeWordDetection();
+    }, 100);
   };
-
-
 
   const processCommand = async (transcript: string) => {
     console.log('🤖 Voice Assistant: Processing command...');
@@ -287,30 +295,27 @@ const VoiceAssistant: React.FC = () => {
       if (speechSynthesis.speaking) {
         speechSynthesis.cancel();
       }
-      response = "Thank you! It was nice talking to you. I'll stop listening now. Say 'Hey Rudra' again if you need me.";
+      setIsSpeaking(true);
+      response = "Thank you! It was nice talking to you.";
       const utterance = new SpeechSynthesisUtterance(response);
       utterance.lang = 'en-IN';
+      utterance.rate = 0.9;
+      
+      utterance.onstart = () => {
+        setIsSpeaking(true);
+        setStatus('Goodbye!');
+      };
+      
       utterance.onend = () => {
-        setStatus('Stopped. Say "Hey Rudra" to activate.');
+        setIsSpeaking(false);
         setIsVisible(false);
-        // Stop all recognition completely
-        if (wakeWordRecognitionRef.current) {
-          wakeWordRecognitionRef.current.stop();
-          wakeWordRecognitionRef.current = null;
-        }
-        if (commandRecognitionRef.current) {
-          commandRecognitionRef.current.stop();
-          commandRecognitionRef.current = null;
-        }
+        // Reset and restart listening immediately
         isProcessingRef.current = false;
         setIsListening(false);
-        // Restart wake word detection after 2 seconds
+        setStatus('Always listening for "Hey Rudra"...');
         setTimeout(() => {
-          if (!isProcessingRef.current) {
-            setStatus('Listening for "Hey Rudra"...');
-            startWakeWordDetection();
-          }
-        }, 2000);
+          startWakeWordDetection();
+        }, 1000);
       };
       speechSynthesis.speak(utterance);
       return;
@@ -423,7 +428,9 @@ const VoiceAssistant: React.FC = () => {
       }
     }
     
-    setStatus('Rudra speaking...');
+    setIsListening(false);
+    setIsSpeaking(true);
+    setStatus('Speaking...');
     console.log('🔊 Voice Assistant: Speaking response:', response);
     
     // Navigate if needed
@@ -437,6 +444,9 @@ const VoiceAssistant: React.FC = () => {
     
     // Detect language and use appropriate TTS
     const utterance = new SpeechSynthesisUtterance(response);
+    utterance.rate = 0.9;
+    utterance.pitch = 1.0;
+    utterance.volume = 0.8;
     
     // Auto-detect language for TTS
     if (/[ऀ-ॿ]/.test(response)) {
@@ -457,23 +467,63 @@ const VoiceAssistant: React.FC = () => {
     
     console.log('🔊 Using TTS language:', utterance.lang);
     
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+    };
+    
     utterance.onend = () => {
       console.log('✅ Voice Assistant: Response completed');
-      // Auto-hide after 2 seconds like Siri
+      setIsSpeaking(false);
+      setStatus('Always listening for "Hey Rudra"...');
+      // Immediately restart listening without hiding
       setTimeout(() => {
-        setIsVisible(false);
         resetToWakeWordDetection();
-      }, 2000);
+      }, 1000);
     };
+    
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setStatus('Speech error');
+      setTimeout(() => resetToWakeWordDetection(), 2000);
+    };
+    
     speechSynthesis.speak(utterance);
   };
 
-  // Auto-start wake word detection
-  useEffect(() => {
-    setStatus('Listening for "Hey Rudra"...');
-    setIsActive(true);
-    startWakeWordDetection();
-  }, []);
+  // Auto-start with greeting and always listen
+  // useEffect(() => {
+  //   setIsActive(true);
+  //   setIsSpeaking(true);
+  //   setStatus('Starting Rudra...');
+    
+  //   // Speak startup greeting
+  //   const greeting = "Hello! I am Rudra, your voice assistant. I'm always listening for 'Hey Rudra'.";
+  //   const utterance = new SpeechSynthesisUtterance(greeting);
+  //   utterance.lang = 'en-IN';
+  //   utterance.rate = 0.9;
+    
+  //   utterance.onstart = () => {
+  //     setIsSpeaking(true);
+  //     setStatus('Rudra speaking...');
+  //   };
+    
+  //   utterance.onend = () => {
+  //     setIsSpeaking(false);
+  //     setStatus('Always listening for "Hey Rudra"...');
+  //     startWakeWordDetection();
+  //   };
+    
+  //   utterance.onerror = () => {
+  //     setIsSpeaking(false);
+  //     setStatus('Always listening for "Hey Rudra"...');
+  //     startWakeWordDetection();
+  //   };
+    
+  //   // Start speaking after a short delay
+  //   setTimeout(() => {
+  //     speechSynthesis.speak(utterance);
+  //   }, 1000);
+  // }, []);
 
   const handleActivate = () => {
     if (!isActive) {
@@ -481,7 +531,7 @@ const VoiceAssistant: React.FC = () => {
       setIsActive(true);
       setStatus('Listening for "Hey Rudra"...');
       startWakeWordDetection();
-    } else if (!isListening && !isProcessingRef.current) {
+    } else if (!isListening && !isSpeaking && !isProcessingRef.current) {
       // Manual activation - skip wake word detection
       console.log('🔥 Manual activation triggered!');
       wakeWordDetectedRef.current = true;
@@ -491,6 +541,7 @@ const VoiceAssistant: React.FC = () => {
       // Deactivate voice assistant
       setIsActive(false);
       setIsListening(false);
+      setIsSpeaking(false);
       setStatus('Click to activate voice assistant');
       if (wakeWordRecognitionRef.current) {
         wakeWordRecognitionRef.current.stop();
@@ -506,7 +557,7 @@ const VoiceAssistant: React.FC = () => {
 
   return (
     <>
-      {/* Always visible activation button */}
+      {/* Always visible activation button with animations */}
       {!isVisible && (
         <Fab
           onClick={() => {
@@ -518,7 +569,12 @@ const VoiceAssistant: React.FC = () => {
             // Speak greeting immediately
             const greeting = "Hi! How can I help?";
             const utterance = new SpeechSynthesisUtterance(greeting);
-            utterance.onend = () => startCommandListening();
+            utterance.rate = 0.9;
+            utterance.onstart = () => setIsSpeaking(true);
+            utterance.onend = () => {
+              setIsSpeaking(false);
+              startCommandListening();
+            };
             speechSynthesis.speak(utterance);
           }}
           sx={{
@@ -526,17 +582,83 @@ const VoiceAssistant: React.FC = () => {
             bottom: 80,
             right: 24,
             zIndex: 1300,
-            width: 64,
-            height: 64,
-            background: 'linear-gradient(45deg, #3b82f6, #1d4ed8)',
-            boxShadow: '0 8px 32px rgba(59, 130, 246, 0.4)',
+            width: 72,
+            height: 72,
+            background: isListening 
+              ? 'radial-gradient(circle, #3b82f6 0%, #1d4ed8 100%)'
+              : isSpeaking
+              ? 'radial-gradient(circle, #22c55e 0%, #16a34a 100%)'
+              : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            boxShadow: isListening
+              ? '0 0 30px rgba(59, 130, 246, 0.8), 0 0 60px rgba(59, 130, 246, 0.4)'
+              : isSpeaking
+              ? '0 0 30px rgba(34, 197, 94, 0.8), 0 0 60px rgba(34, 197, 94, 0.4)'
+              : '0 8px 32px rgba(102, 126, 234, 0.4)',
+            border: isListening || isSpeaking ? '3px solid rgba(255,255,255,0.3)' : '2px solid rgba(255,255,255,0.2)',
+            transform: isListening || isSpeaking ? 'scale(1.1)' : 'scale(1)',
             '&:hover': { 
-              transform: 'scale(1.1)',
-              boxShadow: '0 12px 40px rgba(59, 130, 246, 0.6)'
+              transform: isListening || isSpeaking ? 'scale(1.15)' : 'scale(1.05)',
+              boxShadow: isListening
+                ? '0 0 40px rgba(59, 130, 246, 1), 0 0 80px rgba(59, 130, 246, 0.6)'
+                : isSpeaking
+                ? '0 0 40px rgba(34, 197, 94, 1), 0 0 80px rgba(34, 197, 94, 0.6)'
+                : '0 12px 40px rgba(102, 126, 234, 0.6)'
+            },
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            animation: isListening 
+              ? 'listeningPulse 2s ease-in-out infinite'
+              : isSpeaking
+              ? 'speakingPulse 1s ease-in-out infinite'
+              : 'none',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              inset: -6,
+              borderRadius: '50%',
+              background: isListening || isSpeaking
+                ? 'conic-gradient(from 0deg, #3b82f6, #22c55e, #f59e0b, #3b82f6)'
+                : 'none',
+              animation: (isListening || isSpeaking) ? 'rotate 3s linear infinite' : 'none',
+              zIndex: -1,
+              opacity: 0.6
+            },
+            '@keyframes listeningPulse': {
+              '0%, 100%': { 
+                boxShadow: '0 0 20px rgba(59, 130, 246, 0.6), 0 0 40px rgba(59, 130, 246, 0.3)'
+              },
+              '50%': { 
+                boxShadow: '0 0 40px rgba(59, 130, 246, 1), 0 0 80px rgba(59, 130, 246, 0.6)'
+              }
+            },
+            '@keyframes speakingPulse': {
+              '0%, 100%': { 
+                boxShadow: '0 0 20px rgba(34, 197, 94, 0.6), 0 0 40px rgba(34, 197, 94, 0.3)'
+              },
+              '50%': { 
+                boxShadow: '0 0 40px rgba(34, 197, 94, 1), 0 0 80px rgba(34, 197, 94, 0.6)'
+              }
+            },
+            '@keyframes rotate': {
+              '0%': { transform: 'rotate(0deg)' },
+              '100%': { transform: 'rotate(360deg)' }
             }
           }}
         >
-          <Mic sx={{ fontSize: 28, color: 'white' }} />
+          {isListening ? (
+            <GraphicEq sx={{ 
+              fontSize: 36, 
+              color: 'white',
+              animation: 'bounce 1s infinite'
+            }} />
+          ) : isSpeaking ? (
+            <VolumeUp sx={{ 
+              fontSize: 36, 
+              color: 'white',
+              animation: 'speakBounce 0.8s ease-in-out infinite'
+            }} />
+          ) : (
+            <Mic sx={{ fontSize: 36, color: 'white' }} />
+          )}
         </Fab>
       )}
       
@@ -563,7 +685,7 @@ const VoiceAssistant: React.FC = () => {
             borderRadius: 5,
             border: '1px solid rgba(148,163,184,0.2)',
             boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)',
-            transform: isListening ? 'scale(1.03) translateY(-2px)' : 'scale(1)',
+            transform: isListening || isSpeaking ? 'scale(1.03) translateY(-2px)' : 'scale(1)',
             transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
             position: 'relative',
             overflow: 'hidden',
@@ -576,9 +698,11 @@ const VoiceAssistant: React.FC = () => {
               height: '2px',
               background: isListening 
                 ? 'linear-gradient(90deg, #06b6d4, #3b82f6, #8b5cf6, #06b6d4)'
+                : isSpeaking
+                ? 'linear-gradient(90deg, #22c55e, #16a34a, #15803d, #22c55e)'
                 : 'linear-gradient(90deg, #64748b, #94a3b8)',
               backgroundSize: '200% 100%',
-              animation: isListening ? 'shimmer 2s infinite' : 'none',
+              animation: (isListening || isSpeaking) ? 'shimmer 2s infinite' : 'none',
             },
             '@keyframes shimmer': {
               '0%': { backgroundPosition: '-200% 0' },
@@ -594,6 +718,8 @@ const VoiceAssistant: React.FC = () => {
                 borderRadius: '50%',
                 background: isListening 
                   ? 'conic-gradient(from 0deg, #06b6d4, #3b82f6, #8b5cf6, #ec4899, #06b6d4)'
+                  : isSpeaking
+                  ? 'conic-gradient(from 0deg, #22c55e, #16a34a, #15803d, #22c55e)'
                   : 'linear-gradient(135deg, #64748b 0%, #475569 100%)',
                 display: 'flex',
                 alignItems: 'center',
@@ -601,17 +727,19 @@ const VoiceAssistant: React.FC = () => {
                 position: 'relative',
                 boxShadow: isListening 
                   ? '0 0 30px rgba(59, 130, 246, 0.5)'
+                  : isSpeaking
+                  ? '0 0 30px rgba(34, 197, 94, 0.5)'
                   : '0 8px 25px rgba(0,0,0,0.3)',
-                animation: isListening ? 'avatarPulse 2s infinite, rotate 4s linear infinite' : 'none',
+                animation: (isListening || isSpeaking) ? 'avatarPulse 2s infinite, rotate 4s linear infinite' : 'none',
                 '&::before': {
                   content: '""',
                   position: 'absolute',
                   inset: -2,
                   borderRadius: '50%',
-                  background: isListening 
+                  background: (isListening || isSpeaking)
                     ? 'conic-gradient(from 0deg, #06b6d4, #3b82f6, #8b5cf6, #ec4899, #06b6d4)'
                     : 'none',
-                  animation: isListening ? 'rotate 3s linear infinite' : 'none',
+                  animation: (isListening || isSpeaking) ? 'rotate 3s linear infinite' : 'none',
                   zIndex: -1,
                 },
                 '@keyframes avatarPulse': {
@@ -624,80 +752,92 @@ const VoiceAssistant: React.FC = () => {
                 }
               }}
             >
-              <SmartToy sx={{ fontSize: 24, color: 'white', zIndex: 1 }} />
+              {isListening ? (
+                <GraphicEq sx={{ fontSize: 24, color: 'white', zIndex: 1, animation: 'bounce 1s infinite' }} />
+              ) : isSpeaking ? (
+                <VolumeUp sx={{ fontSize: 24, color: 'white', zIndex: 1, animation: 'speakBounce 0.8s ease-in-out infinite' }} />
+              ) : (
+                <SmartToy sx={{ fontSize: 24, color: 'white', zIndex: 1 }} />
+              )}
             </Box>
-                <Box flex={1}>
-                  <Typography variant="h6" fontWeight={600} sx={{ fontSize: '1.1rem' }}>
-                    Rudra
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.8, fontSize: '0.85rem' }}>
-                    {status}
-                  </Typography>
-                </Box>
-                <Close
-                  onClick={() => {
-                    setIsVisible(false);
-                    resetToWakeWordDetection();
-                  }}
+            <Box flex={1}>
+              <Typography variant="h6" fontWeight={600} sx={{ fontSize: '1.1rem' }}>
+                Rudra
+              </Typography>
+              <Typography variant="body2" sx={{ opacity: 0.8, fontSize: '0.85rem' }}>
+                {status}
+              </Typography>
+              {currentCommand && (
+                <Typography variant="body2" sx={{ opacity: 0.6, fontSize: '0.75rem', fontStyle: 'italic', mt: 0.5 }}>
+                  "{currentCommand}"
+                </Typography>
+              )}
+            </Box>
+            <Close
+              onClick={() => {
+                setIsVisible(false);
+                resetToWakeWordDetection();
+              }}
+              sx={{
+                fontSize: 20,
+                opacity: 0.6,
+                cursor: 'pointer',
+                '&:hover': { opacity: 1 }
+              }}
+            />
+          </Box>
+          {(isListening || isSpeaking) && (
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              px: 2,
+              py: 1,
+              mt: 2,
+              borderRadius: 3,
+              background: isListening 
+                ? 'rgba(59, 130, 246, 0.1)'
+                : 'rgba(34, 197, 94, 0.1)',
+              border: isListening 
+                ? '1px solid rgba(59, 130, 246, 0.2)'
+                : '1px solid rgba(34, 197, 94, 0.2)'
+            }}>
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Box
+                  key={i}
                   sx={{
-                    fontSize: 20,
-                    opacity: 0.6,
-                    cursor: 'pointer',
-                    '&:hover': { opacity: 1 }
+                    width: 4,
+                    backgroundColor: isListening ? '#3b82f6' : '#22c55e',
+                    borderRadius: 2,
+                    animation: `modernWave${i} ${isListening ? '1.2s' : '0.8s'} ease-in-out infinite`,
+                    boxShadow: isListening 
+                      ? '0 0 8px rgba(59, 130, 246, 0.4)'
+                      : '0 0 8px rgba(34, 197, 94, 0.4)',
+                    [`@keyframes modernWave${i}`]: {
+                      '0%, 100%': { height: `${8 + (i % 3) * 4}px`, opacity: 0.4 },
+                      '50%': { height: `${20 + (i % 4) * 8}px`, opacity: 1 }
+                    }
                   }}
                 />
-            {isListening && (
-              <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                px: 2,
-                py: 1,
-                borderRadius: 3,
-                background: 'rgba(59, 130, 246, 0.1)',
-                border: '1px solid rgba(59, 130, 246, 0.2)'
-              }}>
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <Box
-                    key={i}
-                    sx={{
-                      width: 4,
-                      backgroundColor: '#3b82f6',
-                      borderRadius: 2,
-                      animation: `modernWave${i} 1.2s ease-in-out infinite`,
-                      boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)',
-                      '@keyframes modernWave1': {
-                        '0%, 100%': { height: '8px', opacity: 0.4 },
-                        '50%': { height: '24px', opacity: 1 }
-                      },
-                      '@keyframes modernWave2': {
-                        '0%, 100%': { height: '12px', opacity: 0.5 },
-                        '50%': { height: '20px', opacity: 1 }
-                      },
-                      '@keyframes modernWave3': {
-                        '0%, 100%': { height: '6px', opacity: 0.3 },
-                        '50%': { height: '28px', opacity: 1 }
-                      },
-                      '@keyframes modernWave4': {
-                        '0%, 100%': { height: '10px', opacity: 0.4 },
-                        '50%': { height: '22px', opacity: 1 }
-                      },
-                      '@keyframes modernWave5': {
-                        '0%, 100%': { height: '14px', opacity: 0.5 },
-                        '50%': { height: '18px', opacity: 1 }
-                      },
-                      '@keyframes modernWave6': {
-                        '0%, 100%': { height: '8px', opacity: 0.4 },
-                        '50%': { height: '26px', opacity: 1 }
-                      }
-                    }}
-                  />
-                ))}
-              </Box>
-            )}
-          </Box>
+              ))}
+            </Box>
+          )}
         </Paper>
       </Box>
+
+      <style>
+        {`
+          @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-8px); }
+            60% { transform: translateY(-4px); }
+          }
+          @keyframes speakBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+          }
+        `}
+      </style>
     </>
   );
 };

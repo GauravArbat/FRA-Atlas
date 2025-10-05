@@ -31,7 +31,7 @@ const getFallbackResponse = (question) => {
   }
   
   if (q.includes('fra') || q.includes('forest rights act') || q.includes('forest rights')) {
-    return "The Forest Rights Act (FRA) 2006 is a landmark legislation that recognizes the rights of forest dwelling tribal communities and other traditional forest dwellers to forest resources. It provides for individual forest rights, community forest rights, and community forest resource rights. Our FRA Atlas helps digitize and manage these important land records and claims.";
+    return "FRA stands for Forest Rights Act 2006. It's a law that recognizes forest dwelling communities' rights. Our FRA Atlas helps manage these digital records.";
   }
   
   if (q.includes('navigation') || q.includes('navigate') || q.includes('perform navigation')) {
