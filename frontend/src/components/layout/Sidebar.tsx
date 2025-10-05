@@ -74,7 +74,7 @@ const Sidebar: React.FC = () => {
             { text: 'Upload Data', icon: <CloudUpload />, path: '/upload-data' },
              { text: 'Data Management', icon: <Storage />, path: '/data' },
             // { text: 'Decision Support', icon: <Assessment />, path: '/decisions' },
-            { text: 'Satellite Asset Mapping', icon: <Map />, path: '/advanced-mapping' },
+            { text: 'Advanced Satellite Mapping', icon: <Psychology />, path: '/advanced-mapping' },
             // { text: 'Advanced ML Mapping', icon: <Psychology />, path: '/advanced-mapping' },
             // { text: 'Real-time Satellite', icon: <Satellite />, path: '/realtime-satellite' },
             
@@ -91,7 +91,7 @@ const Sidebar: React.FC = () => {
           title: 'AI Analysis',
           items: [
             { text: 'Dashboard', icon: <Dashboard />, path: '/' },
-            { text: 'Satellite Asset Mapping', icon: <Map />, path: '/satellite-mapping' },
+            { text: 'Advanced Satellite Mapping', icon: <Psychology />, path: '/advanced-mapping' },
             { text: 'AI Analysis', icon: <Analytics />, path: '/ai-analysis' },
             { text: 'Model Results', icon: <Assessment />, path: '/model-results' },
             { text: 'Reports', icon: <BarChart />, path: '/reports' }

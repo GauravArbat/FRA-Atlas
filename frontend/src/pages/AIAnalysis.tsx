@@ -27,6 +27,7 @@ import {
 } from '@mui/icons-material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { api } from '../services/api';
+import { usePageTranslation } from '../hooks/usePageTranslation';
 
 interface DashboardData {
   total_villages_analyzed: number;
@@ -44,6 +45,7 @@ interface DashboardData {
 }
 
 const AIAnalysis: React.FC = () => {
+  usePageTranslation();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -96,7 +98,7 @@ const AIAnalysis: React.FC = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Psychology /> AI Analysis Dashboard
+        <Psychology /> <span data-translate>AI Analysis Dashboard</span>
       </Typography>
 
       {/* Key Metrics */}
@@ -105,7 +107,7 @@ const AIAnalysis: React.FC = () => {
           <Card>
             <CardContent>
               <Typography color="textSecondary" gutterBottom>
-                Villages Analyzed
+                <span data-translate>Villages Analyzed</span>
               </Typography>
               <Typography variant="h4">
                 {dashboardData.total_villages_analyzed.toLocaleString()}
@@ -118,7 +120,7 @@ const AIAnalysis: React.FC = () => {
           <Card>
             <CardContent>
               <Typography color="textSecondary" gutterBottom>
-                High Priority Villages
+                <span data-translate>High Priority Villages</span>
               </Typography>
               <Typography variant="h4" color="error">
                 {dashboardData.high_priority_villages}
@@ -131,7 +133,7 @@ const AIAnalysis: React.FC = () => {
           <Card>
             <CardContent>
               <Typography color="textSecondary" gutterBottom>
-                Satellite Coverage
+                <span data-translate>Satellite Coverage</span>
               </Typography>
               <Typography variant="h4" color="success.main">
                 {Object.values(dashboardData.satellite_coverage).reduce((a, b) => a + b, 0) / 4}%
@@ -144,7 +146,7 @@ const AIAnalysis: React.FC = () => {
           <Card>
             <CardContent>
               <Typography color="textSecondary" gutterBottom>
-                Schemes Recommended
+                <span data-translate>Schemes Recommended</span>
               </Typography>
               <Typography variant="h4" color="primary">
                 {Object.values(dashboardData.schemes_recommended).reduce((a, b) => a + b, 0)}
@@ -160,7 +162,7 @@ const AIAnalysis: React.FC = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Scheme Recommendations
+                <span data-translate>Scheme Recommendations</span>
               </Typography>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={schemeData}>
@@ -180,7 +182,7 @@ const AIAnalysis: React.FC = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Priority Distribution
+                <span data-translate>Priority Distribution</span>
               </Typography>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
@@ -210,7 +212,7 @@ const AIAnalysis: React.FC = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Satellite Data Coverage
+                <span data-translate>Satellite Data Coverage</span>
               </Typography>
               {Object.entries(dashboardData.satellite_coverage).map(([type, coverage]) => (
                 <Box key={type} sx={{ mb: 2 }}>
@@ -243,7 +245,7 @@ const AIAnalysis: React.FC = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Recent Analyses
+                <span data-translate>Recent Analyses</span>
               </Typography>
               <List>
                 {dashboardData.recent_analyses.map((analysis, index) => (
@@ -277,48 +279,47 @@ const AIAnalysis: React.FC = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                AI/ML Model Information
+                <span data-translate>AI/ML Model Information</span>
               </Typography>
               
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMore />}>
-                  <Typography>Priority Scoring Model</Typography>
+                  <Typography><span data-translate>Priority Scoring Model</span></Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Typography variant="body2" paragraph>
-                    Random Forest Regressor trained on satellite-derived features including NDVI, water availability, 
-                    forest cover, and infrastructure metrics combined with FRA claim data.
+                    <span data-translate>Random Forest Regressor trained on satellite-derived features including NDVI, water availability, forest cover, and infrastructure metrics combined with FRA claim data.</span>
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    <Chip label="Random Forest" size="small" />
-                    <Chip label="100 Estimators" size="small" />
-                    <Chip label="Satellite Features" size="small" />
-                    <Chip label="FRA Data" size="small" />
+                    <Chip label={<span data-translate>Random Forest</span>} size="small" />
+                    <Chip label={<span data-translate>100 Estimators</span>} size="small" />
+                    <Chip label={<span data-translate>Satellite Features</span>} size="small" />
+                    <Chip label={<span data-translate>FRA Data</span>} size="small" />
                   </Box>
                 </AccordionDetails>
               </Accordion>
 
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMore />}>
-                  <Typography>Satellite Data Sources</Typography>
+                  <Typography><span data-translate>Satellite Data Sources</span></Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <List dense>
                     <ListItem>
                       <ListItemIcon><CheckCircle color="success" /></ListItemIcon>
-                      <ListItemText primary="Sentinel-2 (NDVI Analysis)" secondary="10m resolution, cloud-filtered" />
+                      <ListItemText primary={<span data-translate>Sentinel-2 (NDVI Analysis)</span>} secondary={<span data-translate>10m resolution, cloud-filtered</span>} />
                     </ListItem>
                     <ListItem>
                       <ListItemIcon><CheckCircle color="success" /></ListItemIcon>
-                      <ListItemText primary="JRC Global Surface Water" secondary="Water occurrence mapping" />
+                      <ListItemText primary={<span data-translate>JRC Global Surface Water</span>} secondary={<span data-translate>Water occurrence mapping</span>} />
                     </ListItem>
                     <ListItem>
                       <ListItemIcon><CheckCircle color="success" /></ListItemIcon>
-                      <ListItemText primary="ESA WorldCover" secondary="Land use classification" />
+                      <ListItemText primary={<span data-translate>ESA WorldCover</span>} secondary={<span data-translate>Land use classification</span>} />
                     </ListItem>
                     <ListItem>
                       <ListItemIcon><CheckCircle color="success" /></ListItemIcon>
-                      <ListItemText primary="VIIRS Nighttime Lights" secondary="Infrastructure assessment" />
+                      <ListItemText primary={<span data-translate>VIIRS Nighttime Lights</span>} secondary={<span data-translate>Infrastructure assessment</span>} />
                     </ListItem>
                   </List>
                 </AccordionDetails>
@@ -326,40 +327,32 @@ const AIAnalysis: React.FC = () => {
 
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMore />}>
-                  <Typography>Scheme Recommendation Rules</Typography>
+                  <Typography><span data-translate>Scheme Recommendation Rules</span></Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
-                      <Typography variant="subtitle2" gutterBottom>PM-KISAN</Typography>
+                      <Typography variant="subtitle2" gutterBottom><span data-translate>PM-KISAN</span></Typography>
                       <Typography variant="body2">
-                        • High agricultural potential (NDVI &gt; 0.6)<br/>
-                        • Significant cropland area<br/>
-                        • Valid FRA titles
+                        <span data-translate>• High agricultural potential (NDVI &gt; 0.6)<br/>• Significant cropland area<br/>• Valid FRA titles</span>
                       </Typography>
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                      <Typography variant="subtitle2" gutterBottom>Jal Jeevan Mission</Typography>
+                      <Typography variant="subtitle2" gutterBottom><span data-translate>Jal Jeevan Mission</span></Typography>
                       <Typography variant="body2">
-                        • Low water availability<br/>
-                        • High population density<br/>
-                        • Poor infrastructure
+                        <span data-translate>• Low water availability<br/>• High population density<br/>• Poor infrastructure</span>
                       </Typography>
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                      <Typography variant="subtitle2" gutterBottom>MGNREGA</Typography>
+                      <Typography variant="subtitle2" gutterBottom><span data-translate>MGNREGA</span></Typography>
                       <Typography variant="body2">
-                        • High population<br/>
-                        • Low infrastructure level<br/>
-                        • Active FRA claims
+                        <span data-translate>• High population<br/>• Low infrastructure level<br/>• Active FRA claims</span>
                       </Typography>
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                      <Typography variant="subtitle2" gutterBottom>DAJGUA</Typography>
+                      <Typography variant="subtitle2" gutterBottom><span data-translate>DAJGUA</span></Typography>
                       <Typography variant="body2">
-                        • FRA claims/titles present<br/>
-                        • High forest cover<br/>
-                        • Low infrastructure
+                        <span data-translate>• FRA claims/titles present<br/>• High forest cover<br/>• Low infrastructure</span>
                       </Typography>
                     </Grid>
                   </Grid>

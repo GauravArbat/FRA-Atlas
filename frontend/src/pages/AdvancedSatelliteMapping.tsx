@@ -41,6 +41,7 @@ import {
 import jsPDF from 'jspdf';
 import { api } from '../services/api';
 import AssetVisualizationMap from '../components/AssetVisualizationMap';
+import { usePageTranslation } from '../hooks/usePageTranslation';
 
 
 
@@ -135,6 +136,7 @@ interface AdvancedAssetResult {
 }
 
 const AdvancedSatelliteMapping: React.FC = () => {
+  usePageTranslation();
   const [selectedState, setSelectedState] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [selectedVillage, setSelectedVillage] = useState('');
@@ -529,19 +531,19 @@ const AdvancedSatelliteMapping: React.FC = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Psychology /> Satellite-Based Asset Mapping
+        <Psychology /> <span data-translate>Satellite-Based Asset Mapping</span>
       </Typography>
 
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            Multi-Spectral Analysis with Machine Learning
+            <span data-translate>Multi-Spectral Analysis with Machine Learning</span>
           </Typography>
           
           <Grid container spacing={3} sx={{ mb: 3 }}>
             <Grid item xs={12} md={3}>
               <FormControl fullWidth>
-                <InputLabel>State</InputLabel>
+                <InputLabel><span data-translate>State</span></InputLabel>
                 <Select
                   value={selectedState}
                   onChange={(e) => {
@@ -559,7 +561,7 @@ const AdvancedSatelliteMapping: React.FC = () => {
 
             <Grid item xs={12} md={3}>
               <FormControl fullWidth disabled={!selectedState}>
-                <InputLabel>District</InputLabel>
+                <InputLabel><span data-translate>District</span></InputLabel>
                 <Select
                   value={selectedDistrict}
                   onChange={(e) => {
@@ -584,7 +586,7 @@ const AdvancedSatelliteMapping: React.FC = () => {
 
             <Grid item xs={12} md={3}>
               <FormControl fullWidth disabled={!selectedDistrict}>
-                <InputLabel>Village</InputLabel>
+                <InputLabel><span data-translate>Village</span></InputLabel>
                 <Select
                   value={selectedVillage}
                   onChange={(e) => setSelectedVillage(e.target.value)}
@@ -606,31 +608,31 @@ const AdvancedSatelliteMapping: React.FC = () => {
 
             <Grid item xs={12} md={2}>
               <FormControl fullWidth>
-                <InputLabel>Analysis Type</InputLabel>
+                <InputLabel><span data-translate>Analysis Type</span></InputLabel>
                 <Select
                   value={analysisType}
                   onChange={(e) => setAnalysisType(e.target.value)}
                 >
-                  <MenuItem value="comprehensive">Comprehensive</MenuItem>
-                  <MenuItem value="water_focus">Water Focus</MenuItem>
-                  <MenuItem value="agriculture_focus">Agriculture Focus</MenuItem>
-                  <MenuItem value="forest_focus">Forest Focus</MenuItem>
-                  <MenuItem value="homestead_focus">Homestead Focus</MenuItem>
+                  <MenuItem value="comprehensive"><span data-translate>Comprehensive</span></MenuItem>
+                  <MenuItem value="water_focus"><span data-translate>Water Focus</span></MenuItem>
+                  <MenuItem value="agriculture_focus"><span data-translate>Agriculture Focus</span></MenuItem>
+                  <MenuItem value="forest_focus"><span data-translate>Forest Focus</span></MenuItem>
+                  <MenuItem value="homestead_focus"><span data-translate>Homestead Focus</span></MenuItem>
                 </Select>
               </FormControl>
             </Grid>
 
             <Grid item xs={12} md={2}>
               <FormControl fullWidth>
-                <InputLabel>ML Model</InputLabel>
+                <InputLabel><span data-translate>ML Model</span></InputLabel>
                 <Select
                   value={mlModel}
                   onChange={(e) => setMlModel(e.target.value)}
                 >
-                  <MenuItem value="ensemble">Ensemble (RF+CNN)</MenuItem>
-                  <MenuItem value="random_forest">Random Forest</MenuItem>
-                  <MenuItem value="cnn">CNN Deep Learning</MenuItem>
-                  <MenuItem value="unet">U-Net Segmentation</MenuItem>
+                  <MenuItem value="ensemble"><span data-translate>Ensemble (RF+CNN)</span></MenuItem>
+                  <MenuItem value="random_forest"><span data-translate>Random Forest</span></MenuItem>
+                  <MenuItem value="cnn"><span data-translate>CNN Deep Learning</span></MenuItem>
+                  <MenuItem value="unet"><span data-translate>U-Net Segmentation</span></MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -648,7 +650,7 @@ const AdvancedSatelliteMapping: React.FC = () => {
                   textTransform: 'none'
                 }}
               >
-                Settings
+                <span data-translate>Settings</span>
               </Button>
             </Grid>
           </Grid>
@@ -656,7 +658,7 @@ const AdvancedSatelliteMapping: React.FC = () => {
           {showSettings && (
             <Box sx={{ mb: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: 2 }}>
               <Typography gutterBottom>
-                Confidence Threshold: {confidenceThreshold}
+                <span data-translate>Confidence Threshold</span>: {confidenceThreshold}
               </Typography>
               <Slider
                 value={confidenceThreshold}
@@ -680,13 +682,13 @@ const AdvancedSatelliteMapping: React.FC = () => {
             startIcon={<TrendingUp />}
             sx={{ mb: 2 }}
           >
-            {loading ? 'Processing ML Models...' : 'Run Advanced ML Analysis'}
+            <span data-translate>{loading ? 'Processing ML Models...' : 'Run Advanced ML Analysis'}</span>
           </Button>
 
           {loading && (
             <Box sx={{ mt: 2 }}>
               <Typography variant="body2" gutterBottom>
-                Running UNet segmentation and spectral analysis...
+                <span data-translate>Running UNet segmentation and spectral analysis...</span>
               </Typography>
               <LinearProgress />
             </Box>
@@ -695,7 +697,7 @@ const AdvancedSatelliteMapping: React.FC = () => {
           {dssLoading && (
             <Box sx={{ mt: 2 }}>
               <Typography variant="body2" gutterBottom>
-                Running Decision Support System analysis...
+                <span data-translate>Running Decision Support System analysis...</span>
               </Typography>
               <LinearProgress color="success" />
             </Box>
@@ -718,7 +720,7 @@ const AdvancedSatelliteMapping: React.FC = () => {
               onClick={() => setShowSpectralData(!showSpectralData)}
               startIcon={showSpectralData ? <TrendingDown /> : <TrendingUp />}
             >
-              {showSpectralData ? 'Hide' : 'Show'} Spectral Indices & ML Performance
+              <span data-translate>{showSpectralData ? 'Hide' : 'Show'} Spectral Indices & ML Performance</span>
             </Button>
           </Box>
 
@@ -728,7 +730,7 @@ const AdvancedSatelliteMapping: React.FC = () => {
               <Card sx={{ mb: 3 }}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
-                    Spectral Indices Analysis
+                    <span data-translate>Spectral Indices Analysis</span>
                   </Typography>
                   
                   <Grid container spacing={2}>
@@ -771,14 +773,14 @@ const AdvancedSatelliteMapping: React.FC = () => {
               <Card sx={{ mb: 3 }}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <SmartToy /> ML Model Performance
+                    <SmartToy /> <span data-translate>ML Model Performance</span>
                   </Typography>
                   
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={4}>
                       <Card variant="outlined">
                         <CardContent sx={{ textAlign: 'center' }}>
-                          <Typography variant="body2" color="text.secondary">Random Forest</Typography>
+                          <Typography variant="body2" color="text.secondary"><span data-translate>Random Forest</span></Typography>
                           <Chip
                             label={`${(results.ml_models.random_forest_accuracy * 100).toFixed(1)}%`}
                             color="success"
@@ -790,7 +792,7 @@ const AdvancedSatelliteMapping: React.FC = () => {
                     <Grid item xs={12} sm={4}>
                       <Card variant="outlined">
                         <CardContent sx={{ textAlign: 'center' }}>
-                          <Typography variant="body2" color="text.secondary">CNN Accuracy</Typography>
+                          <Typography variant="body2" color="text.secondary"><span data-translate>CNN Accuracy</span></Typography>
                           <Chip
                             label={`${(results.ml_models.cnn_accuracy * 100).toFixed(1)}%`}
                             color="success"
@@ -802,7 +804,7 @@ const AdvancedSatelliteMapping: React.FC = () => {
                     <Grid item xs={12} sm={4}>
                       <Card variant="outlined">
                         <CardContent sx={{ textAlign: 'center' }}>
-                          <Typography variant="body2" color="text.secondary">Ensemble Confidence</Typography>
+                          <Typography variant="body2" color="text.secondary"><span data-translate>Ensemble Confidence</span></Typography>
                           <Chip
                             label={`${(results.ml_models.ensemble_confidence * 100).toFixed(1)}%`}
                             color="primary"
@@ -821,7 +823,7 @@ const AdvancedSatelliteMapping: React.FC = () => {
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Engineering /> Infrastructure & Environmental Data
+                <Engineering /> <span data-translate>Infrastructure & Environmental Data</span>
               </Typography>
               
               <Grid container spacing={3}>
@@ -871,7 +873,7 @@ const AdvancedSatelliteMapping: React.FC = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <LocationOn /> ML Segmentation Results - {results.village_name}
+                <LocationOn /> <span data-translate>ML Segmentation Results</span> - {results.village_name}
               </Typography>
 
               <Box sx={{ mb: 2 }}>
@@ -1008,7 +1010,7 @@ const AdvancedSatelliteMapping: React.FC = () => {
                         '&:hover': { borderWidth: 2 }
                       }}
                     >
-                      View on FRA Atlas
+                      <span data-translate>View on FRA Atlas</span>
                     </Button>
                     
                     <Button 
@@ -1025,7 +1027,7 @@ const AdvancedSatelliteMapping: React.FC = () => {
                         boxShadow: 3
                       }}
                     >
-                      {dssLoading ? 'Running DSS...' : 'Run Decision Support System'}
+                      <span data-translate>{dssLoading ? 'Running DSS...' : 'Run Decision Support System'}</span>
                     </Button>
                   </Box>
                 </CardContent>
@@ -1036,7 +1038,7 @@ const AdvancedSatelliteMapping: React.FC = () => {
                 <Card sx={{ mt: 3 }}>
                   <CardContent>
                     <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Psychology color="success" /> Decision Support System Analysis
+                      <Psychology color="success" /> <span data-translate>Decision Support System Analysis</span>
                     </Typography>
 
                     <Grid container spacing={3}>
@@ -1223,7 +1225,7 @@ const AdvancedSatelliteMapping: React.FC = () => {
                         onClick={() => generateDetailedPDFReport(results, dssResults)}
                         sx={{ px: 4, py: 1.5 }}
                       >
-                        Download Detailed DSS Report (PDF)
+                        <span data-translate>Download Detailed DSS Report (PDF)</span>
                       </Button>
                     </Box>
                   </CardContent>
