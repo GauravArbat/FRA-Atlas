@@ -38,8 +38,11 @@ import {
   Assessment,
   Business
 } from '@mui/icons-material';
+import jsPDF from 'jspdf';
 import { api } from '../services/api';
 import AssetVisualizationMap from '../components/AssetVisualizationMap';
+
+
 
 interface AdvancedAssetResult {
   village_id: string;
@@ -282,10 +285,251 @@ const AdvancedSatelliteMapping: React.FC = () => {
     return 'error';
   };
 
+  const generateDetailedPDFReport = (analysisResults: AdvancedAssetResult, dssResults: any) => {
+    const doc = new jsPDF();
+    let yPos = 20;
+    
+    // Header with Government Logo Area
+    doc.setFontSize(20);
+    doc.setTextColor(25, 118, 210);
+    doc.text('GOVERNMENT OF INDIA', 20, yPos);
+    yPos += 8;
+    doc.setFontSize(16);
+    doc.text('Ministry of Tribal Affairs', 20, yPos);
+    yPos += 8;
+    doc.setFontSize(18);
+    doc.text('Forest Rights Act - Decision Support System Report', 20, yPos);
+    yPos += 20;
+    
+    // Village Information
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Village: ' + analysisResults.village_name, 20, yPos);
+    doc.text('State: ' + selectedState, 120, yPos);
+    yPos += 6;
+    doc.text('District: ' + selectedDistrict, 20, yPos);
+    doc.text('Date: ' + new Date().toLocaleDateString('en-GB'), 120, yPos);
+    yPos += 6;
+    doc.text('Coordinates: ' + analysisResults.coordinates[0].toFixed(4) + ', ' + analysisResults.coordinates[1].toFixed(4), 20, yPos);
+    yPos += 15;
+    
+    // Executive Summary
+    doc.setFontSize(16);
+    doc.setTextColor(25, 118, 210);
+    doc.text('EXECUTIVE SUMMARY', 20, yPos);
+    yPos += 10;
+    
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text('FRA Eligibility Score: ' + dssResults.eligibility_score + '%', 20, yPos);
+    doc.text('Priority Level: ' + dssResults.priority_level, 120, yPos);
+    yPos += 6;
+    doc.text('Scheme Convergence Score: ' + (dssResults.scheme_convergence?.convergence_score || 0) + '%', 20, yPos);
+    yPos += 6;
+    const benefit = String(dssResults.fra_patta_benefits?.total_estimated_annual_benefit || 'N/A').replace(/[^\w\s\-\/\.]/g, '');
+    doc.text('Total Annual Benefit: Rs ' + benefit, 20, yPos);
+    yPos += 6;
+    doc.text('Eligible Schemes: ' + (dssResults.scheme_convergence?.eligible_schemes || 0) + ' out of ' + (dssResults.scheme_convergence?.total_schemes || 0), 20, yPos);
+    yPos += 15;
+    
+    // ML Analysis Results
+    doc.setFontSize(16);
+    doc.setTextColor(25, 118, 210);
+    doc.text('MACHINE LEARNING ANALYSIS', 20, yPos);
+    yPos += 10;
+    
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Model Version: ' + analysisResults.model_version, 20, yPos);
+    doc.text('Processing Time: ' + analysisResults.processing_time + 's', 120, yPos);
+    yPos += 6;
+    doc.text('ML Model Accuracy: RF ' + (analysisResults.ml_models.random_forest_accuracy * 100).toFixed(1) + '%, CNN ' + (analysisResults.ml_models.cnn_accuracy * 100).toFixed(1) + '%', 20, yPos);
+    yPos += 10;
+    
+    // Detailed Asset Analysis
+    doc.setFontSize(14);
+    doc.setTextColor(25, 118, 210);
+    doc.text('DETAILED ASSET ANALYSIS', 20, yPos);
+    yPos += 10;
+    
+    Object.entries(analysisResults.assets).forEach(([type, assets]) => {
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(type.replace(/_/g, ' ').toUpperCase() + ' (' + assets.length + ' detected)', 20, yPos);
+      yPos += 6;
+      doc.setFontSize(10);
+      doc.text('Overall Confidence: ' + (analysisResults.confidence_maps[type] * 100).toFixed(1) + '%', 25, yPos);
+      yPos += 5;
+      
+      assets.slice(0, 3).forEach((asset: any, index: number) => {
+        doc.text('  ' + (index + 1) + '. Type: ' + asset.type.replace(/_/g, ' '), 25, yPos);
+        yPos += 4;
+        if (asset.area) {
+          doc.text('     Area: ' + asset.area + ' hectares', 25, yPos);
+          yPos += 4;
+        }
+        doc.text('     Confidence: ' + (asset.confidence * 100).toFixed(1) + '%', 25, yPos);
+        yPos += 4;
+        if (asset.coordinates) {
+          doc.text('     Location: ' + asset.coordinates[0].toFixed(4) + ', ' + asset.coordinates[1].toFixed(4), 25, yPos);
+          yPos += 4;
+        }
+      });
+      yPos += 5;
+      
+      if (yPos > 250) {
+        doc.addPage();
+        yPos = 20;
+      }
+    });
+    
+    // Spectral Analysis
+    doc.setFontSize(14);
+    doc.setTextColor(25, 118, 210);
+    doc.text('SPECTRAL INDICES ANALYSIS', 20, yPos);
+    yPos += 10;
+    
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    Object.entries(analysisResults.spectral_indices).slice(0, 5).forEach(([index, value]) => {
+      const displayValue = typeof value === 'number' ? value.toFixed(3) : String(value);
+      doc.text(index.toUpperCase().replace(/_/g, ' ') + ': ' + displayValue, 20, yPos);
+      yPos += 5;
+    });
+    yPos += 5;
+    
+    doc.text('Vegetation Health: ' + analysisResults.spectral_indices.vegetation_health, 20, yPos);
+    yPos += 5;
+    doc.text('Water Stress Level: ' + analysisResults.spectral_indices.water_stress, 20, yPos);
+    yPos += 5;
+    doc.text('Groundwater Potential: ' + analysisResults.spectral_indices.groundwater_potential, 20, yPos);
+    yPos += 15;
+    
+    // Infrastructure Assessment
+    doc.setFontSize(14);
+    doc.setTextColor(25, 118, 210);
+    doc.text('INFRASTRUCTURE ASSESSMENT', 20, yPos);
+    yPos += 10;
+    
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text('PM Gati Shakti Connectivity:', 20, yPos);
+    yPos += 6;
+    doc.text('  Road Connectivity: ' + analysisResults.infrastructure_data.pm_gati_shakti.road_connectivity, 25, yPos);
+    yPos += 5;
+    doc.text('  Digital Connectivity: ' + analysisResults.infrastructure_data.pm_gati_shakti.digital_connectivity, 25, yPos);
+    yPos += 5;
+    doc.text('  Logistics Score: ' + analysisResults.infrastructure_data.pm_gati_shakti.logistics_score + '/100', 25, yPos);
+    yPos += 10;
+    
+    doc.text('Groundwater Assessment:', 20, yPos);
+    yPos += 6;
+    doc.text('  Depth to Water: ' + analysisResults.infrastructure_data.groundwater.depth_to_water + 'm', 25, yPos);
+    yPos += 5;
+    doc.text('  Quality Index: ' + analysisResults.infrastructure_data.groundwater.quality_index + '/100', 25, yPos);
+    yPos += 5;
+    doc.text('  Recharge Potential: ' + analysisResults.infrastructure_data.groundwater.recharge_potential, 25, yPos);
+    yPos += 10;
+    
+    doc.text('Forest Data:', 20, yPos);
+    yPos += 6;
+    doc.text('  Forest Type: ' + analysisResults.infrastructure_data.forest_data.forest_type, 25, yPos);
+    yPos += 5;
+    doc.text('  Canopy Cover: ' + analysisResults.infrastructure_data.forest_data.canopy_cover_percent + '%', 25, yPos);
+    yPos += 5;
+    doc.text('  Biodiversity Score: ' + analysisResults.infrastructure_data.forest_data.biodiversity_score, 25, yPos);
+    yPos += 5;
+    doc.text('  Conservation Status: ' + analysisResults.infrastructure_data.forest_data.conservation_status, 25, yPos);
+    yPos += 15;
+    
+    // New Page for Schemes
+    doc.addPage();
+    yPos = 20;
+    
+    // Central Sector Schemes Analysis
+    doc.setFontSize(16);
+    doc.setTextColor(25, 118, 210);
+    doc.text('CENTRAL SECTOR SCHEMES ANALYSIS', 20, yPos);
+    yPos += 15;
+    
+    Object.entries(dssResults.css_schemes || {}).forEach(([scheme, details]: [string, any]) => {
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      const schemeName = scheme.replace(/_/g, ' ').toUpperCase();
+      doc.text(schemeName, 20, yPos);
+      yPos += 6;
+      
+      doc.setFontSize(10);
+      const status = details.eligible ? 'ELIGIBLE' : 'NOT ELIGIBLE';
+      doc.text('Status: ' + status, 25, yPos);
+      yPos += 5;
+      
+      if (details.ministry) {
+        doc.text('Ministry: ' + details.ministry, 25, yPos);
+        yPos += 5;
+      }
+      
+      if (details.benefit_amount) {
+        const benefit = String(details.benefit_amount).replace(/[^\w\s\-\/\.]/g, '');
+        doc.text('Benefit: Rs ' + benefit, 25, yPos);
+        yPos += 5;
+      }
+      
+      if (details.fra_integration) {
+        doc.text('FRA Integration: ' + details.fra_integration, 25, yPos);
+        yPos += 5;
+      }
+      yPos += 8;
+      
+      if (yPos > 260) {
+        doc.addPage();
+        yPos = 20;
+      }
+    });
+    
+    // Asset-based Recommendations
+    doc.setFontSize(14);
+    doc.setTextColor(25, 118, 210);
+    doc.text('ASSET-BASED RECOMMENDATIONS', 20, yPos);
+    yPos += 10;
+    
+    Object.entries(dssResults.asset_insights || {}).forEach(([asset, insight]: [string, any]) => {
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      doc.text(asset.replace(/_/g, ' ').toUpperCase() + ':', 20, yPos);
+      yPos += 6;
+      doc.setFontSize(10);
+      doc.text('Status: ' + (insight.status || 'N/A'), 25, yPos);
+      yPos += 5;
+      if (insight.intervention) {
+        doc.text('Intervention: ' + insight.intervention, 25, yPos);
+        yPos += 5;
+      }
+      if (insight.css_scheme) {
+        doc.text('Recommended Scheme: ' + insight.css_scheme.replace(/_/g, ' '), 25, yPos);
+        yPos += 5;
+      }
+      yPos += 5;
+    });
+    
+    // Footer on all pages
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(128, 128, 128);
+      doc.text('Government of India - Ministry of Tribal Affairs - Forest Rights Act Implementation', 20, 285);
+      doc.text('Page ' + i + ' of ' + pageCount, 180, 285);
+      doc.text('Generated on: ' + new Date().toLocaleString(), 20, 290);
+    }
+    
+    doc.save('Detailed_DSS_Report_' + analysisResults.village_name + '_' + new Date().toISOString().split('T')[0] + '.pdf');
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Psychology /> Advanced ML-Based Asset Mapping
+        <Psychology /> Satellite-Based Asset Mapping
       </Typography>
 
       <Card sx={{ mb: 3 }}>
@@ -712,34 +956,80 @@ const AdvancedSatelliteMapping: React.FC = () => {
                 </CardContent>
               </Card>
 
-              <Box sx={{ mt: 3, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                  <SmartToy fontSize="small" /> ML Analysis Complete |
-                  <Assessment fontSize="small" /> Spectral Indices: NDVI, NDWI, MNDWI, NDBI, SAVI |
-                  <Search fontSize="small" /> Confidence Filtering: {(confidenceThreshold * 100).toFixed(0)}%
-                </Typography>
-                
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  <Button 
-                    size="small" 
-                    variant="outlined"
-                    onClick={() => window.open(`/atlas?village=${results.village_id}`, '_blank')}
-                  >
-                    View on FRA Atlas
-                  </Button>
+              <Card sx={{ mt: 3, border: '2px solid #e3f2fd', boxShadow: 3 }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: 2,
+                    mb: 3
+                  }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                      <Chip 
+                        icon={<SmartToy />}
+                        label="ML Analysis Complete"
+                        color="success"
+                        variant="filled"
+                        sx={{ fontWeight: 600 }}
+                      />
+                      <Chip 
+                        icon={<Assessment />}
+                        label="Spectral Indices: NDVI, NDWI, MNDWI, NDBI, SAVI"
+                        color="primary"
+                        variant="outlined"
+                      />
+                      <Chip 
+                        icon={<Search />}
+                        label={`Confidence Filtering: ${(confidenceThreshold * 100).toFixed(0)}%`}
+                        color="secondary"
+                        variant="outlined"
+                      />
+                    </Box>
+                  </Box>
                   
-                  <Button 
-                    size="small" 
-                    variant="contained"
-                    color="success"
-                    onClick={() => runDecisionSupport()}
-                    startIcon={<Psychology />}
-                    disabled={dssLoading}
-                  >
-                    {dssLoading ? 'Running DSS...' : 'Run Decision Support System'}
-                  </Button>
-                </Box>
-              </Box>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    gap: 2, 
+                    justifyContent: 'center',
+                    flexWrap: 'wrap'
+                  }}>
+                    <Button 
+                      size="large"
+                      variant="outlined"
+                      color="primary"
+                      onClick={() => window.open(`/atlas?village=${results.village_id}`, '_blank')}
+                      sx={{ 
+                        px: 4, 
+                        py: 1.5,
+                        fontWeight: 600,
+                        borderWidth: 2,
+                        '&:hover': { borderWidth: 2 }
+                      }}
+                    >
+                      View on FRA Atlas
+                    </Button>
+                    
+                    <Button 
+                      size="large"
+                      variant="contained"
+                      color="success"
+                      onClick={() => runDecisionSupport()}
+                      startIcon={<Psychology />}
+                      disabled={dssLoading}
+                      sx={{ 
+                        px: 4, 
+                        py: 1.5,
+                        fontWeight: 600,
+                        boxShadow: 3
+                      }}
+                    >
+                      {dssLoading ? 'Running DSS...' : 'Run Decision Support System'}
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
 
               {/* Decision Support System Results */}
               {dssResults && (
@@ -923,6 +1213,19 @@ const AdvancedSatelliteMapping: React.FC = () => {
                         </Card>
                       </Grid>
                     </Grid>
+                    
+                    {/* Download Report Button */}
+                    <Box sx={{ mt: 3, textAlign: 'center' }}>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        size="large"
+                        onClick={() => generateDetailedPDFReport(results, dssResults)}
+                        sx={{ px: 4, py: 1.5 }}
+                      >
+                        Download Detailed DSS Report (PDF)
+                      </Button>
+                    </Box>
                   </CardContent>
                 </Card>
               )}

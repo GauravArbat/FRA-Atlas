@@ -48,7 +48,7 @@ services:
       context: ./data-processor
       dockerfile: Dockerfile
     ports:
-      - "8001:8001"
+      - "8002:8001"
     volumes:
       - ./data-processor:/app
       - ./uploads:/app/uploads
@@ -56,6 +56,26 @@ services:
     environment:
       - DATABASE_URL=postgresql://fra_user:fra_password@postgres:5432/fra_atlas
       - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - fra-network
+
+  # Advanced Digitization Pipeline
+  digitization-pipeline:
+    build:
+      context: ./digitization-pipeline
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./uploads:/tmp/uploads
+      - ./processed:/tmp/processed
+    environment:
+      - DATABASE_URL=postgresql://fra_user:fra_password@postgres:5432/fra_atlas
+      - REDIS_URL=redis://redis:6379/0
+      - DIGITIZATION_API_URL=http://digitization-pipeline:8001
     depends_on:
       - postgres
       - redis

@@ -31,7 +31,8 @@ import {
   TrackChanges,
   Assignment,
   Psychology,
-  Satellite
+  Satellite,
+  TrendingUp
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
@@ -69,13 +70,16 @@ const Sidebar: React.FC = () => {
             { text: 'FRA Atlas', icon: <Map />, path: '/atlas' },
             // { text: 'Digital GIS Plot', icon: <LocationOn />, path: '/gis-plot' },
             // { text: 'Dummy Data Generator', icon: <Assignment />, path: '/dummy-data' },
-            { text: 'Data Management', icon: <Storage />, path: '/data' },
+           
+            { text: 'Upload Data', icon: <CloudUpload />, path: '/upload-data' },
+             { text: 'Data Management', icon: <Storage />, path: '/data' },
             // { text: 'Decision Support', icon: <Assessment />, path: '/decisions' },
             { text: 'Satellite Asset Mapping', icon: <Map />, path: '/advanced-mapping' },
             // { text: 'Advanced ML Mapping', icon: <Psychology />, path: '/advanced-mapping' },
             // { text: 'Real-time Satellite', icon: <Satellite />, path: '/realtime-satellite' },
             
             { text: 'Decision Support', icon: <Assessment />, path: '/dss-analysis' },
+            { text: 'Progress Tracking', icon: <TrendingUp />, path: '/progress-tracking' },
             { text: 'Reports & Analytics', icon: <BarChart />, path: '/reports' },
             { text: 'User Settings', icon: <Settings />, path: '/settings' },
             { text: 'AI Analysis', icon: <Analytics />, path: '/ai-analysis' }
@@ -111,10 +115,11 @@ const Sidebar: React.FC = () => {
           title: 'District Operations',
           items: [
             { text: 'Dashboard', icon: <Dashboard />, path: '/' },
-            { text: 'Legacy Upload', icon: <CloudUpload />, path: '/legacy-upload' },
+            { text: 'FRA Atlas', icon: <Map />, path: '/atlas' },
+            { text: 'Legacy Upload', icon: <CloudUpload />, path: '/upload-data' },
             { text: 'Legacy Digitization', icon: <Assignment />, path: '/legacy-digitization' },
             { text: 'Claims Processing', icon: <Assignment />, path: '/claims-processing' },
-            { text: 'OCR Review', icon: <Description />, path: '/ocr-review' },
+            // { text: 'OCR Review', icon: <Description />, path: '/ocr-review' },
             { text: 'Reports', icon: <BarChart />, path: '/reports' }
           ]
         }

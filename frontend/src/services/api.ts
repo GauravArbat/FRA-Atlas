@@ -80,6 +80,36 @@ export const geojsonPlotAPI = {
     api.get(`/geojson-plot/layers/${id}/export/${format}`),
 };
 
+// Digitization Pipeline API functions
+export const digitizationPipelineAPI = {
+  // Upload single document
+  uploadDocument: (file: File, state?: string, district?: string) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (state) formData.append('state', state);
+    if (district) formData.append('district', district);
+    return api.post('/digitization-pipeline/upload', formData);
+  },
+  
+  // Batch upload
+  batchUpload: (files: File[], state?: string, district?: string) => {
+    const formData = new FormData();
+    files.forEach(file => formData.append('files', file));
+    if (state) formData.append('state', state);
+    if (district) formData.append('district', district);
+    return api.post('/digitization-pipeline/batch-upload', formData);
+  },
+  
+  // Get status
+  getStatus: (documentId: string) => api.get(`/digitization-pipeline/status/${documentId}`),
+  
+  // Export data
+  exportData: (format: string, filters?: any) => {
+    const params = new URLSearchParams(filters);
+    return api.get(`/digitization-pipeline/export/${format}?${params}`);
+  }
+};
+
 // PDF Processor API functions
 export const pdfProcessorAPI = {
   // Process PDF and extract data

@@ -74,6 +74,7 @@ import 'leaflet-draw/dist/leaflet.draw.css';
 import 'leaflet-draw';
 import '../styles/mapPopup.css';
 import '../styles/fraLayers.css';
+import '../styles/liveData.css';
 import FRALayerManager from '../components/FRALayerManager';
 import { loadAllFRAData } from '../utils/dataFetcher';
 import { loadRealFRAData } from '../services/realFRAData';
@@ -239,6 +240,12 @@ const FRAAtlas: React.FC = () => {
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [selectedPattaId, setSelectedPattaId] = useState<string>('');
   const [selectedOwnerName, setSelectedOwnerName] = useState<string>('');
+  const [realTimeStats, setRealTimeStats] = useState({
+    totalClaims: 0,
+    grantedClaims: 0,
+    pendingClaims: 0,
+    lastUpdated: new Date()
+  });
 
 
   // Get map configuration based on user role and location
@@ -357,25 +364,44 @@ const FRAAtlas: React.FC = () => {
 
   // Update map layers with filtered data
   const updateMapLayers = (data: FRAData[]) => {
-    if (!mapRef.current || !fraGrantedLayerRef.current || !fraPotentialLayerRef.current) return;
+    if (!mapRef.current) {
+      console.warn('Map not ready for plotting');
+      return;
+    }
+
+    // Initialize layers if not exists
+    if (!fraGrantedLayerRef.current) {
+      fraGrantedLayerRef.current = L.layerGroup().addTo(mapRef.current);
+    }
+    if (!fraPotentialLayerRef.current) {
+      fraPotentialLayerRef.current = L.layerGroup().addTo(mapRef.current);
+    }
 
     // Clear existing layers
     fraGrantedLayerRef.current.clearLayers();
     fraPotentialLayerRef.current.clearLayers();
 
-    data.forEach(item => {
-      const coordinates = item.coordinates.map(coord => [coord[0], coord[1]] as [number, number]);
-      
-      const polygon = L.polygon(coordinates, {
-        color: item.status === 'granted' ? '#1b5e20' : '#ff6f00',
-        fillColor: item.status === 'granted' ? '#2e7d32' : '#ff9800',
-        fillOpacity: item.status === 'granted' ? 0.35 : 0.25,
-        weight: 2
-      });
+    console.log('🗺️ Plotting', data.length, 'claims on map');
+
+    data.forEach((item, index) => {
+      try {
+        // Convert coordinates properly (lat, lng format for Leaflet)
+        const coordinates = item.coordinates.map(coord => [coord[0], coord[1]] as [number, number]);
+        
+        const polygon = L.polygon(coordinates, {
+          color: item.status === 'granted' ? '#1b5e20' : '#ff6f00',
+          fillColor: item.status === 'granted' ? '#2e7d32' : '#ff9800',
+          fillOpacity: item.status === 'granted' ? 0.6 : 0.4,
+          weight: 3
+        });
+        
+        console.log(`Plotting claim ${index + 1}:`, item.claimantName, 'at', coordinates[0]);
 
       const statusClass = item.status === 'granted' ? 'status-granted' : 'status-potential';
+      const isRealTime = item.id.startsWith('FRA');
       polygon.bindPopup(`
         <div>
+          ${isRealTime ? '<div class="popup-header"><span class="live-indicator">🔴 LIVE</span> Government FRA Data</div>' : ''}
           <div class="popup-section">
             <h5>Claimant Details</h5>
             <table class="popup-table">
@@ -390,20 +416,29 @@ const FRAAtlas: React.FC = () => {
             <table class="popup-table">
               <tr><td>Survey No</td><td>${item.surveyNumber || 'N/A'}</td></tr>
               <tr><td>Area</td><td>${item.area} hectares</td></tr>
-              <tr><td>Status</td><td><span class="status-chip ${statusClass}">${item.status}</span></td></tr>
-              <tr><td>Date</td><td>${new Date(item.dateSubmitted).toLocaleDateString()}</td></tr>
+              <tr><td>Status</td><td><span class="status-chip ${statusClass}">${item.status.toUpperCase()}</span></td></tr>
+              <tr><td>Submitted</td><td>${new Date(item.dateSubmitted).toLocaleDateString()}</td></tr>
+              ${isRealTime ? `<tr><td>Source</td><td>Ministry of Tribal Affairs</td></tr>` : ''}
             </table>
           </div>
+          ${isRealTime ? '<div class="popup-footer">Real-time data from Government of India</div>' : ''}
         </div>
       `, { className: 'custom-popup' });
 
-      // Add to appropriate layer group
-      if (item.status === 'granted') {
-        polygon.addTo(fraGrantedLayerRef.current!);
-      } else {
-        polygon.addTo(fraPotentialLayerRef.current!);
+        // Add to appropriate layer group
+        if (item.status === 'granted') {
+          polygon.addTo(fraGrantedLayerRef.current!);
+        } else {
+          polygon.addTo(fraPotentialLayerRef.current!);
+        }
+      } catch (error) {
+        console.error('Error plotting claim:', item.id, error);
       }
     });
+    
+    console.log('✅ Successfully plotted', data.length, 'FRA claims');
+    
+    // Auto-zoom disabled - map stays at current position
   };
 
   // Add base layers to map
@@ -535,6 +570,14 @@ const FRAAtlas: React.FC = () => {
       setMapInitialized(true);
       setLoading(false);
 
+      // Initialize layer groups first
+      fraGrantedLayerRef.current = L.layerGroup().addTo(map);
+      fraPotentialLayerRef.current = L.layerGroup().addTo(map);
+      boundariesLayerRef.current = L.layerGroup();
+      forestsLayerRef.current = L.layerGroup();
+      pattaHoldersLayerRef.current = L.layerGroup();
+      waterBodiesLayerRef.current = L.layerGroup();
+      
       // Load FRA data
       loadFRAData();
 
@@ -546,15 +589,12 @@ const FRAAtlas: React.FC = () => {
     };
   }, [user]); // Only re-initialize if user changes
 
-  // Refresh patta holders layer on load
+  // Load patta holders data when map is ready
   useEffect(() => {
-    if (mapLoaded && pattaHoldersLayerRef.current) {
-      // Toggle off then on to refresh
+    if (mapLoaded && layerVisibility.pattaHolders) {
       setTimeout(() => {
-        setLayerVisibility(prev => ({ ...prev, pattaHolders: false }));
-        setTimeout(() => {
-          setLayerVisibility(prev => ({ ...prev, pattaHolders: true }));
-        }, 100);
+        console.log('🔄 Auto-loading patta holders on map ready...');
+        loadPattaHoldersData();
       }, 1000);
     }
   }, [mapLoaded]);
@@ -565,7 +605,83 @@ const FRAAtlas: React.FC = () => {
     try {
       setLoading(true);
       
-      // Load from permanent GeoJSON files first
+      // Try to load real government FRA data first
+      try {
+        const { realFRADataService } = await import('../services/realFRADataService');
+        const realClaims = await realFRADataService.fetchRealFRAClaims();
+        console.log('✅ Loaded real FRA claims:', realClaims.length);
+        
+        const convertedRealData = realClaims.map(claim => {
+          console.log('Converting claim:', claim.id, 'coordinates:', claim.coordinates);
+          return {
+            id: claim.id,
+            claimantName: claim.claimantName,
+            area: claim.area,
+            status: claim.status === 'granted' || claim.status === 'approved' ? 'granted' as const : 'potential' as const,
+            coordinates: claim.coordinates,
+            village: claim.village,
+            district: claim.district,
+            state: claim.state,
+            dateSubmitted: claim.dateSubmitted,
+            surveyNumber: claim.surveyNumber
+          };
+        });
+        
+        const filteredRealData = filterDataForUser(convertedRealData);
+        setFraData(filteredRealData);
+        setFilteredData(filteredRealData);
+        updateMapLayers(filteredRealData);
+        console.log('🗺️ Plotting', filteredRealData.length, 'FRA claims on map');
+        
+        // Update real-time stats
+        setRealTimeStats({
+          totalClaims: filteredRealData.length,
+          grantedClaims: filteredRealData.filter(item => item.status === 'granted').length,
+          pendingClaims: filteredRealData.filter(item => item.status === 'potential').length,
+          lastUpdated: new Date()
+        });
+        
+        // setInfo(`Loaded ${filteredRealData.length} real FRA claims from government sources`);
+        setLoading(false);
+        
+        // Start real-time updates
+        realFRADataService.startRealTimeUpdates((updatedClaims) => {
+          const convertedUpdatedData = updatedClaims.map(claim => ({
+            id: claim.id,
+            claimantName: claim.claimantName,
+            area: claim.area,
+            status: claim.status === 'granted' || claim.status === 'approved' ? 'granted' as const : 'potential' as const,
+            coordinates: claim.coordinates,
+            village: claim.village,
+            district: claim.district,
+            state: claim.state,
+            dateSubmitted: claim.dateSubmitted,
+            surveyNumber: claim.surveyNumber
+          }));
+          
+          const filteredUpdatedData = filterDataForUser(convertedUpdatedData);
+          setFraData(filteredUpdatedData);
+          setFilteredData(filteredUpdatedData);
+          updateMapLayers(filteredUpdatedData);
+          console.log('🗺️ Updated map with', filteredUpdatedData.length, 'FRA claims');
+          
+          // Update real-time stats
+          setRealTimeStats({
+            totalClaims: filteredUpdatedData.length,
+            grantedClaims: filteredUpdatedData.filter(item => item.status === 'granted').length,
+            pendingClaims: filteredUpdatedData.filter(item => item.status === 'potential').length,
+            lastUpdated: new Date()
+          });
+          
+          console.log('🔄 Real-time FRA data updated:', filteredUpdatedData.length);
+        });
+        
+        return;
+      } catch (realDataError) {
+        console.warn('⚠️ Real FRA data unavailable, falling back to permanent files:', realDataError);
+      }
+      
+      // Load from permanent GeoJSON files as fallback
       const permanentData = await loadPermanentData();
       console.log('✅ Using permanent GeoJSON files');
       const filteredMockData = filterDataForUser(convertToFRAData(permanentData));
@@ -806,8 +922,8 @@ const FRAAtlas: React.FC = () => {
     boundaries.forEach(boundary => {
       const coordinates = boundary.coordinates.map(coord => [coord[0], coord[1]] as [number, number]);
       const polygon = L.polygon(coordinates, {
-        color: '#1976d2',
-        fillColor: '#2196f3',
+        color: '#e91e63',
+        fillColor: '#f48fb1',
         fillOpacity: 0.1,
         weight: 2,
         dashArray: '5,5'
@@ -862,6 +978,7 @@ const FRAAtlas: React.FC = () => {
       
       if (records.length === 0) {
         console.log('⚠️ No patta holders found, checking uploaded layers...');
+        return;
       }
 
       if (records.length > 0) {
@@ -907,14 +1024,15 @@ const FRAAtlas: React.FC = () => {
               [lat + offset, lng - offset]
             ];
           } else {
+            console.warn('Skipping unsupported geometry type:', feature.geometry.type);
             return; // Skip unsupported geometry types
           }
 
           const polygon = L.polygon(coordinates, {
             color: props.fraStatus?.includes('Granted') ? '#4caf50' : '#ff9800',
             fillColor: props.fraStatus?.includes('Granted') ? '#66bb6a' : '#ffb74d',
-            fillOpacity: 0.4,
-            weight: 2
+            fillOpacity: 0.6,
+            weight: 3
           });
 
           const statusClass = props.fraStatus?.includes('Granted') ? 'status-granted' : 'status-potential';
@@ -1250,8 +1368,8 @@ const FRAAtlas: React.FC = () => {
           fetchRealStateBoundaries().then(stateBoundaries => {
             const boundaryLayer = L.geoJSON(stateBoundaries as any, {
               style: {
-                color: '#1976d2',
-                fillColor: '#2196f3',
+                color: '#e91e63',
+                fillColor: '#f48fb1',
                 fillOpacity: 0.1,
                 weight: 3,
                 dashArray: '10,5'
@@ -1298,7 +1416,6 @@ const FRAAtlas: React.FC = () => {
     console.log('Patta Holders toggle:', layerVisibility.pattaHolders, 'Layer exists:', !!pattaHoldersLayerRef.current);
     if (!pattaHoldersLayerRef.current) {
       pattaHoldersLayerRef.current = L.layerGroup();
-      loadPattaHoldersData(); // Load data when initializing
       console.log('🔄 Patta holders layer initialized');
     }
     
@@ -1308,6 +1425,11 @@ const FRAAtlas: React.FC = () => {
         if (!mapRef.current.hasLayer(pattaHoldersLayerRef.current)) {
           pattaHoldersLayerRef.current.addTo(mapRef.current);
           console.log('✅ Patta holders layer added to map');
+        }
+        // Always reload data when layer is toggled on
+        if (pattaHoldersLayerRef.current.getLayers().length === 0) {
+          console.log('🔄 Loading patta holders data...');
+          loadPattaHoldersData();
         }
       } else {
         if (mapRef.current.hasLayer(pattaHoldersLayerRef.current)) {
@@ -1945,11 +2067,11 @@ const FRAAtlas: React.FC = () => {
             />
             <Box sx={{ minWidth: 0, flex: 1 }}>
               <Typography 
-                variant="h5" 
+                variant="h6" 
                 fontWeight="bold" 
                 color="primary"
                 sx={{
-                  fontSize: { xs: '14px', sm: '16px', md: '20px', lg: '24px' },
+                  fontSize: { xs: '12px', sm: '14px', md: '16px', lg: '18px' },
                   lineHeight: 1.2,
                   mb: 0.5
                 }}
@@ -1960,7 +2082,7 @@ const FRAAtlas: React.FC = () => {
                 variant="body2" 
                 color="text.secondary"
                 sx={{
-                  fontSize: { xs: '10px', sm: '11px', md: '12px', lg: '14px' },
+                  fontSize: { xs: '8px', sm: '9px', md: '10px', lg: '11px' },
                   display: { xs: 'none', sm: 'block' }
                 }}
               >
@@ -1980,6 +2102,20 @@ const FRAAtlas: React.FC = () => {
               variant="outlined"
               size={window.innerWidth < 768 ? "small" : "medium"}
               sx={{ fontSize: { xs: '8px', sm: '10px', md: '12px' } }}
+            />
+            <Chip 
+              label="LIVE DATA" 
+              color="success" 
+              size="small"
+              sx={{ 
+                fontSize: { xs: '7px', sm: '9px', md: '11px' },
+                animation: 'pulse 2s infinite',
+                '@keyframes pulse': {
+                  '0%': { opacity: 1 },
+                  '50%': { opacity: 0.5 },
+                  '100%': { opacity: 1 }
+                }
+              }}
             />
             <Chip 
               label={currentMapStyle.toUpperCase()} 
@@ -3115,7 +3251,7 @@ const FRAAtlas: React.FC = () => {
         sx={{ 
           position: 'absolute', 
           bottom: 20, 
-          left: 20, 
+          left: { xs: 20, md: 300 }, 
           p: 2, 
           display: 'flex', 
           gap: 2,
@@ -3230,6 +3366,78 @@ const FRAAtlas: React.FC = () => {
           </Box>
         )}
       </Paper>
+
+      {/* Real-time Statistics Panel */}
+      {fraData.length > 0 && (
+        <Paper sx={{
+          position: 'absolute',
+          bottom: { xs: 140, sm: 120 },
+          left: { xs: 8, md: 300 },
+          p: { xs: 1, sm: 2 },
+          bgcolor: 'rgba(255, 255, 255, 0.95)',
+          boxShadow: 2,
+          borderRadius: 2,
+          border: '1px solid rgba(0,0,0,0.1)',
+          zIndex: 1000,
+          cursor: 'move',
+          userSelect: 'none',
+          minWidth: { xs: '150px', sm: '200px' },
+          maxWidth: { xs: '200px', sm: '250px' }
+        }}
+        onMouseDown={(e) => {
+          const panel = e.currentTarget;
+          const rect = panel.getBoundingClientRect();
+          const offsetX = e.clientX - rect.left;
+          const offsetY = e.clientY - rect.top;
+          
+          const handleMouseMove = (moveEvent: MouseEvent) => {
+            panel.style.left = (moveEvent.clientX - offsetX) + 'px';
+            panel.style.top = (moveEvent.clientY - offsetY) + 'px';
+            panel.style.bottom = 'auto';
+          };
+          
+          const handleMouseUp = () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+          };
+          
+          document.addEventListener('mousemove', handleMouseMove);
+          document.addEventListener('mouseup', handleMouseUp);
+        }}>
+          <Typography variant="h6" sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1, 
+            fontSize: { xs: '14px', sm: '16px' },
+            mb: 1
+          }}>
+            <Analytics sx={{ fontSize: { xs: '14px', sm: '16px' } }} />
+            FRA Statistics
+          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+            <Typography variant="body2" sx={{ fontSize: { xs: '11px', sm: '12px' } }}>Total Claims:</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: { xs: '11px', sm: '12px' } }}>{realTimeStats.totalClaims}</Typography>
+          </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+            <Typography variant="body2" sx={{ fontSize: { xs: '11px', sm: '12px' } }}>Granted:</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'success.main', fontSize: { xs: '11px', sm: '12px' } }}>{realTimeStats.grantedClaims}</Typography>
+          </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+            <Typography variant="body2" sx={{ fontSize: { xs: '11px', sm: '12px' } }}>Pending:</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'warning.main', fontSize: { xs: '11px', sm: '12px' } }}>{realTimeStats.pendingClaims}</Typography>
+          </Box>
+          <Typography variant="caption" sx={{ 
+            display: 'block', 
+            textAlign: 'center', 
+            color: 'text.secondary',
+            fontSize: { xs: '9px', sm: '10px' },
+            borderTop: '1px solid rgba(0,0,0,0.1)',
+            pt: 0.5
+          }}>
+            Updated: {realTimeStats.lastUpdated.toLocaleTimeString()}
+          </Typography>
+        </Paper>
+      )}
 
       {/* Patta Report Modal */}
       <PattaReportModal

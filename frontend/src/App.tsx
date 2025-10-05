@@ -13,6 +13,7 @@ import Settings from './pages/Settings';
 import SatelliteMapping from './pages/SatelliteMapping';
 import SatelliteAssetMapping from './pages/SatelliteAssetMapping';
 import AdvancedSatelliteMapping from './pages/AdvancedSatelliteMapping';
+import FRAProgressTracker from './components/FRAProgressTracker';
 import RealTimeSatelliteMapping from './pages/RealTimeSatelliteMapping';
 import AIAnalysis from './pages/AIAnalysis';
 import Notifications from './pages/Notifications';
@@ -24,6 +25,7 @@ import SubmitClaim from './pages/SubmitClaim';
 import TrackClaims from './pages/TrackClaims';
 import LegacyDataDigitization from './pages/LegacyDataDigitization';
 import DummyDataGenerator from './pages/DummyDataGenerator';
+import UploadData from './pages/UploadData';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -59,9 +61,11 @@ const AppContent: React.FC = () => {
             <Route path="/atlas" element={<FRAAtlas />} />
             <Route path="/gis-plot" element={<RoleBasedRoute allowedRoles={['admin']}><DigitalGISPlot /></RoleBasedRoute>} />
             <Route path="/data" element={<RoleBasedRoute allowedRoles={['admin']}><DataManagement /></RoleBasedRoute>} />
+            <Route path="/upload-data" element={<RoleBasedRoute allowedRoles={['admin', 'district_tribal_welfare']}><UploadData /></RoleBasedRoute>} />
             <Route path="/decisions" element={<RoleBasedRoute allowedRoles={['admin']}><DecisionSupport /></RoleBasedRoute>} />
             <Route path="/satellite-mapping" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><SatelliteAssetMapping /></RoleBasedRoute>} />
             <Route path="/advanced-mapping" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><AdvancedSatelliteMapping /></RoleBasedRoute>} />
+            <Route path="/progress-tracking" element={<FRAProgressTracker />} />
             <Route path="/realtime-satellite" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><RealTimeSatelliteMapping /></RoleBasedRoute>} />
             <Route path="/dss-analysis" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><DecisionSupport /></RoleBasedRoute>} />
             <Route path="/ai-analysis" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><AIAnalysis /></RoleBasedRoute>} />

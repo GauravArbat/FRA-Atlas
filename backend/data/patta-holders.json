@@ -1851,6 +1851,175 @@
     "lastModified": "2025-10-03T08:17:50.570Z",
     "createdBy": "c59bf674-a4e6-4f72-9480-c39c9d8c279a",
     "status": "active"
+  },
+  {
+    "id": "polygon_1759683930527_szob79hr0",
+    "ownerName": "Manoj Thakur",
+    "fatherName": "Umesh Pandey",
+    "address": {
+      "village": "Khordha",
+      "block": "Bhubaneswar Block",
+      "district": "Bhubaneswar",
+      "state": "Odisha",
+      "pincode": 793897,
+      "fullAddress": "Khordha, Bhubaneswar Block, Bhubaneswar, Odisha - 793897"
+    },
+    "landDetails": {
+      "surveyNo": "OD-AGR-959",
+      "khasra": "17/9",
+      "area": {
+        "hectares": 0.27895705209301014,
+        "acres": 0.689302875721828,
+        "squareMeters": 2789.5705209301013
+      },
+      "classification": "Grazing Land",
+      "fraStatus": "Pending"
+    },
+    "coordinates": [
+      [
+        83.646963,
+        21.178108
+      ],
+      [
+        83.646882,
+        21.177678
+      ],
+      [
+        83.647338,
+        21.177472
+      ],
+      [
+        83.647413,
+        21.177978
+      ],
+      [
+        83.646963,
+        21.178108
+      ]
+    ],
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            83.646963,
+            21.178108
+          ],
+          [
+            83.646882,
+            21.177678
+          ],
+          [
+            83.647338,
+            21.177472
+          ],
+          [
+            83.647413,
+            21.177978
+          ],
+          [
+            83.646963,
+            21.178108
+          ]
+        ]
+      ]
+    },
+    "created": "2025-10-05T17:05:30.527Z",
+    "lastModified": "2025-10-05T17:05:30.527Z",
+    "createdBy": "c59bf674-a4e6-4f72-9480-c39c9d8c279a",
+    "status": "active"
+  },
+  {
+    "id": "polygon_1759683967790_8y4y4n4kr",
+    "ownerName": "Ramesh Verma",
+    "fatherName": "Seema Shah",
+    "address": {
+      "village": "Phulbani",
+      "block": "Cuttack Block",
+      "district": "Angul",
+      "state": "Odisha",
+      "pincode": 337571,
+      "fullAddress": "Phulbani, Cuttack Block, Angul, Odisha - 337571"
+    },
+    "landDetails": {
+      "surveyNo": "OD-AGR-785",
+      "khasra": "88/6",
+      "area": {
+        "hectares": 0.507451315000053,
+        "acres": 1.253912199365131,
+        "squareMeters": 5074.51315000053
+      },
+      "classification": "Agricultural Land",
+      "fraStatus": "CR Granted"
+    },
+    "coordinates": [
+      [
+        83.647435,
+        21.177988
+      ],
+      [
+        83.648191,
+        21.177878
+      ],
+      [
+        83.648143,
+        21.177648
+      ],
+      [
+        83.647934,
+        21.177282
+      ],
+      [
+        83.647408,
+        21.177482
+      ],
+      [
+        83.647333,
+        21.177487
+      ],
+      [
+        83.647435,
+        21.177988
+      ]
+    ],
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            83.647435,
+            21.177988
+          ],
+          [
+            83.648191,
+            21.177878
+          ],
+          [
+            83.648143,
+            21.177648
+          ],
+          [
+            83.647934,
+            21.177282
+          ],
+          [
+            83.647408,
+            21.177482
+          ],
+          [
+            83.647333,
+            21.177487
+          ],
+          [
+            83.647435,
+            21.177988
+          ]
+        ]
+      ]
+    },
+    "created": "2025-10-05T17:06:07.790Z",
+    "lastModified": "2025-10-05T17:06:07.790Z",
+    "createdBy": "c59bf674-a4e6-4f72-9480-c39c9d8c279a",
+    "status": "active"
   }
-
 ]

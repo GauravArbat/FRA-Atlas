@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  digitization-api:
+    build: .
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql://fra_user:fra_password@postgres:5432/fra_atlas
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./uploads:/tmp/uploads
+      - ./processed:/tmp/processed
+      - ./logs:/app/logs
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+  postgres:
+    image: postgis/postgis:14-3.2
+    environment:
+      - POSTGRES_DB=fra_atlas
+      - POSTGRES_USER=fra_user
+      - POSTGRES_PASSWORD=fra_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  celery-worker:
+    build: .
+    command: celery -A app.celery_app worker --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql://fra_user:fra_password@postgres:5432/fra_atlas
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./uploads:/tmp/uploads
+      - ./processed:/tmp/processed
+      - ./logs:/app/logs
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
