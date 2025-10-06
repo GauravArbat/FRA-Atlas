@@ -1,16 +1,7 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 
-app = FastAPI(title="FRA Data Processor", version="1.0.0")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app = FastAPI(title="FRA Data Processor")
 
 @app.get("/")
 async def root():
@@ -18,11 +9,11 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "timestamp": datetime.utcnow()}
+    return {"status": "healthy", "timestamp": str(datetime.utcnow())}
 
 @app.post("/process")
-async def process_data(data: dict):
-    return {"status": "processed", "data": data}
+async def process_data():
+    return {"status": "processed"}
 
 if __name__ == "__main__":
     import uvicorn
