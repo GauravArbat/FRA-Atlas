@@ -1149,15 +1149,22 @@ const FRAAtlas: React.FC = () => {
       
       // Try the new API endpoint first
       try {
+        console.log('🔄 Trying API endpoint: /api/fra/atlas/forest-areas');
         const response = await fetch('/api/fra/atlas/forest-areas');
         if (response.ok) {
           fraStatesForest = await response.json();
           forestFeatures = fraStatesForest.features || [];
-          console.log('✅ Loaded forest areas from new API endpoint:', forestFeatures.length);
+          console.log('✅ Loaded forest areas from API endpoint:', forestFeatures.length);
+          if (forestFeatures.length > 0) {
+            // Success - use this data
+          } else {
+            throw new Error('API returned 0 features');
+          }
         } else {
-          throw new Error('New API endpoint failed');
+          throw new Error(`API failed with status: ${response.status}`);
         }
       } catch (apiError) {
+        console.log('⚠️ API endpoint failed:', apiError.message);
         console.log('⚠️ New API endpoint failed, trying existing endpoints...');
         
         // Try multiple endpoints in order

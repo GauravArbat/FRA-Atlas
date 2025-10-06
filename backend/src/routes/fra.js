@@ -464,42 +464,35 @@ router.get('/atlas/forest-areas', async (req, res) => {
     const fs = require('fs');
     const path = require('path');
     
-    // Path to the forest data file
-    const forestDataPath = path.join(__dirname, '../../data/fra-states-forest-data.geojson');
+    // Try multiple possible paths
+    const possiblePaths = [
+      path.join(__dirname, '../../data/fra-states-forest-data.geojson'),
+      path.join(process.cwd(), 'backend/data/fra-states-forest-data.geojson'),
+      path.join(process.cwd(), 'data/fra-states-forest-data.geojson'),
+      '/app/backend/data/fra-states-forest-data.geojson', // Railway deployment path
+      '/app/data/fra-states-forest-data.geojson' // Alternative deployment path
+    ];
     
-    // Check if file exists
-    if (!fs.existsSync(forestDataPath)) {
+    let forestData = null;
+    
+    for (const forestDataPath of possiblePaths) {
+      if (fs.existsSync(forestDataPath)) {
+        console.log('✅ Found forest data at:', forestDataPath);
+        forestData = JSON.parse(fs.readFileSync(forestDataPath, 'utf8'));
+        break;
+      }
+    }
+    
+    if (!forestData) {
+      console.log('❌ Forest data file not found in any location');
       return res.status(404).json({ error: 'Forest data file not found' });
     }
     
-    // Read and parse the GeoJSON file
-    const forestData = JSON.parse(fs.readFileSync(forestDataPath, 'utf8'));
-    
-    // Apply filters if provided
-    const { state, district, type } = req.query;
-    let filteredFeatures = forestData.features || [];
-    
-    if (state) {
-      filteredFeatures = filteredFeatures.filter(f => 
-        f.properties.state && f.properties.state.toLowerCase().includes(state.toLowerCase())
-      );
-    }
-    
-    if (district) {
-      filteredFeatures = filteredFeatures.filter(f => 
-        f.properties.district && f.properties.district.toLowerCase().includes(district.toLowerCase())
-      );
-    }
-    
-    if (type) {
-      filteredFeatures = filteredFeatures.filter(f => 
-        f.properties.type && f.properties.type.toLowerCase().includes(type.toLowerCase())
-      );
-    }
+    console.log('🌲 Serving forest data:', forestData.features?.length || 0, 'features');
     
     res.json({
       type: 'FeatureCollection',
-      features: filteredFeatures
+      features: forestData.features || []
     });
     
   } catch (error) {
