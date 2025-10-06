@@ -3,57 +3,34 @@ services:
     name: fra-atlas-backend
     env: node
     plan: free
-    rootDir: backend
-    buildCommand: npm install
-    startCommand: npm start
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
-      - key: JWT_SECRET
-        generateValue: true
-      - key: CORS_ORIGIN
-        value: https://fra-atlas.vercel.app
       - key: DATABASE_URL
         fromDatabase:
-          name: fra-atlas-db
+          name: fra-postgres
           property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: fra-atlas-redis
-          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://fra-atlas-frontend.onrender.com
 
   - type: web
-    name: fra-atlas-data-processor
-    env: python
+    name: fra-atlas-frontend
+    env: static
     plan: free
-    rootDir: data-processor
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/build
     envVars:
-      - key: PORT
-        value: 10000
-
-  - type: web
-    name: fra-atlas-digitization-pipeline
-    env: python
-    plan: free
-    rootDir: digitization-pipeline
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
-    envVars:
-      - key: PORT
-        value: 10000
-
-  - type: redis
-    name: fra-atlas-redis
-    plan: free
-    ipAllowList: []
+      - key: REACT_APP_API_URL
+        value: https://fra-atlas-backend.onrender.com
 
 databases:
-  - name: fra-atlas-db
+  - name: fra-postgres
+    plan: free
     databaseName: fra_atlas
     user: fra_user
-    plan: free
