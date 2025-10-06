@@ -34,7 +34,7 @@ const fallbackUsers = [
     id: '2',
     username: 'state_mp',
     email: 'state@mp.gov.in',
-    password_hash: '$2a$12$rQ/ww4ccjaJe5DEvD66lrepu5JRwn7DNd/reZFgq11BjbhF5Et556',
+    password_hash: '$2a$12$oYUWSGR0gO9WoKuuhQe.7uWToPd7KXopoYpB7.4bKHnVzwS.Xyfhy',
     role: 'state_admin',
     state: 'Madhya Pradesh',
     district: null
@@ -43,7 +43,7 @@ const fallbackUsers = [
     id: '3',
     username: 'district_bhopal',
     email: 'tribal.bhopal@mp.gov.in',
-    password_hash: '$2a$12$rQ/ww4ccjaJe5DEvD66lrepu5JRwn7DNd/reZFgq11BjbhF5Et556',
+    password_hash: '$2a$12$MCtoJjMQzq8LM3CaU0wbwOw0JHepi2b5oVP6EbruwxqrkKSBCst7q',
     role: 'district_admin',
     state: 'Madhya Pradesh',
     district: 'Bhopal'
