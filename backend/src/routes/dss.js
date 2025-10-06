@@ -91,7 +91,7 @@ router.post('/analyze', authenticateToken, async (req, res) => {
   }
 });
 
-// Get available schemes
+// Get available schemes  
 router.get('/schemes', authenticateToken, async (req, res) => {
   try {
     const response = await axios.get(`${DSS_ENGINE_URL}/api/dss/schemes`);
