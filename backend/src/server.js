@@ -6,20 +6,8 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
-// Database functions with error handling
-let testConnection, initializeTables, seedDatabase;
-try {
-  const dbConfig = require('./config/database');
-  testConnection = dbConfig.testConnection;
-  initializeTables = dbConfig.initializeTables;
-  const seedData = require('./scripts/seedData');
-  seedDatabase = seedData.seedDatabase;
-} catch (error) {
-  console.log('⚠️ Database modules not available, running without database');
-  testConnection = async () => false;
-  initializeTables = async () => {};
-  seedDatabase = async () => {};
-}
+const { testConnection, initializeTables } = require('./config/database');
+const { seedDatabase } = require('./scripts/seedData');
 
 const authRoutes = require('./routes/auth'); // Real auth with RBAC
 const rbacRoutes = require('./routes/rbac'); // Role-based access control
