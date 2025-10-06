@@ -61,7 +61,7 @@ const AppContent: React.FC = () => {
             <Route path="/atlas" element={<FRAAtlas />} />
             <Route path="/gis-plot" element={<RoleBasedRoute allowedRoles={['admin']}><DigitalGISPlot /></RoleBasedRoute>} />
             <Route path="/data" element={<RoleBasedRoute allowedRoles={['admin']}><DataManagement /></RoleBasedRoute>} />
-            <Route path="/upload-data" element={<RoleBasedRoute allowedRoles={['admin', 'district_tribal_welfare']}><UploadData /></RoleBasedRoute>} />
+            <Route path="/upload-data" element={<RoleBasedRoute allowedRoles={['admin', 'district_admin']}><UploadData /></RoleBasedRoute>} />
             <Route path="/decisions" element={<RoleBasedRoute allowedRoles={['admin']}><DecisionSupport /></RoleBasedRoute>} />
             <Route path="/satellite-mapping" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><SatelliteAssetMapping /></RoleBasedRoute>} />
             <Route path="/advanced-mapping" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><AdvancedSatelliteMapping /></RoleBasedRoute>} />
@@ -71,13 +71,13 @@ const AppContent: React.FC = () => {
             <Route path="/ai-analysis" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><AIAnalysis /></RoleBasedRoute>} />
             <Route path="/settings" element={<RoleBasedRoute allowedRoles={['admin']}><Settings /></RoleBasedRoute>} />
             <Route path="/model-results" element={<RoleBasedRoute allowedRoles={['admin', 'mota_technical']}><Reports /></RoleBasedRoute>} />
-            <Route path="/claims-review" element={<RoleBasedRoute allowedRoles={['admin', 'state_authority']}><DataManagement /></RoleBasedRoute>} />
-            <Route path="/gis-validation" element={<RoleBasedRoute allowedRoles={['admin', 'state_authority']}><DigitalGISPlot /></RoleBasedRoute>} />
-            <Route path="/legacy-upload" element={<RoleBasedRoute allowedRoles={['admin', 'district_tribal_welfare']}><DataManagement /></RoleBasedRoute>} />
-            <Route path="/legacy-digitization" element={<RoleBasedRoute allowedRoles={['admin', 'district_tribal_welfare']}><LegacyDataDigitization /></RoleBasedRoute>} />
+            <Route path="/claims-review" element={<RoleBasedRoute allowedRoles={['admin', 'state_admin']}><DataManagement /></RoleBasedRoute>} />
+            <Route path="/gis-validation" element={<RoleBasedRoute allowedRoles={['admin', 'state_admin']}><DigitalGISPlot /></RoleBasedRoute>} />
+            <Route path="/legacy-upload" element={<RoleBasedRoute allowedRoles={['admin', 'district_admin']}><DataManagement /></RoleBasedRoute>} />
+            <Route path="/legacy-digitization" element={<RoleBasedRoute allowedRoles={['admin', 'district_admin']}><LegacyDataDigitization /></RoleBasedRoute>} />
             <Route path="/dummy-data" element={<RoleBasedRoute allowedRoles={['admin']}><DummyDataGenerator /></RoleBasedRoute>} />
-            <Route path="/claims-processing" element={<RoleBasedRoute allowedRoles={['admin', 'district_tribal_welfare']}><DataManagement /></RoleBasedRoute>} />
-            <Route path="/ocr-review" element={<RoleBasedRoute allowedRoles={['admin', 'district_tribal_welfare']}><Reports /></RoleBasedRoute>} />
+            <Route path="/claims-processing" element={<RoleBasedRoute allowedRoles={['admin', 'district_admin']}><DataManagement /></RoleBasedRoute>} />
+            <Route path="/ocr-review" element={<RoleBasedRoute allowedRoles={['admin', 'district_admin']}><Reports /></RoleBasedRoute>} />
             <Route path="/submit-claim" element={<RoleBasedRoute allowedRoles={['admin', 'beneficiary']}><SubmitClaim /></RoleBasedRoute>} />
             <Route path="/track-claims" element={<RoleBasedRoute allowedRoles={['admin', 'beneficiary']}><TrackClaims /></RoleBasedRoute>} />
             <Route path="/reports" element={<Reports />} />
