@@ -13,9 +13,56 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
+// Initialize database if needed
+async function initializeDatabase() {
+  try {
+    // Create users table if not exists
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id VARCHAR(255) PRIMARY KEY,
+        username VARCHAR(255) UNIQUE NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        role VARCHAR(50) NOT NULL DEFAULT 'user',
+        state VARCHAR(255),
+        district VARCHAR(255),
+        block VARCHAR(255),
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW(),
+        last_login TIMESTAMP
+      )
+    `);
+
+    // Check if admin user exists
+    const adminCheck = await pool.query('SELECT id FROM users WHERE email = $1', ['admin@fraatlas.gov.in']);
+    
+    if (adminCheck.rows.length === 0) {
+      // Create default users
+      const users = [
+        { id: '1', username: 'admin', email: 'admin@fraatlas.gov.in', password: 'admin123', role: 'admin' },
+        { id: '2', username: 'testuser', email: 'test@example.com', password: 'testpass123', role: 'user' }
+      ];
+
+      for (const user of users) {
+        const hashedPassword = await bcrypt.hash(user.password, 12);
+        await pool.query(`
+          INSERT INTO users (id, username, email, password_hash, role)
+          VALUES ($1, $2, $3, $4, $5)
+        `, [user.id, user.username, user.email, hashedPassword, user.role]);
+      }
+      console.log('✅ Default users created');
+    }
+  } catch (error) {
+    console.error('Database initialization error:', error);
+  }
+}
+
 // Login user
 router.post('/login', async (req, res) => {
   try {
+    // Initialize database on first login attempt
+    await initializeDatabase();
+    
     console.log('Login request received:', { email: req.body.email, hasPassword: !!req.body.password });
     const { email, password } = req.body;
 
