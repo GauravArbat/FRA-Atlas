@@ -223,16 +223,46 @@ router.get('/me', async (req, res) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production');
     
-    const result = await pool.query(
-      'SELECT id, username, email, role, state, district, block, created_at, last_login FROM users WHERE id = $1',
-      [decoded.userId]
-    );
+    let user = null;
     
-    if (result.rows.length === 0) {
+    // Try database first
+    if (pool) {
+      try {
+        const result = await pool.query(
+          'SELECT id, username, email, role, state, district, block, created_at, last_login FROM users WHERE id = $1',
+          [decoded.userId]
+        );
+        if (result.rows.length > 0) {
+          user = result.rows[0];
+        }
+      } catch (dbError) {
+        console.log('Database error in /me, using fallback:', dbError.message);
+      }
+    }
+    
+    // Fallback to hardcoded users
+    if (!user) {
+      const fallbackUser = fallbackUsers.find(u => u.id === decoded.userId);
+      if (fallbackUser) {
+        user = {
+          id: fallbackUser.id,
+          username: fallbackUser.username,
+          email: fallbackUser.email,
+          role: fallbackUser.role,
+          state: fallbackUser.state,
+          district: fallbackUser.district,
+          block: fallbackUser.block || null,
+          created_at: new Date().toISOString(),
+          last_login: new Date().toISOString()
+        };
+      }
+    }
+    
+    if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json({ user: result.rows[0] });
+    res.json({ user });
   } catch (error) {
     console.error('Get user error:', error);
     res.status(401).json({ error: 'Invalid token' });
