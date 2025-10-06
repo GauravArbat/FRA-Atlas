@@ -28,6 +28,7 @@ services:
   - type: redis
     name: fra-atlas-redis
     plan: free
+    ipAllowList: []
 
 databases:
   - name: fra-atlas-db
