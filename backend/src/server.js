@@ -71,6 +71,21 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Static files
 app.use('/uploads', express.static('uploads'));
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'FRA Atlas API Server', 
+    version: '1.0.0',
+    status: 'Running',
+    endpoints: {
+      health: '/health',
+      auth: '/api/auth/*',
+      fra: '/api/fra/*',
+      data: '/api/data/*'
+    }
+  });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
