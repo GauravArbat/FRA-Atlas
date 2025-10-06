@@ -38,6 +38,7 @@ const adminRoutes = require('./routes/admin');
 const digitizationPipelineRoutes = require('./routes/digitization-pipeline');
 const setupRoutes = require('./routes/setup');
 const migrateRoutes = require('./routes/migrate');
+const createUsersRoutes = require('./routes/create-users');
 
 const { errorHandler } = require('./middleware/errorHandler');
 const { authenticateToken, authorize } = require('./middleware/auth');
@@ -128,6 +129,7 @@ app.use('/api/admin', adminRoutes); // Admin management
 app.use('/api/digitization-pipeline', digitizationPipelineRoutes); // Advanced digitization pipeline
 app.use('/api/setup', setupRoutes); // Database setup
 app.use('/api/migrate', migrateRoutes); // Data migration
+app.use('/api/create-users', createUsersRoutes); // Create users
 
 // Error handling middleware
 app.use(errorHandler);
