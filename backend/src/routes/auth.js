@@ -25,21 +25,27 @@ const users = [
 // Login user
 router.post('/login', async (req, res) => {
   try {
+    console.log('Login request received:', { email: req.body.email, hasPassword: !!req.body.password });
     const { email, password } = req.body;
 
     if (!email || !password) {
+      console.log('Missing credentials');
       return res.status(400).json({ error: 'Email and password required' });
     }
 
     // Find user
     const user = users.find(u => u.email === email);
+    console.log('User found:', !!user);
     if (!user) {
+      console.log('User not found for email:', email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    console.log('Password valid:', isValidPassword);
     if (!isValidPassword) {
+      console.log('Invalid password for user:', email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
