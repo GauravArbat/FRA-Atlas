@@ -474,21 +474,43 @@ router.get('/atlas/forest-areas', async (req, res) => {
     ];
     
     let forestData = null;
+    let usedPath = null;
     
+    console.log('🔍 Searching for forest data file...');
     for (const forestDataPath of possiblePaths) {
+      console.log('   Checking:', forestDataPath);
       if (fs.existsSync(forestDataPath)) {
         console.log('✅ Found forest data at:', forestDataPath);
-        forestData = JSON.parse(fs.readFileSync(forestDataPath, 'utf8'));
-        break;
+        try {
+          const rawData = fs.readFileSync(forestDataPath, 'utf8');
+          forestData = JSON.parse(rawData);
+          usedPath = forestDataPath;
+          break;
+        } catch (parseError) {
+          console.error('❌ Failed to parse forest data:', parseError);
+          continue;
+        }
       }
     }
     
-    if (!forestData) {
-      console.log('❌ Forest data file not found in any location');
-      return res.status(404).json({ error: 'Forest data file not found' });
+    if (!forestData || !forestData.features) {
+      console.log('❌ Forest data file not found or invalid in any location');
+      possiblePaths.forEach(p => console.log('   Tried:', p));
+      
+      // Return empty FeatureCollection instead of error
+      return res.json({
+        type: 'FeatureCollection',
+        features: [],
+        message: 'Forest data not available'
+      });
     }
     
-    console.log('🌲 Serving forest data:', forestData.features?.length || 0, 'features');
+    console.log('🌲 Serving forest data from', usedPath, ':', forestData.features?.length || 0, 'features');
+    
+    // Set proper headers
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
     
     res.json({
       type: 'FeatureCollection',
@@ -496,8 +518,12 @@ router.get('/atlas/forest-areas', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Error loading forest data:', error);
-    res.status(500).json({ error: 'Failed to load forest areas data' });
+    console.error('❌ Error loading forest data:', error);
+    res.status(500).json({ 
+      error: 'Failed to load forest areas data',
+      type: 'FeatureCollection',
+      features: []
+    });
   }
 });
 

@@ -1147,30 +1147,32 @@ const FRAAtlas: React.FC = () => {
       let fraStatesForest;
       let forestFeatures = [];
       
-      // Try the new API endpoint first
+      // Try the backend API endpoint first
       try {
-        console.log('🔄 Trying API endpoint: /api/fra/atlas/forest-areas');
-        const response = await fetch('/api/fra/atlas/forest-areas');
+        console.log('🔄 Trying backend API endpoint: http://localhost:8000/api/fra/atlas/forest-areas');
+        const response = await fetch('http://localhost:8000/api/fra/atlas/forest-areas');
         if (response.ok) {
           fraStatesForest = await response.json();
           forestFeatures = fraStatesForest.features || [];
-          console.log('✅ Loaded forest areas from API endpoint:', forestFeatures.length);
+          console.log('✅ Loaded forest areas from backend API:', forestFeatures.length);
           if (forestFeatures.length > 0) {
             // Success - use this data
           } else {
-            throw new Error('API returned 0 features');
+            throw new Error('Backend API returned 0 features');
           }
         } else {
-          throw new Error(`API failed with status: ${response.status}`);
+          throw new Error(`Backend API failed with status: ${response.status}`);
         }
       } catch (apiError) {
-        console.log('⚠️ API endpoint failed:', apiError.message);
-        console.log('⚠️ New API endpoint failed, trying existing endpoints...');
+        console.log('⚠️ Backend API endpoint failed:', apiError.message);
+        console.log('⚠️ Trying fallback endpoints...');
         
         // Try multiple endpoints in order
         const fallbackEndpoints = [
+          '/api/fra/atlas/forest-areas',
           '/data/fra-states-forest-data.geojson',
-          '/static-data/fra-states-forest-data.geojson'
+          '/static-data/fra-states-forest-data.geojson',
+          'http://localhost:8000/data/fra-states-forest-data.geojson'
         ];
         
         let loaded = false;
@@ -1182,8 +1184,14 @@ const FRAAtlas: React.FC = () => {
               fraStatesForest = await response.json();
               forestFeatures = fraStatesForest.features || [];
               console.log(`✅ Loaded forest areas from ${endpoint}:`, forestFeatures.length);
-              loaded = true;
-              break;
+              if (forestFeatures.length > 0) {
+                loaded = true;
+                break;
+              } else {
+                console.log(`⚠️ ${endpoint} returned 0 features, trying next...`);
+              }
+            } else {
+              console.log(`❌ ${endpoint} failed with status:`, response.status);
             }
           } catch (endpointError) {
             console.log(`❌ Failed ${endpoint}:`, endpointError.message);
