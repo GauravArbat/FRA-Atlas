@@ -6,7 +6,7 @@ const router = express.Router();
 // Forest data endpoint - serve actual GeoJSON file
 router.get('/fra-states-forest-data.geojson', (req, res) => {
   try {
-    const filePath = path.join(__dirname, '../../frontend/public/data/fra-states-forest-data.geojson');
+    const filePath = path.join(__dirname, '../data/fra-states-forest-data.geojson');
     
     if (fs.existsSync(filePath)) {
       const forestData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
