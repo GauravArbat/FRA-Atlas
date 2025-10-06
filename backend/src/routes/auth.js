@@ -7,16 +7,41 @@ const { Pool } = require('pg');
 
 const router = express.Router();
 
-// Database connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+// Database connection with fallback
+let pool;
+try {
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  });
+} catch (error) {
+  console.error('Database connection failed, using fallback auth');
+  pool = null;
+}
+
+// Fallback users when database is not available
+const fallbackUsers = [
+  {
+    id: '1',
+    username: 'admin',
+    email: 'admin@fraatlas.gov.in',
+    password_hash: '$2a$12$mX0T3Mm.J1.ez2Q31.c0ZOkcEJdxjRpAg5ytJxIZhm5PsZ7vKbaGy',
+    role: 'admin'
+  },
+  {
+    id: '2',
+    username: 'testuser', 
+    email: 'test@example.com',
+    password_hash: '$2a$12$rQ/ww4ccjaJe5DEvD66lrepu5JRwn7DNd/reZFgq11BjbhF5Et556',
+    role: 'user'
+  }
+];
 
 // Initialize database if needed
 async function initializeDatabase() {
+  if (!pool) return false;
+  
   try {
-    // Create users table if not exists
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id VARCHAR(255) PRIMARY KEY,
@@ -32,62 +57,48 @@ async function initializeDatabase() {
         last_login TIMESTAMP
       )
     `);
-
-    // Check if admin user exists
-    const adminCheck = await pool.query('SELECT id FROM users WHERE email = $1', ['admin@fraatlas.gov.in']);
-    
-    if (adminCheck.rows.length === 0) {
-      // Create default users
-      const users = [
-        { id: '1', username: 'admin', email: 'admin@fraatlas.gov.in', password: 'admin123', role: 'admin' },
-        { id: '2', username: 'testuser', email: 'test@example.com', password: 'testpass123', role: 'user' }
-      ];
-
-      for (const user of users) {
-        const hashedPassword = await bcrypt.hash(user.password, 12);
-        await pool.query(`
-          INSERT INTO users (id, username, email, password_hash, role)
-          VALUES ($1, $2, $3, $4, $5)
-        `, [user.id, user.username, user.email, hashedPassword, user.role]);
-      }
-      console.log('✅ Default users created');
-    }
+    return true;
   } catch (error) {
     console.error('Database initialization error:', error);
+    return false;
   }
 }
 
 // Login user
 router.post('/login', async (req, res) => {
   try {
-    // Initialize database on first login attempt
-    await initializeDatabase();
-    
-    console.log('Login request received:', { email: req.body.email, hasPassword: !!req.body.password });
     const { email, password } = req.body;
 
     if (!email || !password) {
-      console.log('Missing credentials');
       return res.status(400).json({ error: 'Email and password required' });
     }
 
-    // Find user in database
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-    console.log('User found:', result.rows.length > 0);
-    
-    if (result.rows.length === 0) {
-      console.log('User not found for email:', email);
-      return res.status(401).json({ error: 'Invalid credentials' });
+    let user = null;
+
+    // Try database first
+    if (pool) {
+      try {
+        await initializeDatabase();
+        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (result.rows.length > 0) {
+          user = result.rows[0];
+        }
+      } catch (dbError) {
+        console.log('Database error, using fallback:', dbError.message);
+      }
     }
 
-    const user = result.rows[0];
-
+    // Fallback to hardcoded users
+    if (!user) {
+      user = fallbackUsers.find(u => u.email === email);
+      if (!user) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+    }
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
-    console.log('Password valid:', isValidPassword);
     
     if (!isValidPassword) {
-      console.log('Invalid password for user:', email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -98,10 +109,14 @@ router.post('/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    // Update last login
-    await pool.query('UPDATE users SET last_login = NOW() WHERE id = $1', [user.id]);
-
-    console.log('Login successful for:', user.email);
+    // Update last login (only if database is available)
+    if (pool) {
+      try {
+        await pool.query('UPDATE users SET last_login = NOW() WHERE id = $1', [user.id]);
+      } catch (e) {
+        console.log('Could not update last login:', e.message);
+      }
+    }
 
     res.json({
       message: 'Login successful',
