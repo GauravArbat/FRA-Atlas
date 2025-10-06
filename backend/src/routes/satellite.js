@@ -134,20 +134,13 @@ router.post('/advanced-mapping', async (req, res) => {
       include_forest_data
     } = req.body;
     
-    if (!state || !district || !village) {
-      return res.status(400).json({ error: 'State, district, and village are required' });
-    }
+    // Simple mock response without complex processing
+    const coords = [22.0, 78.0]; // Default coordinates
     
-    // Simulate processing delay based on model complexity
-    const processingTime = ml_model === 'ensemble' ? 4000 : ml_model === 'cnn' ? 3500 : 2500;
-    await new Promise(resolve => setTimeout(resolve, processingTime));
-    
-    const coords = getVillageCoordinates(village);
-    
-    // Enhanced mock results with comprehensive AI analysis
+    // Simple mock results
     const mockAdvancedResult = {
-      village_id: `${state.substring(0,2).toUpperCase()}${district.substring(0,3).toUpperCase()}${village.substring(0,3).toUpperCase()}`,
-      village_name: village,
+      village_id: 'SAMPLE001',
+      village_name: village || 'Sample Village',
       coordinates: coords,
       assets: {
         water_bodies: [
@@ -266,7 +259,7 @@ router.post('/advanced-mapping', async (req, res) => {
           conservation_status: 'protected'
         }
       },
-      processing_time: processingTime / 1000,
+      processing_time: 2.5,
       model_version: `${ml_model ? ml_model.toUpperCase() : 'ENSEMBLE'}-Enhanced-v3.0`
     };
     
