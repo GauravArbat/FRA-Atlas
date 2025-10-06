@@ -46,8 +46,10 @@ const PORT = process.env.PORT || 8000;
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: true, // Allow all origins temporarily for testing
+  origin: ['https://rudrax-atlas.vercel.app', 'http://localhost:3000', 'https://fra-atlas.vercel.app'],
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Rate limiting
