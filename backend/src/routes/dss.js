@@ -103,7 +103,7 @@ router.get('/schemes', authenticateToken, async (req, res) => {
 });
 
 // DSS Dashboard data
-router.get('/dashboard', authenticateToken, async (req, res) => {
+router.get('/dashboard', async (req, res) => {
   try {
     // Mock dashboard data - replace with actual database queries
     const dashboardData = {
