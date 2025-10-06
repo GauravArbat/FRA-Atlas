@@ -23,7 +23,9 @@
     }
   ],
   "env": {
-    "REACT_APP_API_URL": "https://fra-atlas-backend.onrender.com"
+    "REACT_APP_API_URL": "https://fra-atlas-backend-ipd3.onrender.com/api",
+    "REACT_APP_DATA_PROCESSOR_URL": "https://fra-atlas-data-processor.onrender.com",
+    "REACT_APP_DIGITIZATION_PIPELINE_URL": "https://fra-atlas-digitization-pipeline.onrender.com"
   },
   "build": {
     "env": {
