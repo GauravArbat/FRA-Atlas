@@ -152,7 +152,7 @@ router.get('/dashboard', async (req, res) => {
 });
 
 // Analyze assets from ML results
-router.post('/analyze-assets', authenticateToken, async (req, res) => {
+router.post('/analyze-assets', async (req, res) => {
   try {
     const { village_data, analysis_type, include_recommendations } = req.body;
     
@@ -161,10 +161,10 @@ router.post('/analyze-assets', authenticateToken, async (req, res) => {
     }
     
     // Comprehensive CSS scheme layering for FRA patta holders
-    const waterScore = village_data.assets.water_bodies?.length * 20 || 0;
-    const forestScore = village_data.assets.forest_cover?.length * 25 || 0;
-    const agriScore = village_data.assets.agricultural_land?.length * 15 || 0;
-    const homesteadScore = village_data.assets.homesteads?.length * 10 || 0;
+    const waterScore = (village_data?.assets?.water_bodies?.length || 0) * 20;
+    const forestScore = (village_data?.assets?.forest_cover?.length || 0) * 25;
+    const agriScore = (village_data?.assets?.agricultural_land?.length || 0) * 15;
+    const homesteadScore = (village_data?.assets?.homesteads?.length || 0) * 10;
     
     const eligibilityScore = Math.min(100, waterScore + forestScore + agriScore + homesteadScore + 30);
     
