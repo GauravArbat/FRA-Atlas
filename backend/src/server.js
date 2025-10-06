@@ -36,6 +36,7 @@ const pattaHoldersRoutes = require('./routes/patta-holders');
 const pattaReportRoutes = require('./routes/patta-report');
 const adminRoutes = require('./routes/admin');
 const digitizationPipelineRoutes = require('./routes/digitization-pipeline');
+const setupRoutes = require('./routes/setup');
 
 const { errorHandler } = require('./middleware/errorHandler');
 const { authenticateToken, authorize } = require('./middleware/auth');
@@ -124,6 +125,7 @@ app.use('/api/patta-holders', pattaHoldersRoutes); // Patta holders management
 app.use('/api/patta-report', pattaReportRoutes); // Patta holder reports
 app.use('/api/admin', adminRoutes); // Admin management
 app.use('/api/digitization-pipeline', digitizationPipelineRoutes); // Advanced digitization pipeline
+app.use('/api/setup', setupRoutes); // Database setup
 
 // Error handling middleware
 app.use(errorHandler);

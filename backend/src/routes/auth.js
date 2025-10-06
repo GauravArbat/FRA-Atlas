@@ -1,26 +1,17 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
+const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
+const { Pool } = require('pg');
 
 const router = express.Router();
 
-// Hardcoded users for demo (replace with database in production)
-const users = [
-  {
-    id: '1',
-    username: 'admin',
-    email: 'admin@fraatlas.gov.in',
-    password_hash: '$2a$12$mX0T3Mm.J1.ez2Q31.c0ZOkcEJdxjRpAg5ytJxIZhm5PsZ7vKbaGy', // admin123
-    role: 'admin'
-  },
-  {
-    id: '2', 
-    username: 'testuser',
-    email: 'test@example.com',
-    password_hash: '$2a$12$rQ/ww4ccjaJe5DEvD66lrepu5JRwn7DNd/reZFgq11BjbhF5Et556', // testpass123
-    role: 'user'
-  }
-];
+// Database connection
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
 
 // Login user
 router.post('/login', async (req, res) => {
@@ -33,17 +24,21 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password required' });
     }
 
-    // Find user
-    const user = users.find(u => u.email === email);
-    console.log('User found:', !!user);
-    if (!user) {
+    // Find user in database
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    console.log('User found:', result.rows.length > 0);
+    
+    if (result.rows.length === 0) {
       console.log('User not found for email:', email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    const user = result.rows[0];
+
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     console.log('Password valid:', isValidPassword);
+    
     if (!isValidPassword) {
       console.log('Invalid password for user:', email);
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -56,13 +51,21 @@ router.post('/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
+    // Update last login
+    await pool.query('UPDATE users SET last_login = NOW() WHERE id = $1', [user.id]);
+
+    console.log('Login successful for:', user.email);
+
     res.json({
       message: 'Login successful',
       user: {
         id: user.id,
         username: user.username,
         email: user.email,
-        role: user.role
+        role: user.role,
+        state: user.state,
+        district: user.district,
+        block: user.block
       },
       token
     });
@@ -72,38 +75,46 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Register user (simplified)
-router.post('/register', async (req, res) => {
+// Register user
+router.post('/register', [
+  body('username').isLength({ min: 3 }).trim().escape(),
+  body('email').isEmail().normalizeEmail(),
+  body('password').isLength({ min: 6 }),
+  body('role').optional().isIn(['admin', 'state_admin', 'district_admin', 'block_admin', 'user'])
+], async (req, res) => {
   try {
-    const { username, email, password, role = 'user' } = req.body;
-
-    if (!username || !email || !password) {
-      return res.status(400).json({ error: 'Username, email and password required' });
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
 
+    const { username, email, password, role = 'user', state, district, block } = req.body;
+
     // Check if user exists
-    const existingUser = users.find(u => u.email === email || u.username === username);
-    if (existingUser) {
+    const existingUser = await pool.query(
+      'SELECT id FROM users WHERE email = $1 OR username = $2',
+      [email, username]
+    );
+
+    if (existingUser.rows.length > 0) {
       return res.status(400).json({ error: 'User already exists' });
     }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create new user
-    const newUser = {
-      id: String(users.length + 1),
-      username,
-      email,
-      password_hash: hashedPassword,
-      role
-    };
+    // Create user
+    const newUser = await pool.query(`
+      INSERT INTO users (id, username, email, password_hash, role, state, district, block)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING id, username, email, role, state, district, block
+    `, [uuidv4(), username, email, hashedPassword, role, state, district, block]);
 
-    users.push(newUser);
+    const user = newUser.rows[0];
 
     // Generate token
     const token = jwt.sign(
-      { userId: newUser.id, role: newUser.role },
+      { userId: user.id, role: user.role },
       process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production',
       { expiresIn: '24h' }
     );
@@ -111,10 +122,13 @@ router.post('/register', async (req, res) => {
     res.status(201).json({
       message: 'User registered successfully',
       user: {
-        id: newUser.id,
-        username: newUser.username,
-        email: newUser.email,
-        role: newUser.role
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        state: user.state,
+        district: user.district,
+        block: user.block
       },
       token
     });
@@ -125,7 +139,7 @@ router.post('/register', async (req, res) => {
 });
 
 // Get current user
-router.get('/me', (req, res) => {
+router.get('/me', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) {
@@ -133,20 +147,17 @@ router.get('/me', (req, res) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production');
-    const user = users.find(u => u.id === decoded.userId);
     
-    if (!user) {
+    const result = await pool.query(
+      'SELECT id, username, email, role, state, district, block, created_at, last_login FROM users WHERE id = $1',
+      [decoded.userId]
+    );
+    
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json({
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role
-      }
-    });
+    res.json({ user: result.rows[0] });
   } catch (error) {
     console.error('Get user error:', error);
     res.status(401).json({ error: 'Invalid token' });
