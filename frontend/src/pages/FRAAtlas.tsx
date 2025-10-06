@@ -106,7 +106,13 @@ const loadPermanentData = async () => {
       fetch('/data/fra-granted.geojson').then(r => r.json()),
       fetch('/data/fra-potential.geojson').then(r => r.json()),
       realBoundaries ? Promise.resolve(JSON.parse(realBoundaries)) : fetch('/data/state-boundaries.geojson').then(r => r.json()),
-      realForests ? Promise.resolve(JSON.parse(realForests)) : fetch('/data/fra-states-forest-data.geojson').then(r => r.json())
+      realForests ? Promise.resolve(JSON.parse(realForests)) : 
+        fetch('/data/fra-states-forest-data.geojson').then(r => {
+          if (!r.ok) throw new Error('Forest data endpoint failed');
+          return r.json();
+        }).catch(() => 
+          fetch('/api/fra/atlas/forest-areas').then(r => r.json())
+        )
     ]);
     
     return { fraGranted: granted, fraPotential: potential, boundaries, forestAreas: forests };
@@ -1130,17 +1136,57 @@ const FRAAtlas: React.FC = () => {
     }
   };
 
-  // Add forests layer - Load from fra-states-forest-data.geojson only
+  // Add forests layer - Load from backend API
   const addForestsLayer = async () => {
     if (!mapRef.current || !forestsLayerRef.current) return;
 
     forestsLayerRef.current.clearLayers();
 
     try {
-      const fraStatesForest = await fetch('/data/fra-states-forest-data.geojson').then(r => r.json());
-      const forestFeatures = fraStatesForest.features || [];
-
-      console.log('Loading forest areas:', forestFeatures.length);
+      // Load forest data from backend API (try multiple endpoints)
+      let fraStatesForest;
+      let forestFeatures = [];
+      
+      // Try the new API endpoint first
+      try {
+        const response = await fetch('/api/fra/atlas/forest-areas');
+        if (response.ok) {
+          fraStatesForest = await response.json();
+          forestFeatures = fraStatesForest.features || [];
+          console.log('✅ Loaded forest areas from new API endpoint:', forestFeatures.length);
+        } else {
+          throw new Error('New API endpoint failed');
+        }
+      } catch (apiError) {
+        console.log('⚠️ New API endpoint failed, trying existing endpoints...');
+        
+        // Try multiple endpoints in order
+        const fallbackEndpoints = [
+          '/data/fra-states-forest-data.geojson',
+          '/static-data/fra-states-forest-data.geojson'
+        ];
+        
+        let loaded = false;
+        for (const endpoint of fallbackEndpoints) {
+          try {
+            console.log(`🔄 Trying endpoint: ${endpoint}`);
+            const response = await fetch(endpoint);
+            if (response.ok) {
+              fraStatesForest = await response.json();
+              forestFeatures = fraStatesForest.features || [];
+              console.log(`✅ Loaded forest areas from ${endpoint}:`, forestFeatures.length);
+              loaded = true;
+              break;
+            }
+          } catch (endpointError) {
+            console.log(`❌ Failed ${endpoint}:`, endpointError.message);
+          }
+        }
+        
+        if (!loaded) {
+          throw new Error('All forest data endpoints failed');
+        }
+      }
 
       forestFeatures.forEach((feature: any) => {
         const props = feature.properties;
@@ -1194,9 +1240,75 @@ const FRAAtlas: React.FC = () => {
 
 
 
-      console.log('✅ Loaded forest areas successfully:', forestFeatures.length);
+      console.log('✅ Loaded forest areas successfully from backend:', forestFeatures.length);
     } catch (error) {
-      console.error('Failed to load forest data:', error);
+      console.error('Failed to load forest data from backend API:', error);
+      
+      // Fallback: try to load from public folder
+      try {
+        console.log('🔄 Trying fallback: loading from public folder...');
+        const fallbackResponse = await fetch('/data/fra-states-forest-data.geojson');
+        if (fallbackResponse.ok) {
+          const fallbackData = await fallbackResponse.json();
+          const fallbackFeatures = fallbackData.features || [];
+          
+          console.log('✅ Loaded forest areas from fallback:', fallbackFeatures.length);
+          
+          // Process fallback features the same way
+          fallbackFeatures.forEach((feature: any) => {
+            const props = feature.properties;
+            const geometry = feature.geometry;
+
+            if (geometry.type === 'Polygon') {
+              const coordinates = geometry.coordinates[0].map((coord: [number, number]) => [coord[1], coord[0]] as [number, number]);
+              
+              const polygon = L.polygon(coordinates, {
+                color: '#2e7d32',
+                fillColor: '#4caf50',
+                fillOpacity: 0.4,
+                weight: 2
+              });
+
+              const forestPopup = `
+                <div>
+                  <div class="popup-header">
+                    <h4>🌲 ${props.name || 'Forest Area'}</h4>
+                  </div>
+                  <div class="popup-section">
+                    <h5>Forest Details</h5>
+                    <table class="popup-table">
+                      <tr><td>Type</td><td>${props.type || 'Forest'}</td></tr>
+                      <tr><td>Area</td><td>${props.area || 'Unknown'} ${typeof props.area === 'number' ? 'sq km' : ''}</td></tr>
+                      <tr><td>State</td><td>${props.state || 'N/A'}</td></tr>
+                      ${props.osm_id ? `<tr><td>OSM ID</td><td>${props.osm_id}</td></tr>` : ''}
+                      ${props.source ? `<tr><td>Source</td><td>${props.source}</td></tr>` : ''}
+                    </table>
+                  </div>
+                </div>
+              `;
+              
+              polygon.bindPopup(forestPopup, { className: 'custom-popup' });
+              polygon.on('click', () => {
+                try {
+                  const b = polygon.getBounds();
+                  if (b && b.isValid() && mapRef.current) {
+                    mapRef.current.fitBounds(b, { padding: [16, 16] });
+                  }
+                } catch {}
+              });
+              
+              polygon.addTo(forestsLayerRef.current!);
+              polygon.bringToBack();
+            }
+          });
+        } else {
+          throw new Error('Fallback also failed');
+        }
+      } catch (fallbackError) {
+        console.error('Both backend API and fallback failed:', fallbackError);
+        // Show user-friendly message
+        setError && setError('Failed to load forest areas data. Please try refreshing the page.');
+      }
     }
   };
 

@@ -458,6 +458,56 @@ router.get('/atlas/filters', async (req, res) => {
   }
 });
 
+// Forest Areas data endpoint - serves the actual GeoJSON file
+router.get('/atlas/forest-areas', async (req, res) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    
+    // Path to the forest data file
+    const forestDataPath = path.join(__dirname, '../../data/fra-states-forest-data.geojson');
+    
+    // Check if file exists
+    if (!fs.existsSync(forestDataPath)) {
+      return res.status(404).json({ error: 'Forest data file not found' });
+    }
+    
+    // Read and parse the GeoJSON file
+    const forestData = JSON.parse(fs.readFileSync(forestDataPath, 'utf8'));
+    
+    // Apply filters if provided
+    const { state, district, type } = req.query;
+    let filteredFeatures = forestData.features || [];
+    
+    if (state) {
+      filteredFeatures = filteredFeatures.filter(f => 
+        f.properties.state && f.properties.state.toLowerCase().includes(state.toLowerCase())
+      );
+    }
+    
+    if (district) {
+      filteredFeatures = filteredFeatures.filter(f => 
+        f.properties.district && f.properties.district.toLowerCase().includes(district.toLowerCase())
+      );
+    }
+    
+    if (type) {
+      filteredFeatures = filteredFeatures.filter(f => 
+        f.properties.type && f.properties.type.toLowerCase().includes(type.toLowerCase())
+      );
+    }
+    
+    res.json({
+      type: 'FeatureCollection',
+      features: filteredFeatures
+    });
+    
+  } catch (error) {
+    console.error('Error loading forest data:', error);
+    res.status(500).json({ error: 'Failed to load forest areas data' });
+  }
+});
+
 // AI/ML asset mapping (mock outputs). Types: agriculture, forest, water, homestead, infrastructure
 router.get('/atlas/assets', async (req, res) => {
   try {

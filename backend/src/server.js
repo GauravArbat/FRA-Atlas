@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 require('dotenv').config();
 
 const { testConnection, initializeTables } = require('./config/database');
@@ -81,6 +82,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Static files
 app.use('/uploads', express.static('uploads'));
 
+// Serve forest data as static file
+app.use('/static-data', express.static(path.join(__dirname, 'data')));
+
 // Root route
 app.get('/', (req, res) => {
   res.json({ 
@@ -101,24 +105,42 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Forest data endpoints - direct routes
+// Forest data endpoints - serve actual data
 app.get('/data/fra-states-forest-data.geojson', (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.json({
-    "type": "FeatureCollection",
-    "features": []
-  });
+  try {
+    const fs = require('fs');
+    const filePath = path.join(__dirname, 'data', 'fra-states-forest-data.geojson');
+    
+    console.log('🌲 Serving forest data from:', filePath);
+    
+    if (fs.existsSync(filePath)) {
+      const data = fs.readFileSync(filePath, 'utf8');
+      const forestData = JSON.parse(data);
+      
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+      
+      console.log('✅ Forest data served successfully:', forestData.features?.length || 0, 'features');
+      res.json(forestData);
+    } else {
+      console.warn('⚠️ Forest data file not found, using empty response');
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.json({
+        "type": "FeatureCollection",
+        "features": []
+      });
+    }
+  } catch (error) {
+    console.error('❌ Error serving forest data:', error);
+    res.status(500).json({ error: 'Failed to load forest data' });
+  }
 });
 
 // Additional forest data route
 app.get('/api/forest-data', (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.json({
-    "type": "FeatureCollection",
-    "features": []
-  });
+  res.redirect('/data/fra-states-forest-data.geojson');
 });
 
 // API routes
