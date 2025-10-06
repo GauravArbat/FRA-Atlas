@@ -101,6 +101,15 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+// Forest data endpoint - direct route
+app.get('/data/fra-states-forest-data.geojson', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.json({
+    "type": "FeatureCollection",
+    "features": []
+  });
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/rbac', authenticateToken, rbacRoutes); // Role-based access control
