@@ -136,6 +136,7 @@ app.use('/api/setup', setupRoutes); // Database setup
 app.use('/api/migrate', migrateRoutes); // Data migration
 app.use('/api/create-users', createUsersRoutes); // Create users
 app.use('/api/permissions', permissionsRoutes); // User permissions
+app.use('/data', require('./routes/forest-data')); // Forest data
 
 // Error handling middleware
 app.use(errorHandler);
