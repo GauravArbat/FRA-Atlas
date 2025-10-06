@@ -256,6 +256,15 @@ const FRAAtlas: React.FC = () => {
 
   // Get map configuration based on user role and location
   const getMapConfigForUser = () => {
+    // Give admin, state_admin, and district_admin full India access
+    if (user && (user.role === 'admin' || user.role === 'state_admin' || user.role === 'district_admin')) {
+      return {
+        center: [21.5, 82.5] as [number, number],
+        zoom: 6,
+        bounds: [[6.0, 68.0], [37.0, 97.0]] as [[number, number], [number, number]]
+      };
+    }
+
     if (!user) {
       return {
         center: [21.5, 82.5] as [number, number],
@@ -264,7 +273,7 @@ const FRAAtlas: React.FC = () => {
       };
     }
 
-    // State-level bounds and centers (tight bounds - only show the state)
+    // State-level bounds and centers (for other roles)
     const stateConfigs = {
       'Madhya Pradesh': {
         center: [23.0, 78.0] as [number, number],
@@ -288,7 +297,7 @@ const FRAAtlas: React.FC = () => {
       }
     };
 
-    // District-level bounds (tight bounds - only show the district)
+    // District-level bounds (for regular users)
     const districtConfigs = {
       'Bhopal': { center: [23.2599, 77.4126] as [number, number], zoom: 11, bounds: [[23.1, 77.1], [23.4, 77.7]] as [[number, number], [number, number]] },
       'Indore': { center: [22.7196, 75.8577] as [number, number], zoom: 11, bounds: [[22.5, 75.6], [22.9, 76.1]] as [[number, number], [number, number]] },
@@ -296,18 +305,6 @@ const FRAAtlas: React.FC = () => {
       'Khordha': { center: [20.1498, 85.6597] as [number, number], zoom: 11, bounds: [[20.0, 85.4], [20.3, 85.9]] as [[number, number], [number, number]] },
       'Hyderabad': { center: [17.3850, 78.4867] as [number, number], zoom: 11, bounds: [[17.3, 78.3], [17.5, 78.7]] as [[number, number], [number, number]] }
     };
-
-    // Role-based configuration
-    if (user.role === 'district_admin' && user.district) {
-      return districtConfigs[user.district as keyof typeof districtConfigs] || 
-             stateConfigs[user.state as keyof typeof stateConfigs] || 
-             { center: [21.5, 82.5] as [number, number], zoom: 6, bounds: [[6.0, 68.0], [37.0, 97.0]] as [[number, number], [number, number]] };
-    }
-    
-    if (user.role === 'state_admin' && user.state) {
-      return stateConfigs[user.state as keyof typeof stateConfigs] || 
-             { center: [21.5, 82.5] as [number, number], zoom: 6, bounds: [[6.0, 68.0], [37.0, 97.0]] as [[number, number], [number, number]] };
-    }
     
     if (user.role === 'user' && user.district) {
       return districtConfigs[user.district as keyof typeof districtConfigs] || 
@@ -315,7 +312,7 @@ const FRAAtlas: React.FC = () => {
              { center: [21.5, 82.5] as [number, number], zoom: 6, bounds: [[6.0, 68.0], [37.0, 97.0]] as [[number, number], [number, number]] };
     }
 
-    // Default for admin and mota_technical - full India view
+    // Default - full India view
     return {
       center: [21.5, 82.5] as [number, number],
       zoom: 6,
@@ -327,19 +324,9 @@ const FRAAtlas: React.FC = () => {
   const filterDataForUser = (data: FRAData[]) => {
     if (!user) return data;
 
-    // Admin can see all data
-    if (user.role === 'admin') {
+    // Admin, state_admin, and district_admin can see all data
+    if (user.role === 'admin' || user.role === 'state_admin' || user.role === 'district_admin') {
       return data;
-    }
-
-    // State admin can see only their state data
-    if (user.role === 'state_admin' && user.state) {
-      return data.filter(item => item.state === user.state);
-    }
-
-    // District admin can see only their district data
-    if (user.role === 'district_admin' && user.district) {
-      return data.filter(item => item.district === user.district);
     }
 
     // Users can see only their district data
@@ -465,7 +452,11 @@ const FRAAtlas: React.FC = () => {
 
   // Add user-specific boundary overlay
   const addUserBoundaryOverlay = (map: L.Map) => {
-    // No popup or overlay needed - map bounds already restrict the view
+    // Only add boundary overlays for regular users, not for admin/state_admin/district_admin
+    if (!user || user.role === 'admin' || user.role === 'state_admin' || user.role === 'district_admin') {
+      return; // No restrictions for these roles
+    }
+    // Regular users get boundary restrictions (if needed in future)
     return;
   };
 
@@ -474,17 +465,23 @@ const FRAAtlas: React.FC = () => {
     if (containerRef.current && !mapRef.current && !mapInitialized) {
       const { center, zoom, bounds } = getMapConfigForUser();
       
-      // Initialize map with strict bounds - only show user's area
-      const map = L.map(containerRef.current, {
+      // Initialize map with appropriate bounds based on user role
+      const mapOptions: any = {
         center,
         zoom,
-        minZoom: zoom - 1,
+        minZoom: user && (user.role === 'admin' || user.role === 'state_admin' || user.role === 'district_admin') ? 4 : zoom - 1,
         maxZoom: 18,
         zoomControl: false,
-        attributionControl: true,
-        maxBounds: bounds,
-        maxBoundsViscosity: 1.0
-      });
+        attributionControl: true
+      };
+      
+      // Only restrict bounds for regular users, not for admin/state_admin/district_admin
+      if (user && user.role === 'user') {
+        mapOptions.maxBounds = bounds;
+        mapOptions.maxBoundsViscosity = 1.0;
+      }
+      
+      const map = L.map(containerRef.current, mapOptions);
 
       // Add base layers
       addBaseLayers(map);
