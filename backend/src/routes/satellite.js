@@ -119,7 +119,7 @@ router.post('/realtime-classification', authenticateToken, async (req, res) => {
 });
 
 // Enhanced AI-based asset mapping endpoint
-router.post('/advanced-mapping', authenticateToken, async (req, res) => {
+router.post('/advanced-mapping', async (req, res) => {
   try {
     const { 
       state, 

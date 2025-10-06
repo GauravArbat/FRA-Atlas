@@ -101,9 +101,20 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Forest data endpoint - direct route
+// Forest data endpoints - direct routes
 app.get('/data/fra-states-forest-data.geojson', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.json({
+    "type": "FeatureCollection",
+    "features": []
+  });
+});
+
+// Additional forest data route
+app.get('/api/forest-data', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.json({
     "type": "FeatureCollection",
     "features": []

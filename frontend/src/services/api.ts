@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'https://fra-atlas-backend-ipd3.onrender.com/api',
+  baseURL: process.env.REACT_APP_API_URL || (process.env.NODE_ENV === 'production' 
+    ? 'https://fra-atlas-backend-ipd3.onrender.com/api' 
+    : 'http://localhost:8000/api'),
   headers: {
     'Content-Type': 'application/json',
   },
@@ -129,6 +131,27 @@ export const pdfProcessorAPI = {
   // Save processed data to map layers
   saveToLayers: (geoJSON: any, personalInfo: any) => 
     api.post('/pdf-processor/save-to-layers', { geoJSON, personalInfo }),
+};
+
+// Forest Data API functions
+export const forestDataAPI = {
+  // Get forest data
+  getForestData: () => api.get('/fra/atlas/geojson'),
+  
+  // Fallback for legacy endpoints
+  getForestDataLegacy: () => {
+    return axios.get('/data/fra-states-forest-data.geojson', {
+      baseURL: process.env.REACT_APP_API_URL?.replace('/api', '') || 
+        (process.env.NODE_ENV === 'production' 
+          ? 'https://fra-atlas-backend-ipd3.onrender.com' 
+          : 'http://localhost:8000')
+    }).catch(() => ({
+      data: {
+        type: 'FeatureCollection',
+        features: []
+      }
+    }));
+  }
 };
 
 export { api };
