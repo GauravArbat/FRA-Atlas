@@ -6,8 +6,20 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
-const { testConnection, initializeTables } = require('./config/database');
-const { seedDatabase } = require('./scripts/seedData');
+// Database functions with error handling
+let testConnection, initializeTables, seedDatabase;
+try {
+  const dbConfig = require('./config/database');
+  testConnection = dbConfig.testConnection;
+  initializeTables = dbConfig.initializeTables;
+  const seedData = require('./scripts/seedData');
+  seedDatabase = seedData.seedDatabase;
+} catch (error) {
+  console.log('⚠️ Database modules not available, running without database');
+  testConnection = async () => false;
+  initializeTables = async () => {};
+  seedDatabase = async () => {};
+}
 
 const authRoutes = require('./routes/auth'); // Real auth with RBAC
 const rbacRoutes = require('./routes/rbac'); // Role-based access control
@@ -53,8 +65,12 @@ app.use(cors({
   origin: ['https://rudrax-atlas.vercel.app', 'http://localhost:3000', 'https://fra-atlas.vercel.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
 }));
+
+// Handle preflight requests
+app.options('*', cors());
 
 // Rate limiting
 const limiter = rateLimit({
