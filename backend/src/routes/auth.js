@@ -10,14 +10,14 @@ const users = [
     id: '1',
     username: 'admin',
     email: 'admin@fraatlas.gov.in',
-    password_hash: '$2a$12$LQv3c1yqBwEHFl5fvlHOUe.4nOtx.l0PoWEgbcLdrcLzC6U6Nm.Gy', // admin123
+    password_hash: '$2a$12$mX0T3Mm.J1.ez2Q31.c0ZOkcEJdxjRpAg5ytJxIZhm5PsZ7vKbaGy', // admin123
     role: 'admin'
   },
   {
     id: '2', 
     username: 'testuser',
     email: 'test@example.com',
-    password_hash: '$2a$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // testpass123
+    password_hash: '$2a$12$rQ/ww4ccjaJe5DEvD66lrepu5JRwn7DNd/reZFgq11BjbhF5Et556', // testpass123
     role: 'user'
   }
 ];
