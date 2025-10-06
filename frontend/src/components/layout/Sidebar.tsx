@@ -98,7 +98,7 @@ const Sidebar: React.FC = () => {
           ]
         }
       ],
-      state_authority: [
+      state_admin: [
         {
           title: 'State Operations',
           items: [
@@ -110,7 +110,7 @@ const Sidebar: React.FC = () => {
           ]
         }
       ],
-      district_tribal_welfare: [
+      district_admin: [
         {
           title: 'District Operations',
           items: [
