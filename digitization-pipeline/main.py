@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 
-app = FastAPI(title="FRA Data Processor", version="1.0.0")
+app = FastAPI(title="FRA Digitization Pipeline", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -14,15 +14,15 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
-    return {"message": "FRA Data Processor API", "status": "running"}
+    return {"message": "FRA Digitization Pipeline API", "status": "running"}
 
 @app.get("/health")
 async def health():
     return {"status": "healthy", "timestamp": datetime.utcnow()}
 
-@app.post("/process")
-async def process_data(data: dict):
-    return {"status": "processed", "data": data}
+@app.post("/upload")
+async def upload_document():
+    return {"status": "queued", "message": "Document processing not implemented yet"}
 
 if __name__ == "__main__":
     import uvicorn
