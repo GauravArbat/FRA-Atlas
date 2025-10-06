@@ -25,13 +25,12 @@ services:
           name: fra-atlas-redis
           property: connectionString
 
-  - type: pserv
-    name: fra-atlas-db
-    env: postgresql
-    plan: free
-    ipAllowList: []
-
   - type: redis
     name: fra-atlas-redis
     plan: free
-    ipAllowList: []
+
+databases:
+  - name: fra-atlas-db
+    databaseName: fra_atlas
+    user: fra_user
+    plan: free
