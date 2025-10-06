@@ -26,14 +26,27 @@ const fallbackUsers = [
     username: 'admin',
     email: 'admin@fraatlas.gov.in',
     password_hash: '$2a$12$mX0T3Mm.J1.ez2Q31.c0ZOkcEJdxjRpAg5ytJxIZhm5PsZ7vKbaGy',
-    role: 'admin'
+    role: 'admin',
+    state: null,
+    district: null
   },
   {
     id: '2',
-    username: 'testuser', 
-    email: 'test@example.com',
+    username: 'state_mp',
+    email: 'state@mp.gov.in',
     password_hash: '$2a$12$rQ/ww4ccjaJe5DEvD66lrepu5JRwn7DNd/reZFgq11BjbhF5Et556',
-    role: 'user'
+    role: 'state_admin',
+    state: 'Madhya Pradesh',
+    district: null
+  },
+  {
+    id: '3',
+    username: 'district_bhopal',
+    email: 'tribal.bhopal@mp.gov.in',
+    password_hash: '$2a$12$rQ/ww4ccjaJe5DEvD66lrepu5JRwn7DNd/reZFgq11BjbhF5Et556',
+    role: 'district_admin',
+    state: 'Madhya Pradesh',
+    district: 'Bhopal'
   }
 ];
 
