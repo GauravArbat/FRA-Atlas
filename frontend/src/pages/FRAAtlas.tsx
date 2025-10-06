@@ -1149,8 +1149,8 @@ const FRAAtlas: React.FC = () => {
       
       // Try the backend API endpoint first
       try {
-        console.log('🔄 Trying backend API endpoint: http://localhost:8000/api/fra/atlas/forest-areas');
-        const response = await fetch('http://localhost:8000/api/fra/atlas/forest-areas');
+        console.log('🔄 Trying backend API endpoint: https://fra-atlas-backend-ipd3.onrender.com/api/fra/atlas/forest-areas');
+        const response = await fetch('https://fra-atlas-backend-ipd3.onrender.com/api/fra/atlas/forest-areas');
         if (response.ok) {
           fraStatesForest = await response.json();
           forestFeatures = fraStatesForest.features || [];
@@ -1172,7 +1172,7 @@ const FRAAtlas: React.FC = () => {
           '/api/fra/atlas/forest-areas',
           '/data/fra-states-forest-data.geojson',
           '/static-data/fra-states-forest-data.geojson',
-          'http://localhost:8000/data/fra-states-forest-data.geojson'
+          'https://fra-atlas-backend-ipd3.onrender.com/data/fra-states-forest-data.geojson'
         ];
         
         let loaded = false;
