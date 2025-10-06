@@ -109,22 +109,38 @@ app.get('/health', (req, res) => {
 app.get('/data/fra-states-forest-data.geojson', (req, res) => {
   try {
     const fs = require('fs');
-    const filePath = path.join(__dirname, 'data', 'fra-states-forest-data.geojson');
+    // Try multiple possible paths
+    const possiblePaths = [
+      path.join(__dirname, 'data', 'fra-states-forest-data.geojson'),
+      path.join(__dirname, '..', 'data', 'fra-states-forest-data.geojson'),
+      path.join(process.cwd(), 'backend', 'data', 'fra-states-forest-data.geojson'),
+      path.join(process.cwd(), 'data', 'fra-states-forest-data.geojson')
+    ];
     
-    console.log('🌲 Serving forest data from:', filePath);
+    let forestData = null;
+    let usedPath = null;
     
-    if (fs.existsSync(filePath)) {
-      const data = fs.readFileSync(filePath, 'utf8');
-      const forestData = JSON.parse(data);
-      
+    for (const filePath of possiblePaths) {
+      console.log('🔍 Checking path:', filePath);
+      if (fs.existsSync(filePath)) {
+        console.log('✅ Found forest data at:', filePath);
+        const data = fs.readFileSync(filePath, 'utf8');
+        forestData = JSON.parse(data);
+        usedPath = filePath;
+        break;
+      }
+    }
+    
+    if (forestData && forestData.features) {
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+      res.setHeader('Cache-Control', 'public, max-age=3600');
       
-      console.log('✅ Forest data served successfully:', forestData.features?.length || 0, 'features');
+      console.log('✅ Forest data served successfully from', usedPath, ':', forestData.features.length, 'features');
       res.json(forestData);
     } else {
-      console.warn('⚠️ Forest data file not found, using empty response');
+      console.warn('⚠️ Forest data file not found in any location');
+      possiblePaths.forEach(p => console.log('   Tried:', p));
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.json({
