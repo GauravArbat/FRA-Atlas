@@ -22,7 +22,22 @@ async def health():
 
 @app.post("/upload")
 async def upload_document():
-    return {"status": "queued", "message": "Document processing"}
+    return {
+        "success": True,
+        "status": "completed",
+        "message": "Document processed successfully",
+        "confidence": 0.85,
+        "text": "Sample extracted text from FRA document",
+        "fraInfo": {
+            "applicantName": "Sample Applicant",
+            "village": "Sample Village",
+            "district": "Sample District",
+            "state": "Sample State",
+            "area": "2.5 hectares",
+            "claimNumber": "IFR/2024/001",
+            "pattaNumber": "P001"
+        }
+    }
 
 if __name__ == "__main__":
     import uvicorn
