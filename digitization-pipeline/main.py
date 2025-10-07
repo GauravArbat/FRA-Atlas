@@ -6,6 +6,7 @@ from PIL import Image
 import io
 import re
 import spacy
+import fitz  # PyMuPDF
 
 app = FastAPI(title="FRA Digitization Pipeline")
 
@@ -31,9 +32,18 @@ async def upload_document(file: UploadFile = File(...)):
         # Read file content
         content = await file.read()
         
-        # Process image with OCR
-        image = Image.open(io.BytesIO(content))
-        text = pytesseract.image_to_string(image)
+        # Check file type and extract text
+        if file.filename.lower().endswith('.pdf'):
+            # Extract text from PDF
+            pdf_doc = fitz.open(stream=content, filetype="pdf")
+            text = ""
+            for page in pdf_doc:
+                text += page.get_text()
+            pdf_doc.close()
+        else:
+            # Process image with OCR
+            image = Image.open(io.BytesIO(content))
+            text = pytesseract.image_to_string(image)
         
         # Extract FRA information using NER + regex
         fraInfo = extract_fra_entities(text)

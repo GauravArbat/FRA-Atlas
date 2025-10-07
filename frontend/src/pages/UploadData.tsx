@@ -97,8 +97,9 @@ const UploadData: React.FC = () => {
         console.log('Processing file:', file.name);
         const response = await digitizationPipelineAPI.processOCR(file);
         console.log('OCR Response:', response);
+        console.log('Response data:', response.data);
         
-        if (response.data.success) {
+        if (response.data && (response.data.success || response.data.status === 'completed')) {
           const extractedData: ExtractedData = {
             claimantName: response.data.fraInfo?.applicantName,
             village: response.data.fraInfo?.village,
@@ -120,7 +121,8 @@ const UploadData: React.FC = () => {
             } : f
           ));
         } else {
-          const errorMsg = 'OCR processing failed';
+          console.log('OCR failed - response.data:', response.data);
+          const errorMsg = response.data?.message || 'OCR processing failed';
           throw { message: errorMsg };
         }
       } catch (error: any) {
