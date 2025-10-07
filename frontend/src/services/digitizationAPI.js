@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const DIGITIZATION_API_URL = 'http://localhost:8000/api/digitization';
+const DIGITIZATION_URL = 'https://fra-atlas-digitization-pipeline.onrender.com';
 
 export const digitizationPipelineAPI = {
   batchUpload: async (files) => {
@@ -11,7 +11,7 @@ export const digitizationPipelineAPI = {
       formData.append('file', files[i]);
       
       try {
-        const response = await axios.post(`${DIGITIZATION_API_URL}/ocr`, formData, {
+        const response = await axios.post(`${DIGITIZATION_URL}/upload`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         results.push(response.data);
@@ -47,16 +47,16 @@ export const digitizationPipelineAPI = {
   processOCR: async (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    return axios.post(`${DIGITIZATION_API_URL}/ocr`, formData);
+    return axios.post(`${DIGITIZATION_URL}/upload`, formData);
   },
 
   processNER: async (text) => {
-    return axios.post(`${DIGITIZATION_API_URL}/ner`, { text });
+    return axios.post(`${DIGITIZATION_URL}/upload`, { text });
   },
 
   computerVision: async (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    return axios.post(`${DIGITIZATION_API_URL}/cv/detect`, formData);
+    return axios.post(`${DIGITIZATION_URL}/upload`, formData);
   }
 };
