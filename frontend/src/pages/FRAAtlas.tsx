@@ -256,21 +256,20 @@ const FRAAtlas: React.FC = () => {
 
   // Get map configuration based on user role and location
   const getMapConfigForUser = () => {
+    // All users get India-only view
+    const indiaConfig = {
+      center: [20.5937, 78.9629] as [number, number],
+      zoom: 5,
+      bounds: [[6.4627, 68.1097], [35.5044, 97.3953]] as [[number, number], [number, number]]
+    };
+
     // Give admin, state_admin, and district_admin full India access
     if (user && (user.role === 'admin' || user.role === 'state_admin' || user.role === 'district_admin')) {
-      return {
-        center: [21.5, 82.5] as [number, number],
-        zoom: 6,
-        bounds: [[6.0, 68.0], [37.0, 97.0]] as [[number, number], [number, number]]
-      };
+      return indiaConfig;
     }
 
     if (!user) {
-      return {
-        center: [21.5, 82.5] as [number, number],
-        zoom: 6,
-        bounds: [[6.0, 68.0], [37.0, 97.0]] as [[number, number], [number, number]]
-      };
+      return indiaConfig;
     }
 
     // State-level bounds and centers (for other roles)
@@ -312,12 +311,8 @@ const FRAAtlas: React.FC = () => {
              { center: [21.5, 82.5] as [number, number], zoom: 6, bounds: [[6.0, 68.0], [37.0, 97.0]] as [[number, number], [number, number]] };
     }
 
-    // Default - full India view
-    return {
-      center: [21.5, 82.5] as [number, number],
-      zoom: 6,
-      bounds: [[6.0, 68.0], [37.0, 97.0]] as [[number, number], [number, number]]
-    };
+    // Default - India view
+    return indiaConfig;
   };
 
   // Filter FRA data based on user role and location
@@ -465,21 +460,17 @@ const FRAAtlas: React.FC = () => {
     if (containerRef.current && !mapRef.current && !mapInitialized) {
       const { center, zoom, bounds } = getMapConfigForUser();
       
-      // Initialize map with appropriate bounds based on user role
+      // Initialize map with India bounds for all users
       const mapOptions: any = {
         center,
         zoom,
-        minZoom: user && (user.role === 'admin' || user.role === 'state_admin' || user.role === 'district_admin') ? 4 : zoom - 1,
+        minZoom: 4,
         maxZoom: 18,
         zoomControl: false,
-        attributionControl: true
+        attributionControl: true,
+        maxBounds: bounds,
+        maxBoundsViscosity: 1.0
       };
-      
-      // Only restrict bounds for regular users, not for admin/state_admin/district_admin
-      if (user && user.role === 'user') {
-        mapOptions.maxBounds = bounds;
-        mapOptions.maxBoundsViscosity = 1.0;
-      }
       
       const map = L.map(containerRef.current, mapOptions);
 
