@@ -18,8 +18,32 @@ const authenticateToken = (req, res, next) => {
 
     try {
       // Verify user still exists and is active
+      // First check what columns exist
+      const tableInfo = await pool.query(`
+        SELECT column_name FROM information_schema.columns 
+        WHERE table_name = 'users'
+      `);
+      
+      const columns = tableInfo.rows.map(row => row.column_name);
+      const hasUsername = columns.includes('username');
+      const hasState = columns.includes('state');
+      const hasDistrict = columns.includes('district');
+      const hasBlock = columns.includes('block');
+      const hasIsActive = columns.includes('is_active');
+      
+      const selectColumns = [
+        'id',
+        hasUsername ? 'username' : 'email as username',
+        'email',
+        'COALESCE(role, \'user\') as role',
+        hasState ? 'state' : 'NULL as state',
+        hasDistrict ? 'district' : 'NULL as district', 
+        hasBlock ? 'block' : 'NULL as block',
+        hasIsActive ? 'is_active' : 'true as is_active'
+      ].join(', ');
+      
       const user = await pool.query(
-        'SELECT id, username, email, role, state, district, block, is_active FROM users WHERE id = $1',
+        `SELECT ${selectColumns} FROM users WHERE id = $1`,
         [decoded.userId]
       );
 
@@ -27,7 +51,7 @@ const authenticateToken = (req, res, next) => {
         return res.status(403).json({ error: 'User not found' });
       }
 
-      if (!user.rows[0].is_active) {
+      if (hasIsActive && !user.rows[0].is_active) {
         return res.status(403).json({ error: 'Account is deactivated' });
       }
 
@@ -76,12 +100,36 @@ const optionalAuth = (req, res, next) => {
     }
 
     try {
+      // Check what columns exist
+      const tableInfo = await pool.query(`
+        SELECT column_name FROM information_schema.columns 
+        WHERE table_name = 'users'
+      `);
+      
+      const columns = tableInfo.rows.map(row => row.column_name);
+      const hasUsername = columns.includes('username');
+      const hasState = columns.includes('state');
+      const hasDistrict = columns.includes('district');
+      const hasBlock = columns.includes('block');
+      const hasIsActive = columns.includes('is_active');
+      
+      const selectColumns = [
+        'id',
+        hasUsername ? 'username' : 'email as username',
+        'email',
+        'COALESCE(role, \'user\') as role',
+        hasState ? 'state' : 'NULL as state',
+        hasDistrict ? 'district' : 'NULL as district', 
+        hasBlock ? 'block' : 'NULL as block',
+        hasIsActive ? 'is_active' : 'true as is_active'
+      ].join(', ');
+      
       const user = await pool.query(
-        'SELECT id, username, email, role, state, district, block, is_active FROM users WHERE id = $1',
+        `SELECT ${selectColumns} FROM users WHERE id = $1`,
         [decoded.userId]
       );
 
-      if (user.rows.length > 0 && user.rows[0].is_active) {
+      if (user.rows.length > 0 && (!hasIsActive || user.rows[0].is_active)) {
         req.user = {
           userId: decoded.userId,
           role: decoded.role,
