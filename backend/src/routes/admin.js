@@ -12,14 +12,32 @@ router.get('/users', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
+    // Get table structure first
+    const tableInfo = await pool.query(`
+      SELECT column_name FROM information_schema.columns 
+      WHERE table_name = 'users'
+    `);
+    
+    const columns = tableInfo.rows.map(row => row.column_name);
+    const hasUsername = columns.includes('username');
+    const hasState = columns.includes('state');
+    const hasDistrict = columns.includes('district');
+    const hasBlock = columns.includes('block');
+    const hasIsActive = columns.includes('is_active');
+    const hasLastLogin = columns.includes('last_login');
+    
     const users = await pool.query(`
       SELECT 
-        u.id, u.username, u.email, u.role, 
-        COALESCE(u.state, '') as state, 
-        COALESCE(u.district, '') as district, 
-        COALESCE(u.block, '') as block,
-        COALESCE(u.is_active, true) as is_active, 
-        u.created_at, u.last_login,
+        u.id, 
+        ${hasUsername ? 'u.username' : 'u.email as username'}, 
+        u.email, 
+        COALESCE(u.role, 'user') as role,
+        ${hasState ? 'COALESCE(u.state, \'\') as state' : '\'\' as state'},
+        ${hasDistrict ? 'COALESCE(u.district, \'\') as district' : '\'\' as district'},
+        ${hasBlock ? 'COALESCE(u.block, \'\') as block' : '\'\' as block'},
+        ${hasIsActive ? 'COALESCE(u.is_active, true) as is_active' : 'true as is_active'},
+        u.created_at,
+        ${hasLastLogin ? 'u.last_login' : 'NULL as last_login'},
         0 as claims_created,
         0 as documents_uploaded,
         0 as total_activities
@@ -154,10 +172,20 @@ router.get('/reports/combined', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    // System overview
+    // System overview - check if is_active column exists
+    const userTableInfo = await pool.query(`
+      SELECT column_name FROM information_schema.columns 
+      WHERE table_name = 'users' AND column_name = 'is_active'
+    `);
+    
+    const hasIsActive = userTableInfo.rows.length > 0;
+    
     const systemStats = await pool.query(`
       SELECT 
-        (SELECT COUNT(*) FROM users WHERE COALESCE(is_active, true) = true) as active_users,
+        ${hasIsActive ? 
+          '(SELECT COUNT(*) FROM users WHERE COALESCE(is_active, true) = true) as active_users' :
+          '(SELECT COUNT(*) FROM users) as active_users'
+        },
         (SELECT COUNT(*) FROM users) as total_users,
         0 as total_claims,
         0 as approved_claims,
@@ -167,21 +195,28 @@ router.get('/reports/combined', authenticateToken, async (req, res) => {
 
     // Role distribution
     const roleStats = await pool.query(`
-      SELECT role, COUNT(*) as count
+      SELECT COALESCE(role, 'user') as role, COUNT(*) as count
       FROM users 
-      WHERE COALESCE(is_active, true) = true AND role != 'beneficiary'
+      ${hasIsActive ? 'WHERE COALESCE(is_active, true) = true' : ''}
       GROUP BY role
       ORDER BY count DESC
     `);
 
-    // State-wise distribution
-    const stateStats = await pool.query(`
+    // State-wise distribution - check if state column exists
+    const stateColumnInfo = await pool.query(`
+      SELECT column_name FROM information_schema.columns 
+      WHERE table_name = 'users' AND column_name = 'state'
+    `);
+    
+    const hasStateColumn = stateColumnInfo.rows.length > 0;
+    
+    const stateStats = hasStateColumn ? await pool.query(`
       SELECT COALESCE(state, 'Unknown') as state, COUNT(*) as user_count
       FROM users 
-      WHERE COALESCE(is_active, true) = true AND state IS NOT NULL AND state != ''
+      WHERE ${hasIsActive ? 'COALESCE(is_active, true) = true AND' : ''} state IS NOT NULL AND state != ''
       GROUP BY state
       ORDER BY user_count DESC
-    `);
+    `) : { rows: [{ state: 'Unknown', user_count: 0 }] };
 
     // Claims by status (mock data since table may not exist)
     const claimStats = { rows: [
