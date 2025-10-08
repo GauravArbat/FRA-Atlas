@@ -215,13 +215,15 @@ const startServer = async () => {
       // Initialize database tables
       await initializeTables();
       
-      // Seed database if empty (development only)
-      if (process.env.NODE_ENV !== 'production') {
+      // Skip seeding for deploy database (already has data)
+      if (process.env.NODE_ENV !== 'production' && !process.env.DATABASE_URL?.includes('render.com')) {
         try {
           await seedDatabase();
         } catch (error) {
           console.log('⚠️ Database seeding failed (may already be seeded):', error.message);
         }
+      } else {
+        console.log('ℹ️ Using deploy database - skipping seeding');
       }
     }
     

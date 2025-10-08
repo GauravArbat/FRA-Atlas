@@ -1,12 +1,32 @@
 import axios from 'axios';
 
+// Check if localhost is available, fallback to deploy URL
+const getBaseURL = async () => {
+  try {
+    await axios.get('http://localhost:8000/health', { timeout: 2000 });
+    return 'http://localhost:8000/api';
+  } catch {
+    return 'https://fra-atlas-backend-ipd3.onrender.com/api';
+  }
+};
+
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || (process.env.NODE_ENV === 'production' 
-    ? 'https://fra-atlas-backend-ipd3.onrender.com/api' 
-    : 'http://localhost:8000/api'),
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000/api',
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// Auto-switch to deploy URL if localhost fails
+api.interceptors.request.use(async (config) => {
+  if (!process.env.REACT_APP_API_URL && config.baseURL === 'http://localhost:8000/api') {
+    try {
+      await axios.get('http://localhost:8000/health', { timeout: 1000 });
+    } catch {
+      config.baseURL = 'https://fra-atlas-backend-ipd3.onrender.com/api';
+    }
+  }
+  return config;
 });
 
 // Add request interceptor to include auth token

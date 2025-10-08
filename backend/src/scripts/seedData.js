@@ -3,8 +3,22 @@ const bcrypt = require('bcryptjs');
 
 const seedDatabase = async () => {
   try {
+    // Check table structure first
+    const tableInfo = await pool.query(`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'users'
+    `);
+    
+    const hasPasswordColumn = tableInfo.rows.some(row => row.column_name === 'password');
+    
+    if (!hasPasswordColumn) {
+      console.log('⚠️ Users table exists but missing password column, skipping seeding');
+      return;
+    }
+
     // Check if admin user exists
-    const adminCheck = await pool.query('SELECT id FROM users WHERE email = $1', ['admin@fraatlas.gov.in']);
+    const adminCheck = await pool.query('SELECT * FROM users WHERE email = $1', ['admin@fraatlas.gov.in']);
     
     if (adminCheck.rows.length === 0) {
       // Create admin user
@@ -14,10 +28,12 @@ const seedDatabase = async () => {
         ['admin@fraatlas.gov.in', hashedPassword, 'admin']
       );
       console.log('✅ Admin user created');
+    } else {
+      console.log('ℹ️ Admin user already exists');
     }
 
     // Check if test user exists
-    const testCheck = await pool.query('SELECT id FROM users WHERE email = $1', ['test@example.com']);
+    const testCheck = await pool.query('SELECT * FROM users WHERE email = $1', ['test@example.com']);
     
     if (testCheck.rows.length === 0) {
       // Create test user
@@ -27,12 +43,14 @@ const seedDatabase = async () => {
         ['test@example.com', hashedPassword, 'user']
       );
       console.log('✅ Test user created');
+    } else {
+      console.log('ℹ️ Test user already exists');
     }
 
     console.log('✅ Database seeded successfully');
   } catch (error) {
     console.error('❌ Database seeding failed:', error.message);
-    throw error;
+    // Don't throw error, just log it
   }
 };
 
