@@ -295,7 +295,7 @@ const Dashboard: React.FC = () => {
                 </Typography>
                 <List dense>
                   <ListItem button>
-                    <ListItemText primary={<span data-translate>FRA Rules, 2008</span>} />
+                    <ListItemText primary={<span data-translate>FRA Rules, 2006</span>} />
                   </ListItem>
                   <ListItem button>
                     <ListItemText primary={<span data-translate>Guidelines</span>} />
